@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PixelishSearch</string>
+    <string name="widget_search_hint">Search</string>
+    <string name="widget_description">Recherche unifiée style Pixel</string>
+</resources>

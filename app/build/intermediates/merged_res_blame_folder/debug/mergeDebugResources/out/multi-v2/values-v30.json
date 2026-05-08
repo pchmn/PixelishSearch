@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.pixelish.search.app-mergeDebugResources-46:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/paul/.gradle/caches/9.0.0/transforms/db917d772451ccaf93a1b4a3c67a9f07/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

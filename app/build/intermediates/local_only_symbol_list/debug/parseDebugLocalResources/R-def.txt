@@ -1,0 +1,14 @@
+R_DEF: Internal format may change without notice
+local
+anim slide_in_bottom
+anim slide_out_bottom
+drawable widget_search_bg
+id widget_root
+layout widget_search_bar
+string app_name
+string widget_description
+string widget_search_hint
+style SlideUpAnimation
+style Theme.PixelishSearch
+style Theme.PixelishSearch.Transparent
+xml widget_info
