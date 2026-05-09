@@ -15,6 +15,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
@@ -26,19 +28,23 @@ fun SearchScreen(
     onClose: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val isDark = isSystemInDarkTheme()
 
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = sheetState,
         modifier = Modifier.statusBarsPadding(),
-        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.75f),
+        containerColor = if(isDark) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+            .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+            .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f),
+        scrimColor = Color.White.copy(alpha = 0.1f),
     ) {
         // La window du dialog interne du ModalBottomSheet ne suit pas automatiquement
         // le thème système. On force ici les icônes status/nav bar à suivre le thème :
         //   - thème clair → icônes sombres (isAppearanceLight* = true)
         //   - thème sombre → icônes blanches (isAppearanceLight* = false)
         val view = LocalView.current
-        val isDark = isSystemInDarkTheme()
+
         SideEffect {
             val sheetWindow = view.findDialogWindow() ?: (view.context as Activity).window
             WindowCompat.getInsetsController(sheetWindow, view).apply {

@@ -43,7 +43,7 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.01.00"))
 
     // Material 3 Expressive (alpha au moment où j'écris ça — vérifier la dernière version)
-    implementation("androidx.compose.material3:material3:1.4.0-alpha09")
+    implementation("androidx.compose.material3:material3:1.4.0-alpha15")
     implementation("androidx.compose.material:material-icons-extended")
 
     // Compose
