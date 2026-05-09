@@ -37,7 +37,7 @@ captures/
 
 # IntelliJ / Android Studio
 *.iml
-.idea/
+.idea/*
 !.idea/codeStyles/
 !.idea/runConfigurations/
 

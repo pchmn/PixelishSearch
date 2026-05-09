@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
             window.attributes = window.attributes.apply {
-                blurBehindRadius = 60
+                blurBehindRadius = 80
             }
         }
 
