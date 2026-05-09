@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -48,7 +47,6 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // Recherche locale instantanée à chaque frappe (apps + contacts sont rapides)
         viewModelScope.launch {
             _query
-                .distinctUntilChanged()
                 .onEach { runLocalSearch(it) }
                 .debounce(180) // debounce uniquement pour le réseau
                 .collect { runWebSearch(it) }

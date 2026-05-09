@@ -5,37 +5,33 @@ import android.net.Uri
 import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,13 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pixelish.search.data.AppEntry
 import com.pixelish.search.data.ContactEntry
@@ -68,60 +62,106 @@ fun SearchScreen(
         focusRequester.requestFocus()
     }
 
-    // Surface pleine page avec le wallpaper visible derrière (theme transparent)
+    val noIndication = remember { MutableInteractionSource() }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
-            .clickable(onClick = onClose) // tap en dehors → ferme
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp)
-                .padding(top = 48.dp),
-        ) {
-            // Barre de recherche style Pixel
-            SearchBar(
-                query = state.query,
-                onQueryChange = viewModel::onQueryChange,
-                focusRequester = focusRequester
+            .clickable(
+                interactionSource = noIndication,
+                indication = null,
+                onClick = onClose // tap au-dessus de la sheet → ferme
             )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Apps suggérées (quand pas de query)
-            if (state.query.isBlank() && state.suggestedApps.isNotEmpty()) {
-                SuggestedAppsRow(
-                    apps = state.suggestedApps,
-                    onClick = { entry -> launchApp(context, entry) }
+    ) {
+        // Bottom sheet : wallpaper visible et flouté derrière (FLAG_BLUR_BEHIND côté Window),
+        // sheet teintée par la couleur dynamique du thème, légèrement translucide.
+        Surface(
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.88f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                // se positionne au-dessus du clavier (qui inclut déjà la nav bar quand visible)
+                .imePadding()
+                // intercepte les taps : on ne ferme pas quand on touche la sheet
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
                 )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Liste des résultats
-            LazyColumn(
-                contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
             ) {
-                if (state.apps.isNotEmpty()) {
-                    items(state.apps, key = { "app-${it.packageName}" }) { app ->
-                        AppRow(app = app, onClick = { launchApp(context, app) })
+                DragHandle()
+
+                // Barre de recherche transparente (intégrée à la sheet)
+                SearchBar(
+                    query = state.query,
+                    onQueryChange = viewModel::onQueryChange,
+                    focusRequester = focusRequester
+                )
+
+                if (state.query.isBlank() && state.suggestedApps.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    SuggestedAppsRow(
+                        apps = state.suggestedApps,
+                        onClick = { entry -> launchApp(context, entry) }
+                    )
+                }
+
+                val hasResults = state.apps.isNotEmpty() ||
+                    state.contacts.isNotEmpty() ||
+                    state.webSuggestions.isNotEmpty()
+                if (hasResults) {
+                    Spacer(Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        state.apps.forEach { app ->
+                            AppRow(app = app, onClick = { launchApp(context, app) })
+                        }
+                        state.contacts.forEach { contact ->
+                            ContactRow(
+                                contact = contact,
+                                onClick = { launchContact(context, contact) }
+                            )
+                        }
+                        state.webSuggestions.forEach { suggestion ->
+                            WebSuggestionRow(
+                                text = suggestion,
+                                onClick = { launchWebSearch(context, suggestion) }
+                            )
+                        }
                     }
                 }
 
-                if (state.contacts.isNotEmpty()) {
-                    items(state.contacts, key = { "contact-${it.id}" }) { contact ->
-                        ContactRow(contact = contact, onClick = { launchContact(context, contact) })
-                    }
-                }
+                Spacer(Modifier.height(8.dp))
 
-                if (state.webSuggestions.isNotEmpty()) {
-                    items(state.webSuggestions, key = { "web-$it" }) { suggestion ->
-                        WebSuggestionRow(
-                            text = suggestion,
-                            onClick = { launchWebSearch(context, suggestion) }
+                // Info + Settings, alignés à droite, en bas de la sheet
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = { /* TODO: about */ }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "À propos",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { /* TODO: settings */ }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Paramètres",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -131,55 +171,76 @@ fun SearchScreen(
 }
 
 @Composable
+private fun DragHandle() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .width(32.dp)
+                .height(4.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(2.dp)
+                )
+        )
+    }
+}
+
+@Composable
 private fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     focusRequester: FocusRequester
 ) {
-    Surface(
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(16.dp))
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(24.dp)
-            )
-
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                placeholder = { Text("Search apps, contacts, web…") },
-                singleLine = true,
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
-
-            IconButton(onClick = { /* TODO: voice search via SpeechRecognizer */ }) {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Voice search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                .weight(1f)
+                .focusRequester(focusRequester),
+            decorationBox = { inner ->
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) {
+                        Text(
+                            text = "Search apps, contacts, web…",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    inner()
+                }
             }
+        )
+        IconButton(onClick = { /* TODO: voice search */ }) {
+            Icon(
+                imageVector = Icons.Default.Mic,
+                contentDescription = "Voice search",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -190,7 +251,9 @@ private fun SuggestedAppsRow(
     onClick: (AppEntry) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         apps.forEach { app ->
@@ -198,13 +261,13 @@ private fun SuggestedAppsRow(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .clickable { onClick(app) }
-                    .padding(8.dp)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 AppIconImage(app, size = 56.dp)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = app.label,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
                 )
@@ -215,22 +278,20 @@ private fun SuggestedAppsRow(
 
 @Composable
 private fun AppRow(app: AppEntry, onClick: () -> Unit) {
-    Card(
+    Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIconImage(app, size = 36.dp)
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
             Text(
                 text = app.label,
                 style = MaterialTheme.typography.bodyLarge,
@@ -242,18 +303,16 @@ private fun AppRow(app: AppEntry, onClick: () -> Unit) {
 
 @Composable
 private fun ContactRow(contact: ContactEntry, onClick: () -> Unit) {
-    Card(
+    Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -262,7 +321,7 @@ private fun ContactRow(contact: ContactEntry, onClick: () -> Unit) {
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(36.dp)
             )
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(16.dp))
             Column {
                 Text(
                     text = contact.name,
@@ -287,7 +346,7 @@ private fun WebSuggestionRow(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -296,7 +355,7 @@ private fun WebSuggestionRow(text: String, onClick: () -> Unit) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(20.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
@@ -307,8 +366,6 @@ private fun WebSuggestionRow(text: String, onClick: () -> Unit) {
 
 @Composable
 private fun AppIconImage(app: AppEntry, size: androidx.compose.ui.unit.Dp) {
-    // On utilise AndroidView pour afficher le Drawable natif du PackageManager,
-    // qui peut être un AdaptiveIcon avec animations.
     AndroidView(
         factory = { ctx ->
             ImageView(ctx).apply { setImageDrawable(app.icon) }
