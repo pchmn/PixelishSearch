@@ -17,11 +17,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Edge-to-edge avec icônes status/nav bar toujours en blanc
-        // (SystemBarStyle.dark = fond sombre, donc icônes claires).
+        // Edge-to-edge avec status / nav bar 100 % transparentes (scrims = TRANSPARENT).
+        // Le couple light/dark (donc la couleur des icônes) reste pris en charge
+        // automatiquement par auto() en fonction du thème système.
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
         )
 
         // Effet "Pixel Search" : flou + assombrissement léger du wallpaper / contenu derrière.

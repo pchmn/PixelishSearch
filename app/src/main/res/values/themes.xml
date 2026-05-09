@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Thème de base -->
+    <!-- Thème de base. Pas de windowLightStatusBar/Navigation : laissé à Android,
+         qui choisit selon le thème système via enableEdgeToEdge() côté MainActivity. -->
     <style name="Theme.PixelishSearch" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <!-- Icônes status/nav bar toujours en blanc (false = fond sombre, icônes claires) -->
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <!-- Thème transparent pour l'Activity de recherche : on voit le wallpaper derrière -->
@@ -16,8 +14,6 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowAnimationStyle">@style/SlideUpAnimation</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <style name="SlideUpAnimation" parent="@android:style/Animation">
