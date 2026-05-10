@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -246,7 +247,7 @@ fun SearchScreen(
                     if (uiState.webSuggestions.isNotEmpty()) {
                         SectionHeader(title = "Web Search")
                         SuggestionList(
-                            suggestions = uiState.webSuggestions.take(3),
+                            suggestions = uiState.webSuggestions.take(if (displayedApps.isNotEmpty() || uiState.contacts.isNotEmpty()) 3 else 5),
                             leadingIcon = Icons.Outlined.Search,
                             onClick = { suggestion ->
                                 viewModel.onSearchLaunched(suggestion)
@@ -403,12 +404,12 @@ private fun SuggestionList(
 }
 
 @Composable
-private fun SuggestionItem(
-    text: String,
-    leadingIcon: ImageVector,
+private fun SearchRowItem(
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
+    leading: @Composable () -> Unit,
+    content: @Composable RowScope.() -> Unit,
 ) {
     val outer = 28.dp
     val inner = 6.dp
@@ -427,21 +428,41 @@ private fun SuggestionItem(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = leadingIcon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(18.dp),
-            )
-        }
+        leading()
         Spacer(modifier = Modifier.width(16.dp))
+        content()
+    }
+}
+
+@Composable
+private fun SuggestionItem(
+    text: String,
+    leadingIcon: ImageVector,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onClick: () -> Unit,
+) {
+    SearchRowItem(
+        isFirst = isFirst,
+        isLast = isLast,
+        onClick = onClick,
+        leading = {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        },
+    ) {
         Text(
             text = text,
             modifier = Modifier.weight(1f),
@@ -449,7 +470,7 @@ private fun SuggestionItem(
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
@@ -675,25 +696,14 @@ private fun RecentContactItem(
     isLast: Boolean,
     onClick: () -> Unit,
 ) {
-    val outer = 28.dp
-    val inner = 6.dp
-    val shape = RoundedCornerShape(
-        topStart = if (isFirst) outer else inner,
-        topEnd = if (isFirst) outer else inner,
-        bottomStart = if (isLast) outer else inner,
-        bottomEnd = if (isLast) outer else inner,
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    SearchRowItem(
+        isFirst = isFirst,
+        isLast = isLast,
+        onClick = onClick,
+        leading = {
+            ContactAvatar(name = contact.name, photoUri = contact.photoUri, size = 32.dp)
+        },
     ) {
-        ContactAvatar(name = contact.name, photoUri = contact.photoUri, size = 32.dp)
-        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = contact.name,
             fontSize = 16.sp,
