@@ -1,61 +1,82 @@
 # PixelishSearch
 
-App Android minimaliste reproduisant l'UI de la recherche unifiée du Pixel Launcher (avant le Feature Drop de novembre 2025), en plus léger et plus rapide que PixelSearch.
+Minimalist Android app that replicates the Pixel Launcher unified search UI (pre-November 2025 Feature Drop), lighter and faster than PixelSearch.
 
-## Fonctionnalités
+## Features
 
-- Recherche d'apps installées (locale, instantanée)
-- Suggestions de contacts (avec permission)
-- Suggestions web (Google Suggest API, optionnel)
-- Widget homescreen qui ouvre la recherche
-- Material 3 Expressive + Dynamic Color (matche le thème système)
-- Mode sombre / clair automatique
+- Installed apps search (local, instant)
+- Default app suggestions ranked by usage frequency + recency (14-day half-life decay)
+- Search history (recent queries)
+- Contact suggestions (with permission) + recent contacts
+- Web suggestions via Google Suggest API
+- Homescreen widget that opens the search
+- Transparent search activity with blur-behind effect over the launcher
+- Material 3 Expressive + Dynamic Color (matches the system theme)
+- Automatic dark / light mode
+- Google Sans font
 
 ## Stack
 
 - Kotlin
-- Jetpack Compose + Material 3 (alpha pour Expressive)
+- Jetpack Compose + Material 3 (`1.4.0-alpha15` for Expressive)
 - Coroutines + Flow
-- Min SDK 31 (Android 12, pour Dynamic Color)
+- DataStore Preferences (usage stats, history)
+- Ktor (Google Suggest client)
+- Min SDK 31 (Android 12, for Dynamic Color)
 - Target SDK 35
+- JVM target 17
 
 ## Architecture
 
 ```
-app/
-├── src/main/
-│   ├── java/com/pchmn/pixelishsearch/
-│   │   ├── MainActivity.kt          # Activity de recherche transparente
-│   │   ├── PixelishApp.kt           # Application class, pré-charge l'index
-│   │   ├── data/
-│   │   │   ├── AppIndex.kt          # Index en mémoire des apps
-│   │   │   ├── ContactRepository.kt # Recherche de contacts
-│   │   │   └── WebSuggestRepository.kt # Suggestions Google
-│   │   ├── ui/
-│   │   │   ├── SearchScreen.kt      # Écran principal Compose
-│   │   │   ├── SearchViewModel.kt
-│   │   │   └── theme/Theme.kt       # Material 3 + Dynamic Color
-│   │   └── widget/
-│   │       └── SearchWidget.kt      # AppWidgetProvider
-│   └── res/
-│       ├── values/
-│       ├── xml/widget_info.xml      # Config du widget
-│       ├── layout/widget_search_bar.xml
-│       └── drawable/
-└── build.gradle.kts
+app/src/main/
+├── java/com/pchmn/pixelishsearch/
+│   ├── MainActivity.kt              # Transparent search activity
+│   ├── PixelishApp.kt               # Application class, preloads index + repos
+│   ├── data/
+│   │   ├── AppIndex.kt              # In-memory app index, fuzzy search
+│   │   ├── AppUsageRepository.kt    # Per-package launch stats with decay scoring
+│   │   ├── SearchHistoryRepository.kt
+│   │   ├── ContactRepository.kt     # Live contact search via ContentResolver
+│   │   ├── ContactHistoryRepository.kt
+│   │   ├── WebSuggestRepository.kt  # Google Suggest API (Ktor)
+│   │   └── BootReceiver.kt          # Re-preloads on BOOT_COMPLETED
+│   ├── ui/
+│   │   ├── SearchScreen.kt          # ModalBottomSheet with input + results
+│   │   ├── SearchViewModel.kt       # Orchestrates local + web search
+│   │   └── theme/Theme.kt           # Material 3 + Dynamic Color + Google Sans
+│   └── widget/
+│       └── SearchWidget.kt          # AppWidgetProvider
+└── res/
+    ├── layout/widget_search_bar.xml
+    ├── xml/widget_info.xml
+    └── drawable/, anim/, values/
+```
+
+## Performance
+
+Cold start of the search activity is the main goal. The app index and DataStore-backed repositories are preloaded:
+
+- At process creation in `PixelishApp` (Application class)
+- On `BOOT_COMPLETED` via `BootReceiver`
+
+The activity launches with a transparent theme and `FLAG_BLUR_BEHIND` to render the search sheet directly over the launcher without a visible app transition.
+
+## Build
+
+```bash
+./gradlew assembleDebug         # debug APK
+./gradlew installDebug          # build + install on a connected device
+./gradlew lint                  # Android lint
 ```
 
 ## Setup
 
-1. Ouvrir dans Android Studio (Koala 2026 ou plus récent)
+1. Open in Android Studio (Koala 2026 or newer)
 2. Sync Gradle
-3. Run sur appareil Android 12+
-4. Long-press sur l'écran d'accueil → Widgets → PixelishSearch → glisser le widget
+3. Run on an Android 12+ device
+4. Long-press the homescreen → Widgets → PixelishSearch → drag the widget
 
-## Performance
-
-L'index des apps est pré-chargé au boot (BOOT_COMPLETED) et au lancement de l'app, gardé en mémoire. Le cold start de l'Activity de recherche cible 100-200ms.
-
-## Licence
+## License
 
 MIT

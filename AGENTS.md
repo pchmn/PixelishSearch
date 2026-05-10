@@ -42,3 +42,15 @@ Code lives in `app/src/main/java/com/pchmn/pixelishsearch/`.
 - The `ModalBottomSheet` lives in its own Dialog window: to make status / nav bar icons follow the theme, retrieve that window via `findDialogWindow()` and call `WindowCompat.getInsetsController(...)` from a `SideEffect`.
 
 **Widget**: `SearchWidget` (`AppWidgetProvider`) simply launches `MainActivity`. Layout in `res/layout/widget_search_bar.xml`, config in `res/xml/widget_info.xml`.
+
+## Post-Modification Verification
+
+After any code change, run:
+
+```bash
+./gradlew compileDebugKotlin
+```
+
+Skip for changes that only touch docs / markdown / license files.
+
+Also check whether `AGENTS.md` or `README.md` need updating to reflect your changes (new modules, moved files, changed patterns, etc.).
