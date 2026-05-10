@@ -1,6 +1,11 @@
 package com.pixelish.search.ui
 
 import android.app.Activity
+import android.app.SearchManager
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
@@ -22,6 +27,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
@@ -54,6 +60,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -144,6 +152,15 @@ fun SearchScreen(
                     singleLine = true,
                     shape = CircleShape,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            val query = uiState.query.trim()
+                            if (query.isNotEmpty()) {
+                                launchGoogleSearch(context, query)
+                                onClose()
+                            }
+                        }
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -255,6 +272,25 @@ private fun AppItem(
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+private fun launchGoogleSearch(context: Context, query: String) {
+    val googleApp = Intent(Intent.ACTION_WEB_SEARCH).apply {
+        putExtra(SearchManager.QUERY, query)
+        setPackage("com.google.android.googlequicksearchbox")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    try {
+        context.startActivity(googleApp)
+        return
+    } catch (_: ActivityNotFoundException) {
+        // App Google non disponible, on retombe sur le navigateur.
+    }
+
+    val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())
+    val fallback = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$encoded"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(fallback)
 }
 
 private fun View.findDialogWindow(): Window? {
