@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pixelish.search"
+    namespace = "com.pchmn.pixelishsearch"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.pixelish.search"
+        applicationId = "com.pchmn.pixelishsearch"
         minSdk = 31
         targetSdk = 35
         versionCode = 1

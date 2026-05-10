@@ -1,11 +1,11 @@
-package com.pixelish.search
+package com.pchmn.pixelishsearch
 
 import android.app.Application
-import com.pixelish.search.data.AppIndex
-import com.pixelish.search.data.AppUsageRepository
-import com.pixelish.search.data.ContactHistoryRepository
-import com.pixelish.search.data.SearchHistoryRepository
-import com.pixelish.search.data.WebSuggestRepository
+import com.pchmn.pixelishsearch.data.AppIndex
+import com.pchmn.pixelishsearch.data.AppUsageRepository
+import com.pchmn.pixelishsearch.data.ContactHistoryRepository
+import com.pchmn.pixelishsearch.data.SearchHistoryRepository
+import com.pchmn.pixelishsearch.data.WebSuggestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

@@ -1,4 +1,4 @@
-package com.pixelish.search.ui
+package com.pchmn.pixelishsearch.ui
 
 import android.app.Activity
 import android.app.SearchManager
@@ -89,10 +89,10 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pixelish.search.data.AppEntry
-import com.pixelish.search.data.ContactAction
-import com.pixelish.search.data.ContactEntry
-import com.pixelish.search.data.ContactHistoryEntry
+import com.pchmn.pixelishsearch.data.AppEntry
+import com.pchmn.pixelishsearch.data.ContactAction
+import com.pchmn.pixelishsearch.data.ContactEntry
+import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -163,7 +163,7 @@ fun SearchScreen(
                     ),
                     leadingIcon = {
                         Image(
-                            painter = painterResource(id = com.pixelish.search.R.drawable.ic_google_logo),
+                            painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.ic_google_logo),
                             contentDescription = null,
                             modifier = Modifier.size(24.dp),
                         )

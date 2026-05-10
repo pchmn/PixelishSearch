@@ -24,7 +24,7 @@ App Android minimaliste reproduisant l'UI de la recherche unifiée du Pixel Laun
 ```
 app/
 ├── src/main/
-│   ├── java/com/pixelish/search/
+│   ├── java/com/pchmn/pixelishsearch/
 │   │   ├── MainActivity.kt          # Activity de recherche transparente
 │   │   ├── PixelishApp.kt           # Application class, pré-charge l'index
 │   │   ├── data/

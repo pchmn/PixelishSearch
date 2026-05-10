@@ -1,4 +1,4 @@
-package com.pixelish.search.ui.theme
+package com.pchmn.pixelishsearch.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

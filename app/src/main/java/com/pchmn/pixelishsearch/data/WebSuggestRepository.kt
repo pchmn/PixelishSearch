@@ -1,4 +1,4 @@
-package com.pixelish.search.data
+package com.pchmn.pixelishsearch.data
 
 import android.util.LruCache
 import io.ktor.client.HttpClient

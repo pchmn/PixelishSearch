@@ -1,4 +1,4 @@
-package com.pixelish.search.data
+package com.pchmn.pixelishsearch.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore

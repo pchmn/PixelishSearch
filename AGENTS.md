@@ -22,7 +22,7 @@ No tests in the project yet.
 
 ## Architecture
 
-Code lives in `app/src/main/java/com/pixelish/search/`.
+Code lives in `app/src/main/java/com/pchmn/pixelishsearch/`.
 
 **Ultra-fast cold start** is the main architectural goal:
 - `PixelishApp` (Application class) preloads `AppIndex` and initializes `AppUsageRepository` / `SearchHistoryRepository` as soon as the process is created.
