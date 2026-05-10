@@ -58,6 +58,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
+    // DataStore (compteurs d'usage des apps persistés)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Réseau pour suggestions web (léger, sans Retrofit)
     implementation("io.ktor:ktor-client-android:2.3.13")
     implementation("io.ktor:ktor-client-content-negotiation:2.3.13")

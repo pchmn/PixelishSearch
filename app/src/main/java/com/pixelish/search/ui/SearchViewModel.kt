@@ -5,14 +5,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.pixelish.search.data.AppEntry
 import com.pixelish.search.data.AppIndex
+import com.pixelish.search.data.AppUsageRepository
 import com.pixelish.search.data.ContactEntry
 import com.pixelish.search.data.ContactRepository
+import com.pixelish.search.data.UsageStat
 import com.pixelish.search.data.WebSuggestRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -38,10 +41,16 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // S'assure que l'index est chargé (au cas où l'app est lancée avant la fin du préchargement)
         viewModelScope.launch {
             AppIndex.preload(application)
-            // Suggestions par défaut : 4 premières apps (à terme : apps les plus utilisées)
-            _uiState.value = _uiState.value.copy(
-                suggestedApps = AppIndex.apps.value.take(4)
-            )
+        }
+
+        // Suggestions par défaut : top 4 apps par score d'usage (decay temporel),
+        // tiebreaker = ordre alpha. Recalculé dès que l'index ou les stats changent.
+        viewModelScope.launch {
+            combine(AppIndex.apps, AppUsageRepository.stats) { apps, stats ->
+                rankByUsage(apps, stats).take(4)
+            }.collect { suggested ->
+                _uiState.value = _uiState.value.copy(suggestedApps = suggested)
+            }
         }
 
         // Recherche locale instantanée à chaque frappe (apps + contacts sont rapides)
@@ -57,6 +66,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         _query.value = newQuery
     }
 
+    fun onAppLaunched(packageName: String) {
+        AppUsageRepository.recordLaunch(packageName)
+    }
+
     private fun runLocalSearch(query: String) {
         if (query.isBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -68,7 +81,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        val apps = AppIndex.search(query, limit = 6)
+        val stats = AppUsageRepository.stats.value
+        val now = System.currentTimeMillis()
+        val apps = AppIndex.search(query, limit = 6) { pkg ->
+            AppUsageRepository.scoreOf(pkg, stats, now)
+        }
         val contacts = ContactRepository.search(getApplication(), query, limit = 3)
 
         _uiState.value = _uiState.value.copy(
@@ -88,5 +105,17 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.value = _uiState.value.copy(webSuggestions = suggestions)
             }
         }
+    }
+
+    private fun rankByUsage(
+        apps: List<AppEntry>,
+        stats: Map<String, UsageStat>,
+    ): List<AppEntry> {
+        val now = System.currentTimeMillis()
+        return apps.sortedWith(
+            compareByDescending<AppEntry> {
+                AppUsageRepository.scoreOf(it.packageName, stats, now)
+            }.thenBy { it.label.lowercase() }
+        )
     }
 }

@@ -76,8 +76,15 @@ object AppIndex {
     /**
      * Recherche fuzzy : commence par les apps dont le label commence par la query,
      * puis celles qui la contiennent. C'est le comportement de Pixel Launcher.
+     *
+     * `scoreOf` permet de re-trier chaque groupe par fréquence d'usage. Égalités
+     * (typiquement score = 0) cassées par l'ordre alpha hérité de `_apps`.
      */
-    fun search(query: String, limit: Int = 8): List<AppEntry> {
+    fun search(
+        query: String,
+        limit: Int = 8,
+        scoreOf: (String) -> Float = { 0f },
+    ): List<AppEntry> {
         if (query.isBlank()) return emptyList()
         val q = query.lowercase()
             .replace("[àáâãäå]".toRegex(), "a")
@@ -96,9 +103,10 @@ object AppIndex {
                 entry.normalizedLabel.startsWith(q) -> startsWith += entry
                 entry.normalizedLabel.contains(q) -> contains += entry
             }
-            if (startsWith.size + contains.size >= limit * 2) break
         }
 
-        return (startsWith + contains).take(limit)
+        val byScoreDesc = compareByDescending<AppEntry> { scoreOf(it.packageName) }
+        return (startsWith.sortedWith(byScoreDesc) + contains.sortedWith(byScoreDesc))
+            .take(limit)
     }
 }

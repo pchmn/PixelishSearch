@@ -166,6 +166,7 @@ fun SearchScreen(
                     apps = displayedApps,
                     highlightFirst = uiState.query.isNotBlank(),
                     onAppClick = { entry ->
+                        viewModel.onAppLaunched(entry.packageName)
                         context.startActivity(entry.launchIntent)
                         onClose()
                     },
