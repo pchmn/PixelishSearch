@@ -77,7 +77,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _query
                 .onEach { runLocalSearch(it) }
-                .debounce(180) // debounce uniquement pour le réseau
+                .debounce(90) // debounce uniquement pour le réseau
                 .collect { runWebSearch(it) }
         }
     }

@@ -5,6 +5,7 @@ import com.pixelish.search.data.AppIndex
 import com.pixelish.search.data.AppUsageRepository
 import com.pixelish.search.data.ContactHistoryRepository
 import com.pixelish.search.data.SearchHistoryRepository
+import com.pixelish.search.data.WebSuggestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,6 +34,10 @@ class PixelishApp : Application() {
         appScope.launch {
             AppIndex.preload(this@PixelishApp)
         }
+
+        // Préchauffe la connexion TLS vers Google Suggest pour que le premier
+        // appel réel n'ait pas à payer DNS + TCP + TLS handshake.
+        WebSuggestRepository.warmUp(appScope)
     }
 
     companion object {
