@@ -3,7 +3,6 @@ package com.pchmn.pixelishsearch
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 
 /**
  * Open Gemini in voice mode. ACTION_VOICE_COMMAND triggers the default
@@ -25,8 +24,7 @@ fun geminiIntent(context: Context): Intent? {
 }
 
 /**
- * Launch Google Lens. Tries known exported activities of the Google app,
- * then falls back to the lens.google.com web URL.
+ * Launch Google Lens via the activity exported by the Google app.
  */
 fun lensIntent(context: Context): Intent? {
     val pm = context.packageManager
@@ -44,10 +42,6 @@ fun lensIntent(context: Context): Intent? {
         }
         if (intent.resolveActivity(pm) != null) return intent
     }
-
-    val webLens = Intent(Intent.ACTION_VIEW, Uri.parse("https://lens.google.com/"))
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    if (webLens.resolveActivity(pm) != null) return webLens
-
     return null
 }
+

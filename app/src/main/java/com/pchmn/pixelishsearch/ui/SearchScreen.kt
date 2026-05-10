@@ -171,7 +171,6 @@ fun SearchScreen(
                             IconButton(onClick = {
                                 com.pchmn.pixelishsearch.geminiIntent(context)?.let {
                                     context.startActivity(it)
-                                    onClose()
                                 }
                             }) {
                                 Icon(
@@ -184,8 +183,8 @@ fun SearchScreen(
                             IconButton(onClick = {
                                 com.pchmn.pixelishsearch.lensIntent(context)?.let {
                                     context.startActivity(it)
-                                    onClose()
                                 }
+                                // onClose()
                             }) {
                                 Icon(
                                     painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
