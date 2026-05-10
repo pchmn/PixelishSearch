@@ -39,8 +39,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
-import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
@@ -170,11 +168,21 @@ fun SearchScreen(
                     },
                     trailingIcon = {
                         Row {
-                            IconButton(onClick = { /* TODO voice */ }) {
-                                Icon(Icons.Outlined.Mic, contentDescription = "Voice search")
+                            IconButton(onClick = { /* TODO gemini */ }) {
+                                Icon(
+                                    painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
+                                    contentDescription = "Gemini",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(24.dp),
+                                )
                             }
                             IconButton(onClick = { /* TODO lens */ }) {
-                                Icon(Icons.Outlined.CameraAlt, contentDescription = "Image search")
+                                Icon(
+                                    painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
+                                    contentDescription = "Google Lens",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(24.dp),
+                                )
                             }
                         }
                     },
