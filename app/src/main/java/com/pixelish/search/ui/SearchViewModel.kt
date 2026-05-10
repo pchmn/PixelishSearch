@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.pixelish.search.data.AppEntry
 import com.pixelish.search.data.AppIndex
 import com.pixelish.search.data.AppUsageRepository
+import com.pixelish.search.data.ContactAction
 import com.pixelish.search.data.ContactEntry
+import com.pixelish.search.data.ContactHistoryEntry
+import com.pixelish.search.data.ContactHistoryRepository
 import com.pixelish.search.data.ContactRepository
 import com.pixelish.search.data.SearchHistoryRepository
 import com.pixelish.search.data.UsageStat
@@ -28,6 +31,7 @@ data class SearchUiState(
     val webSuggestions: List<String> = emptyList(),
     val suggestedApps: List<AppEntry> = emptyList(),
     val searchHistory: List<String> = emptyList(),
+    val recentContacts: List<ContactHistoryEntry> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -63,6 +67,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
+        viewModelScope.launch {
+            ContactHistoryRepository.recents.collect { recents ->
+                _uiState.value = _uiState.value.copy(recentContacts = recents)
+            }
+        }
+
         // Recherche locale instantanée à chaque frappe (apps + contacts sont rapides)
         viewModelScope.launch {
             _query
@@ -82,6 +92,16 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onSearchLaunched(query: String) {
         SearchHistoryRepository.record(query)
+    }
+
+    fun onContactUsed(contact: ContactEntry, action: ContactAction) {
+        ContactHistoryRepository.record(
+            id = contact.id,
+            name = contact.name,
+            photoUri = contact.photoUri,
+            phoneNumber = contact.phoneNumber,
+            action = action,
+        )
     }
 
     private fun runLocalSearch(query: String) {

@@ -81,6 +81,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
@@ -88,7 +89,9 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pixelish.search.data.AppEntry
+import com.pixelish.search.data.ContactAction
 import com.pixelish.search.data.ContactEntry
+import com.pixelish.search.data.ContactHistoryEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -220,6 +223,16 @@ fun SearchScreen(
                 }
 
                 if (uiState.query.isBlank()) {
+                    if (uiState.recentContacts.isNotEmpty()) {
+                        RecentContactList(
+                            contacts = uiState.recentContacts.take(2),
+                            onClick = { entry ->
+                                replayContactAction(context, entry)
+                                onClose()
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                     SuggestionList(
                         suggestions = uiState.searchHistory.take(3),
                         leadingIcon = Icons.Outlined.Schedule,
@@ -257,17 +270,20 @@ fun SearchScreen(
                             smsIcon = smsIcon,
                             callIcon = callIcon,
                             onContactClick = { contact ->
-                                openContact(context, contact)
+                                viewModel.onContactUsed(contact, ContactAction.CARD)
+                                openContactById(context, contact.id)
                                 onClose()
                             },
                             onMessageClick = { contact ->
                                 contact.phoneNumber?.let {
+                                    viewModel.onContactUsed(contact, ContactAction.MESSAGE)
                                     launchSms(context, it)
                                     onClose()
                                 }
                             },
                             onCallClick = { contact ->
                                 contact.phoneNumber?.let {
+                                    viewModel.onContactUsed(contact, ContactAction.CALL)
                                     launchDialer(context, it)
                                     onClose()
                                 }
@@ -425,11 +441,11 @@ private fun SuggestionItem(
                 modifier = Modifier.size(18.dp),
             )
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = text,
             modifier = Modifier.weight(1f),
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -516,7 +532,7 @@ private fun ContactItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ContactAvatar(contact = contact)
+        ContactAvatar(name = contact.name, photoUri = contact.photoUri)
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = contact.name,
@@ -547,10 +563,14 @@ private fun ContactItem(
 }
 
 @Composable
-private fun ContactAvatar(contact: ContactEntry) {
-    val photo = rememberContactPhoto(contact.photoUri)
+private fun ContactAvatar(
+    name: String,
+    photoUri: Uri?,
+    size: Dp = 48.dp,
+) {
+    val photo = rememberContactPhoto(photoUri)
     val avatarModifier = Modifier
-        .size(48.dp)
+        .size(size)
         .clip(CircleShape)
     if (photo != null) {
         Image(
@@ -566,8 +586,8 @@ private fun ContactAvatar(contact: ContactEntry) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = contact.name.firstOrNull { it.isLetter() }?.uppercase() ?: "?",
-                fontSize = 20.sp,
+                text = name.firstOrNull { it.isLetter() }?.uppercase() ?: "?",
+                fontSize = (size.value * 0.42f).sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -626,6 +646,88 @@ private fun ActionIconButton(
     }
 }
 
+@Composable
+private fun RecentContactList(
+    contacts: List<ContactHistoryEntry>,
+    onClick: (ContactHistoryEntry) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        contacts.forEachIndexed { index, contact ->
+            RecentContactItem(
+                contact = contact,
+                isFirst = index == 0,
+                isLast = index == contacts.lastIndex,
+                onClick = { onClick(contact) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentContactItem(
+    contact: ContactHistoryEntry,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onClick: () -> Unit,
+) {
+    val outer = 28.dp
+    val inner = 6.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) outer else inner,
+        topEnd = if (isFirst) outer else inner,
+        bottomStart = if (isLast) outer else inner,
+        bottomEnd = if (isLast) outer else inner,
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ContactAvatar(name = contact.name, photoUri = contact.photoUri, size = 32.dp)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = contact.name,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = " · ${contact.action.label()}",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+private fun ContactAction.label(): String = when (this) {
+    ContactAction.CARD -> "Contacts"
+    ContactAction.MESSAGE -> "Message"
+    ContactAction.CALL -> "Phone"
+}
+
+private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
+    val phone = entry.phoneNumber
+    when (entry.action) {
+        ContactAction.MESSAGE -> if (phone != null) launchSms(context, phone) else openContactById(context, entry.id)
+        ContactAction.CALL -> if (phone != null) launchDialer(context, phone) else openContactById(context, entry.id)
+        ContactAction.CARD -> openContactById(context, entry.id)
+    }
+}
+
 private fun resolveAppIcon(context: Context, intent: Intent): ImageBitmap? {
     val pm = context.packageManager
     val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: return null
@@ -634,10 +736,10 @@ private fun resolveAppIcon(context: Context, intent: Intent): ImageBitmap? {
     }.getOrNull()
 }
 
-private fun openContact(context: Context, contact: ContactEntry) {
+private fun openContactById(context: Context, contactId: Long) {
     val uri = ContentUris.withAppendedId(
         ContactsContract.Contacts.CONTENT_URI,
-        contact.id,
+        contactId,
     )
     val intent = Intent(Intent.ACTION_VIEW, uri)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

@@ -3,6 +3,7 @@ package com.pixelish.search
 import android.app.Application
 import com.pixelish.search.data.AppIndex
 import com.pixelish.search.data.AppUsageRepository
+import com.pixelish.search.data.ContactHistoryRepository
 import com.pixelish.search.data.SearchHistoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ class PixelishApp : Application() {
         // pour que les scores soient prêts quand l'écran de recherche s'ouvre.
         AppUsageRepository.init(this)
         SearchHistoryRepository.init(this)
+        ContactHistoryRepository.init(this)
 
         // Préchargement asynchrone de l'index
         appScope.launch {
