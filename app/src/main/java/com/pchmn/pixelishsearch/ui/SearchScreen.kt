@@ -91,6 +91,7 @@ import com.pchmn.pixelishsearch.data.AppEntry
 import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
+import com.pchmn.pixelishsearch.launchAndDismiss
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -170,7 +171,7 @@ fun SearchScreen(
                         Row {
                             IconButton(onClick = {
                                 com.pchmn.pixelishsearch.geminiIntent(context)?.let {
-                                    context.startActivity(it)
+                                    context.launchAndDismiss(it)
                                 }
                             }) {
                                 Icon(
@@ -182,9 +183,8 @@ fun SearchScreen(
                             }
                             IconButton(onClick = {
                                 com.pchmn.pixelishsearch.lensIntent(context)?.let {
-                                    context.startActivity(it)
+                                    context.launchAndDismiss(it)
                                 }
-                                // onClose()
                             }) {
                                 Icon(
                                     painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
@@ -204,7 +204,6 @@ fun SearchScreen(
                             if (query.isNotEmpty()) {
                                 viewModel.onSearchLaunched(query)
                                 launchGoogleSearch(context, query)
-                                onClose()
                             }
                         }
                     ),
@@ -231,8 +230,7 @@ fun SearchScreen(
                     highlightFirst = uiState.query.isNotBlank(),
                     onAppClick = { entry ->
                         viewModel.onAppLaunched(entry.packageName)
-                        context.startActivity(entry.launchIntent)
-                        onClose()
+                        context.launchAndDismiss(entry.launchIntent)
                     },
                 )
 
@@ -246,7 +244,6 @@ fun SearchScreen(
                             contacts = uiState.recentContacts.take(2),
                             onClick = { entry ->
                                 replayContactAction(context, entry)
-                                onClose()
                             },
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -257,7 +254,6 @@ fun SearchScreen(
                         onClick = { suggestion ->
                             viewModel.onSearchLaunched(suggestion)
                             launchGoogleSearch(context, suggestion)
-                            onClose()
                         },
                     )
                 } else {
@@ -269,7 +265,6 @@ fun SearchScreen(
                             onClick = { suggestion ->
                                 viewModel.onSearchLaunched(suggestion)
                                 launchGoogleSearch(context, suggestion)
-                                onClose()
                             },
                         )
                     }
@@ -290,20 +285,17 @@ fun SearchScreen(
                             onContactClick = { contact ->
                                 viewModel.onContactUsed(contact, ContactAction.CARD)
                                 openContactById(context, contact.id)
-                                onClose()
                             },
                             onMessageClick = { contact ->
                                 contact.phoneNumber?.let {
                                     viewModel.onContactUsed(contact, ContactAction.MESSAGE)
                                     launchSms(context, it)
-                                    onClose()
                                 }
                             },
                             onCallClick = { contact ->
                                 contact.phoneNumber?.let {
                                     viewModel.onContactUsed(contact, ContactAction.CALL)
                                     launchDialer(context, it)
-                                    onClose()
                                 }
                             },
                         )
@@ -771,7 +763,7 @@ private fun openContactById(context: Context, contactId: Long) {
     val intent = Intent(Intent.ACTION_VIEW, uri)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        context.startActivity(intent)
+        context.launchAndDismiss(intent)
     } catch (_: ActivityNotFoundException) {
         // No contacts app available — silently ignore.
     }
@@ -781,7 +773,7 @@ private fun launchSms(context: Context, phoneNumber: String) {
     val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$phoneNumber"))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        context.startActivity(intent)
+        context.launchAndDismiss(intent)
     } catch (_: ActivityNotFoundException) {
     }
 }
@@ -790,7 +782,7 @@ private fun launchDialer(context: Context, phoneNumber: String) {
     val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        context.startActivity(intent)
+        context.launchAndDismiss(intent)
     } catch (_: ActivityNotFoundException) {
     }
 }
@@ -802,7 +794,7 @@ private fun launchGoogleSearch(context: Context, query: String) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     try {
-        context.startActivity(googleApp)
+        context.launchAndDismiss(googleApp)
         return
     } catch (_: ActivityNotFoundException) {
         // Google app unavailable, fall back to the browser.
@@ -811,7 +803,7 @@ private fun launchGoogleSearch(context: Context, query: String) {
     val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())
     val fallback = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$encoded"))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.startActivity(fallback)
+    context.launchAndDismiss(fallback)
 }
 
 private fun View.findDialogWindow(): Window? {

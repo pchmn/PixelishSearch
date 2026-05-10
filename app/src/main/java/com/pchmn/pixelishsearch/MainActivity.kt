@@ -1,5 +1,6 @@
 package com.pchmn.pixelishsearch
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -8,12 +9,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.viewModels
 import com.pchmn.pixelishsearch.ui.SearchScreen
 import com.pchmn.pixelishsearch.ui.SearchViewModel
 import com.pchmn.pixelishsearch.ui.theme.PixelishTheme
 
 class MainActivity : ComponentActivity() {
+
+    private val vm: SearchViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,12 +41,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PixelishTheme {
-                val vm: SearchViewModel = viewModel()
                 SearchScreen(
                     viewModel = vm,
                     onClose = { finish() }
                 )
             }
         }
+    }
+
+    /**
+     * Triggered when the widget re-launches us while the existing instance
+     * is still alive (singleTask + we deliberately don't finish() after
+     * forwarding to Lens/Gemini/an app). Reset the query so the user lands
+     * on a clean search bar instead of their previous results.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        vm.reset()
     }
 }

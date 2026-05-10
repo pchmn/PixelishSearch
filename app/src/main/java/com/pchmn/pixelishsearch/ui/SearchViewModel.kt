@@ -86,6 +86,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         _query.value = newQuery
     }
 
+    /**
+     * Clear the current query. Used when the activity is re-brought to the
+     * foreground via singleTask so the user doesn't see their previous search.
+     */
+    fun reset() {
+        _query.value = ""
+    }
+
     fun onAppLaunched(packageName: String) {
         AppUsageRepository.recordLaunch(packageName)
     }
