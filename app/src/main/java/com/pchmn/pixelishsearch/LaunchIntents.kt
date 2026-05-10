@@ -24,24 +24,28 @@ fun geminiIntent(context: Context): Intent? {
 }
 
 /**
- * Launch Google Lens via the activity exported by the Google app.
+ * Launch Google Lens. The reliable entry point on current Pixel devices is
+ * `com.google.android.apps.lens.DirectLensYoutubeActivity` in the Google
+ * app, launched with ACTION_MAIN (despite its name, it's the generic Lens
+ * launcher used by other Pixel-search alternatives).
  */
 fun lensIntent(context: Context): Intent? {
     val pm = context.packageManager
     val googlePkg = "com.google.android.googlequicksearchbox"
 
-    val componentCandidates = listOf(
-        "com.google.android.apps.search.lens.LensExportedActivity",
-        "com.google.android.apps.gsa.lens.LensExportedActivity",
-        "com.google.android.apps.gsa.googlequicksearchbox.LensExportedActivity",
-    )
-    for (cls in componentCandidates) {
-        val intent = Intent(Intent.ACTION_MAIN).apply {
-            component = ComponentName(googlePkg, cls)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        if (intent.resolveActivity(pm) != null) return intent
+    val installed = runCatching { pm.getPackageInfo(googlePkg, 0) }.isSuccess
+    if (installed) {
+        return Intent(Intent.ACTION_MAIN)
+            .setComponent(
+                ComponentName(googlePkg, "com.google.android.apps.lens.DirectLensYoutubeActivity")
+            )
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
+
+    pm.getLaunchIntentForPackage("com.google.ar.lens")
+        ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        ?.let { return it }
+
     return null
 }
 
