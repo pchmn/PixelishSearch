@@ -12,9 +12,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Application class. Pré-charge l'index des apps dès la création du process,
- * pour que l'Activity de recherche n'ait rien à faire au démarrage.
- * C'est la clé pour battre PixelSearch en vitesse de cold start.
+ * Application class. Preloads the apps index as soon as the process is created,
+ * so the search Activity has nothing to do at launch.
+ * This is the key to beating PixelSearch on cold start speed.
  */
 class PixelishApp : Application() {
 
@@ -24,19 +24,19 @@ class PixelishApp : Application() {
         super.onCreate()
         instance = this
 
-        // Init des compteurs d'usage : on lance la collecte du DataStore tout de suite
-        // pour que les scores soient prêts quand l'écran de recherche s'ouvre.
+        // Init usage counters: start collecting from DataStore right away
+        // so scores are ready when the search screen opens.
         AppUsageRepository.init(this)
         SearchHistoryRepository.init(this)
         ContactHistoryRepository.init(this)
 
-        // Préchargement asynchrone de l'index
+        // Async preload of the index
         appScope.launch {
             AppIndex.preload(this@PixelishApp)
         }
 
-        // Préchauffe la connexion TLS vers Google Suggest pour que le premier
-        // appel réel n'ait pas à payer DNS + TCP + TLS handshake.
+        // Warm up the TLS connection to Google Suggest so the first real call
+        // doesn't have to pay DNS + TCP + TLS handshake cost.
         WebSuggestRepository.warmUp(appScope)
     }
 

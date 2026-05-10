@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 
 /**
- * Thème Material 3 avec Dynamic Color (Material You) sur Android 12+.
- * Reprend automatiquement les couleurs du fond d'écran pour matcher le thème système.
+ * Material 3 theme with Dynamic Color (Material You) on Android 12+.
+ * Automatically picks up wallpaper colors to match the system theme.
  */
 
 private val FallbackLight = lightColorScheme()

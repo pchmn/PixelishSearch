@@ -23,9 +23,9 @@ data class SearchHistoryEntry(
 )
 
 /**
- * Persiste les queries lancées via Google Search.
- * Dédupliqué par query (case-insensitive) : relancer une query met juste à jour
- * le timestamp.
+ * Persists queries run through Google Search.
+ * Deduplicated by query (case-insensitive): re-running a query just updates
+ * the timestamp.
  */
 object SearchHistoryRepository {
 

@@ -30,9 +30,9 @@ data class ContactHistoryEntry(
 )
 
 /**
- * Persiste les contacts ouverts (fiche, message ou appel) pour pouvoir
- * les suggérer ensuite lorsque le champ de recherche est vide.
- * Dédupliqué par contactId — la dernière action effectuée écrase la précédente.
+ * Persists opened contacts (card, message or call) so they can be
+ * suggested later when the search field is empty.
+ * Deduplicated by contactId — the latest action overwrites the previous one.
  */
 object ContactHistoryRepository {
 

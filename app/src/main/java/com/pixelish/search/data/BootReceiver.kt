@@ -8,8 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Préchage l'index dès que le téléphone démarre, pour que le premier lancement
- * de l'app de recherche soit instantané.
+ * Preloads the index as soon as the phone boots, so the first launch
+ * of the search app is instant.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

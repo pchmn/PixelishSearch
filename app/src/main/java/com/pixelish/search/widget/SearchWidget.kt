@@ -11,8 +11,8 @@ import com.pixelish.search.MainActivity
 import com.pixelish.search.R
 
 /**
- * Widget homescreen qui ressemble à la barre de recherche native Pixel.
- * Au tap → ouvre MainActivity (l'écran de recherche).
+ * Homescreen widget that looks like the native Pixel search bar.
+ * On tap → opens MainActivity (the search screen).
  */
 class SearchWidget : AppWidgetProvider() {
 
@@ -33,7 +33,7 @@ class SearchWidget : AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_search_bar)
 
-        // Intent qui lance l'Activity de recherche
+        // Intent that launches the search Activity
         val launchIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

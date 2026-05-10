@@ -114,10 +114,10 @@ fun SearchScreen(
             .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f),
         scrimColor = Color.White.copy(alpha = 0.1f),
     ) {
-        // La window du dialog interne du ModalBottomSheet ne suit pas automatiquement
-        // le thème système. On force ici les icônes status/nav bar à suivre le thème :
-        //   - thème clair → icônes sombres (isAppearanceLight* = true)
-        //   - thème sombre → icônes blanches (isAppearanceLight* = false)
+        // The ModalBottomSheet's internal dialog window doesn't automatically follow
+        // the system theme. Force the status/nav bar icons to match the theme:
+        //   - light theme → dark icons (isAppearanceLight* = true)
+        //   - dark theme → white icons (isAppearanceLight* = false)
         val view = LocalView.current
 
         SideEffect {
@@ -311,8 +311,8 @@ private fun AppRow(
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Toujours 4 slots de largeur fixe — garantit un layout stable même si
-        // moins de 4 apps matchent.
+        // Always 4 fixed-width slots — keeps the layout stable even if
+        // fewer than 4 apps match.
         repeat(4) { index ->
             Box(
                 modifier = Modifier.width(AppSlotWidth),
@@ -756,7 +756,7 @@ private fun openContactById(context: Context, contactId: Long) {
     try {
         context.startActivity(intent)
     } catch (_: ActivityNotFoundException) {
-        // Aucune app contacts disponible — on ignore silencieusement.
+        // No contacts app available — silently ignore.
     }
 }
 
@@ -788,7 +788,7 @@ private fun launchGoogleSearch(context: Context, query: String) {
         context.startActivity(googleApp)
         return
     } catch (_: ActivityNotFoundException) {
-        // App Google non disponible, on retombe sur le navigateur.
+        // Google app unavailable, fall back to the browser.
     }
 
     val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())

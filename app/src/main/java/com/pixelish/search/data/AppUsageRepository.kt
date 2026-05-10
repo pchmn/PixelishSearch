@@ -21,14 +21,14 @@ data class UsageStat(
 )
 
 /**
- * Persiste un compteur d'ouverture par package + le timestamp de la dernière
- * ouverture. Le score combine les deux avec un decay exponentiel : une app très
- * utilisée puis abandonnée finit par redescendre.
+ * Persists a launch counter per package + the timestamp of the last launch.
+ * The score combines both with exponential decay: a heavily used app that's
+ * then abandoned eventually drops back down.
  */
 object AppUsageRepository {
 
-    // Constante de demi-vie : un launch « vaut » la moitié au bout de 14 jours,
-    // un quart au bout de 28, etc.
+    // Half-life constant: a launch is "worth" half after 14 days,
+    // a quarter after 28, etc.
     private const val HALF_LIFE_DAYS = 14.0
     private const val MILLIS_PER_DAY = 1000L * 60 * 60 * 24
 

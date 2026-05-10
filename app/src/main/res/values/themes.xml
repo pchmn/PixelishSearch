@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Thème de base. Pas de windowLightStatusBar/Navigation : laissé à Android,
-         qui choisit selon le thème système via enableEdgeToEdge() côté MainActivity. -->
+    <!-- Base theme. No windowLightStatusBar/Navigation: left to Android,
+         which picks based on the system theme via enableEdgeToEdge() in MainActivity. -->
     <style name="Theme.PixelishSearch" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <!-- Thème transparent pour l'Activity de recherche : on voit le wallpaper derrière -->
+    <!-- Transparent theme for the search Activity: the wallpaper shows through -->
     <style name="Theme.PixelishSearch.Transparent" parent="Theme.PixelishSearch">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>

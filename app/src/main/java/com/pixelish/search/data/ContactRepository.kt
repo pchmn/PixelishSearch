@@ -14,8 +14,8 @@ data class ContactEntry(
 )
 
 /**
- * Recherche de contacts. Pas d'index en mémoire ici car les contacts peuvent être nombreux
- * et le ContentResolver est déjà très rapide pour les requêtes courtes.
+ * Contact search. No in-memory index here because contacts can be numerous
+ * and the ContentResolver is already very fast for short queries.
  */
 object ContactRepository {
 
@@ -60,7 +60,7 @@ object ContactRepository {
                 }
             }
         } catch (e: SecurityException) {
-            // Permission révoquée pendant la session
+            // Permission revoked during the session
             return emptyList()
         }
 

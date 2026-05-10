@@ -14,7 +14,7 @@ data class AppEntry(
     val icon: Drawable,
     val launchIntent: Intent
 ) {
-    // Label en minuscules sans accents pour matcher rapidement
+    // Lowercased, accent-stripped label for fast matching
     val normalizedLabel: String = label.lowercase()
         .replace("[àáâãäå]".toRegex(), "a")
         .replace("[èéêë]".toRegex(), "e")
@@ -25,8 +25,8 @@ data class AppEntry(
 }
 
 /**
- * Singleton qui maintient l'index des apps en mémoire.
- * Préchargé au démarrage de l'app et au boot du téléphone.
+ * Singleton that keeps the apps index in memory.
+ * Preloaded on app start and on phone boot.
  */
 object AppIndex {
 
@@ -50,7 +50,7 @@ object AppIndex {
             .mapNotNull { ri ->
                 try {
                     val pkg = ri.activityInfo.packageName
-                    // On exclut notre propre app
+                    // Exclude our own app
                     if (pkg == context.packageName) return@mapNotNull null
 
                     val launchIntent = pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
@@ -74,11 +74,11 @@ object AppIndex {
     }
 
     /**
-     * Recherche fuzzy : commence par les apps dont le label commence par la query,
-     * puis celles qui la contiennent. C'est le comportement de Pixel Launcher.
+     * Fuzzy search: starts with apps whose label starts with the query,
+     * then those that contain it. Matches Pixel Launcher's behavior.
      *
-     * `scoreOf` permet de re-trier chaque groupe par fréquence d'usage. Égalités
-     * (typiquement score = 0) cassées par l'ordre alpha hérité de `_apps`.
+     * `scoreOf` lets each group be re-sorted by usage frequency. Ties
+     * (typically score = 0) are broken by the alpha order inherited from `_apps`.
      */
     fun search(
         query: String,

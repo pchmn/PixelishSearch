@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permission pour requêter les apps installées (Android 11+) -->
+    <!-- Permission to query installed apps (Android 11+) -->
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
@@ -13,7 +13,7 @@
         <package android:name="com.google.android.googlequicksearchbox" />
     </queries>
 
-    <!-- Permissions optionnelles -->
+    <!-- Optional permissions -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -26,7 +26,7 @@
         android:allowBackup="true"
         android:supportsRtl="true">
 
-        <!-- Activity de recherche, transparente, animée depuis le bas -->
+        <!-- Search Activity: transparent, animated from the bottom -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -40,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Widget homescreen -->
+        <!-- Homescreen widget -->
         <receiver
             android:name=".widget.SearchWidget"
             android:exported="true">
@@ -52,7 +52,7 @@
                 android:resource="@xml/widget_info" />
         </receiver>
 
-        <!-- Pré-charge l'index au boot pour cold start ultra-rapide -->
+        <!-- Preloads the index on boot for ultra-fast cold start -->
         <receiver
             android:name=".data.BootReceiver"
             android:exported="true">

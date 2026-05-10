@@ -44,13 +44,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private var webJob: Job? = null
 
     init {
-        // S'assure que l'index est chargé (au cas où l'app est lancée avant la fin du préchargement)
+        // Ensures the index is loaded (in case the app is launched before preload finishes)
         viewModelScope.launch {
             AppIndex.preload(application)
         }
 
-        // Suggestions par défaut : top 4 apps par score d'usage (decay temporel),
-        // tiebreaker = ordre alpha. Recalculé dès que l'index ou les stats changent.
+        // Default suggestions: top 4 apps by usage score (time decay),
+        // tiebreaker = alphabetical order. Recomputed whenever the index or stats change.
         viewModelScope.launch {
             combine(AppIndex.apps, AppUsageRepository.stats) { apps, stats ->
                 rankByUsage(apps, stats).take(4)
@@ -73,11 +73,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
-        // Recherche locale instantanée à chaque frappe (apps + contacts sont rapides)
+        // Instant local search on every keystroke (apps + contacts are fast)
         viewModelScope.launch {
             _query
                 .onEach { runLocalSearch(it) }
-                .debounce(90) // debounce uniquement pour le réseau
+                .debounce(90) // debounce network calls only
                 .collect { runWebSearch(it) }
         }
     }
@@ -134,7 +134,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         if (query.isBlank()) return
         webJob = viewModelScope.launch {
             val suggestions = WebSuggestRepository.fetch(query, limit = 5)
-            // Vérifie que la query n'a pas changé entre temps
+            // Make sure the query hasn't changed in the meantime
             if (_query.value == query) {
                 _uiState.value = _uiState.value.copy(webSuggestions = suggestions)
             }

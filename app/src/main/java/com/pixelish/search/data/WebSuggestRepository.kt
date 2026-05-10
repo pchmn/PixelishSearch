@@ -14,8 +14,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 /**
- * Récupère les suggestions de recherche depuis l'endpoint public de Google Suggest.
- * C'est le même endpoint qu'utilise le navigateur Android.
+ * Fetches search suggestions from the public Google Suggest endpoint.
+ * Same endpoint used by the Android browser.
  */
 object WebSuggestRepository {
 
@@ -26,14 +26,14 @@ object WebSuggestRepository {
         }
     }
 
-    // Cache en mémoire : la majorité des frappes répètent un préfixe déjà vu
-    // (l'utilisateur tape, efface, retape). Une réponse cachée = résultat instantané.
+    // In-memory cache: most keystrokes repeat a prefix already seen
+    // (user types, deletes, retypes). A cached response = instant result.
     private val cache = LruCache<String, List<String>>(64)
 
     /**
-     * Préchauffe la connexion TLS vers Google Suggest pour éliminer le coût
-     * DNS + TCP + TLS handshake (~200-400ms) du premier appel réel.
-     * À appeler depuis Application.onCreate().
+     * Warms up the TLS connection to Google Suggest to eliminate the
+     * DNS + TCP + TLS handshake cost (~200-400ms) on the first real call.
+     * Call from Application.onCreate().
      */
     fun warmUp(scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
