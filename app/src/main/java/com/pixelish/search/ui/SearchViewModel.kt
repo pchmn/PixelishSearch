@@ -8,6 +8,7 @@ import com.pixelish.search.data.AppIndex
 import com.pixelish.search.data.AppUsageRepository
 import com.pixelish.search.data.ContactEntry
 import com.pixelish.search.data.ContactRepository
+import com.pixelish.search.data.SearchHistoryRepository
 import com.pixelish.search.data.UsageStat
 import com.pixelish.search.data.WebSuggestRepository
 import kotlinx.coroutines.FlowPreview
@@ -25,7 +26,8 @@ data class SearchUiState(
     val apps: List<AppEntry> = emptyList(),
     val contacts: List<ContactEntry> = emptyList(),
     val webSuggestions: List<String> = emptyList(),
-    val suggestedApps: List<AppEntry> = emptyList()
+    val suggestedApps: List<AppEntry> = emptyList(),
+    val searchHistory: List<String> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -53,6 +55,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
+        viewModelScope.launch {
+            SearchHistoryRepository.history.collect { entries ->
+                _uiState.value = _uiState.value.copy(
+                    searchHistory = entries.map { it.query }
+                )
+            }
+        }
+
         // Recherche locale instantanée à chaque frappe (apps + contacts sont rapides)
         viewModelScope.launch {
             _query
@@ -68,6 +78,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onAppLaunched(packageName: String) {
         AppUsageRepository.recordLaunch(packageName)
+    }
+
+    fun onSearchLaunched(query: String) {
+        SearchHistoryRepository.record(query)
     }
 
     private fun runLocalSearch(query: String) {

@@ -3,6 +3,7 @@ package com.pixelish.search
 import android.app.Application
 import com.pixelish.search.data.AppIndex
 import com.pixelish.search.data.AppUsageRepository
+import com.pixelish.search.data.SearchHistoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +25,7 @@ class PixelishApp : Application() {
         // Init des compteurs d'usage : on lance la collecte du DataStore tout de suite
         // pour que les scores soient prêts quand l'écran de recherche s'ouvre.
         AppUsageRepository.init(this)
+        SearchHistoryRepository.init(this)
 
         // Préchargement asynchrone de l'index
         appScope.launch {

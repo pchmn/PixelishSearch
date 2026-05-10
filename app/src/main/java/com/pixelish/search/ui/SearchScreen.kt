@@ -32,6 +32,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.NorthWest
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +58,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -156,6 +160,7 @@ fun SearchScreen(
                         onSearch = {
                             val query = uiState.query.trim()
                             if (query.isNotEmpty()) {
+                                viewModel.onSearchLaunched(query)
                                 launchGoogleSearch(context, query)
                                 onClose()
                             }
@@ -171,7 +176,7 @@ fun SearchScreen(
                     ),
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val displayedApps = if (uiState.query.isBlank()) {
                     uiState.suggestedApps
@@ -185,6 +190,24 @@ fun SearchScreen(
                     onAppClick = { entry ->
                         viewModel.onAppLaunched(entry.packageName)
                         context.startActivity(entry.launchIntent)
+                        onClose()
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val (suggestions, leadingIcon) = if (uiState.query.isBlank()) {
+                    uiState.searchHistory to Icons.Outlined.Schedule
+                } else {
+                    uiState.webSuggestions to Icons.Outlined.Search
+                }
+
+                SuggestionList(
+                    suggestions = suggestions.take(3),
+                    leadingIcon = leadingIcon,
+                    onClick = { suggestion ->
+                        viewModel.onSearchLaunched(suggestion)
+                        launchGoogleSearch(context, suggestion)
                         onClose()
                     },
                 )
@@ -270,6 +293,90 @@ private fun AppItem(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun SuggestionList(
+    suggestions: List<String>,
+    leadingIcon: ImageVector,
+    onClick: (String) -> Unit,
+) {
+    if (suggestions.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        suggestions.forEachIndexed { index, suggestion ->
+            SuggestionItem(
+                text = suggestion,
+                leadingIcon = leadingIcon,
+                isFirst = index == 0,
+                isLast = index == suggestions.lastIndex,
+                onClick = { onClick(suggestion) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SuggestionItem(
+    text: String,
+    leadingIcon: ImageVector,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onClick: () -> Unit,
+) {
+    val outer = 28.dp
+    val inner = 6.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) outer else inner,
+        topEnd = if (isFirst) outer else inner,
+        bottomStart = if (isLast) outer else inner,
+        bottomEnd = if (isLast) outer else inner,
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            modifier = Modifier.weight(1f),
+            fontSize = 17.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Outlined.NorthWest,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
