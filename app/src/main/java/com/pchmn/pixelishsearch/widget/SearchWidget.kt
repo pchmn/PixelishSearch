@@ -3,16 +3,18 @@ package com.pchmn.pixelishsearch.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import com.pchmn.pixelishsearch.MainActivity
 import com.pchmn.pixelishsearch.R
+import com.pchmn.pixelishsearch.geminiIntent
+import com.pchmn.pixelishsearch.lensIntent
 
 /**
  * Homescreen widget that looks like the native Pixel search bar.
  * On tap → opens MainActivity (the search screen).
+ * Gemini / Lens icons → launch their respective apps when installed.
  */
 class SearchWidget : AppWidgetProvider() {
 
@@ -32,20 +34,37 @@ class SearchWidget : AppWidgetProvider() {
         widgetId: Int
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_search_bar)
+        val main = mainActivityIntent(context)
 
-        // Intent that launches the search Activity
-        val launchIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            widgetId,
-            launchIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        views.setOnClickPendingIntent(
+            R.id.widget_root,
+            activityPendingIntent(context, widgetId * 10, main)
         )
-
-        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+        views.setOnClickPendingIntent(
+            R.id.widget_gemini,
+            activityPendingIntent(context, widgetId * 10 + 1, geminiIntent(context) ?: main)
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_lens,
+            activityPendingIntent(context, widgetId * 10 + 2, lensIntent(context) ?: main)
+        )
 
         appWidgetManager.updateAppWidget(widgetId, views)
     }
+
+    private fun activityPendingIntent(
+        context: Context,
+        requestCode: Int,
+        intent: Intent,
+    ): PendingIntent = PendingIntent.getActivity(
+        context,
+        requestCode,
+        intent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    private fun mainActivityIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
 }

@@ -21,18 +21,22 @@
         android:layout_weight="1" />
 
     <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:id="@+id/widget_gemini"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
         android:src="@drawable/gemini_icon"
         android:tint="@color/on_primary_container"
         android:layout_marginEnd="20dp"
+        android:padding="4dp"
         android:contentDescription="Gemini" />
 
     <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:id="@+id/widget_lens"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
         android:src="@drawable/google_lens_icon"
         android:tint="@color/on_primary_container"
+        android:padding="4dp"
         android:contentDescription="Google Lens" />
 
 </LinearLayout>

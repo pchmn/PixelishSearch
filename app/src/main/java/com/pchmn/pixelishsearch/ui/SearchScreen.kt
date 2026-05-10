@@ -168,7 +168,12 @@ fun SearchScreen(
                     },
                     trailingIcon = {
                         Row {
-                            IconButton(onClick = { /* TODO gemini */ }) {
+                            IconButton(onClick = {
+                                com.pchmn.pixelishsearch.geminiIntent(context)?.let {
+                                    context.startActivity(it)
+                                    onClose()
+                                }
+                            }) {
                                 Icon(
                                     painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
                                     contentDescription = "Gemini",
@@ -176,7 +181,12 @@ fun SearchScreen(
                                     modifier = Modifier.size(24.dp),
                                 )
                             }
-                            IconButton(onClick = { /* TODO lens */ }) {
+                            IconButton(onClick = {
+                                com.pchmn.pixelishsearch.lensIntent(context)?.let {
+                                    context.startActivity(it)
+                                    onClose()
+                                }
+                            }) {
                                 Icon(
                                     painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
                                     contentDescription = "Google Lens",
