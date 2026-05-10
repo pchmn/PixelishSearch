@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary -->
+    <color name="primary">@android:color/system_accent1_600</color>
+    <color name="on_primary">@android:color/system_accent1_0</color>
+    <color name="primary_container">@android:color/system_accent1_100</color>
+    <color name="on_primary_container">@android:color/system_accent1_900</color>
+    <color name="inverse_primary">@android:color/system_accent1_200</color>
+
+    <!-- Secondary -->
+    <color name="secondary">@android:color/system_accent2_600</color>
+    <color name="on_secondary">@android:color/system_accent2_0</color>
+    <color name="secondary_container">@android:color/system_accent2_100</color>
+    <color name="on_secondary_container">@android:color/system_accent2_900</color>
+
+    <!-- Tertiary -->
+    <color name="tertiary">@android:color/system_accent3_600</color>
+    <color name="on_tertiary">@android:color/system_accent3_0</color>
+    <color name="tertiary_container">@android:color/system_accent3_100</color>
+    <color name="on_tertiary_container">@android:color/system_accent3_900</color>
+
+    <!-- Background / Surface -->
+    <color name="background">@android:color/system_neutral1_10</color>
+    <color name="on_background">@android:color/system_neutral1_900</color>
+    <color name="surface">@android:color/system_neutral1_10</color>
+    <color name="on_surface">@android:color/system_neutral1_900</color>
+    <color name="surface_variant">@android:color/system_neutral2_100</color>
+    <color name="on_surface_variant">@android:color/system_neutral2_700</color>
+    <color name="surface_tint">@android:color/system_accent1_600</color>
+    <color name="inverse_surface">@android:color/system_neutral1_800</color>
+    <color name="inverse_on_surface">@android:color/system_neutral1_50</color>
+
+    <!-- Surface containers (closest tonal fallback for API 31-33) -->
+    <color name="surface_dim">@android:color/system_neutral1_100</color>
+    <color name="surface_bright">@android:color/system_neutral1_10</color>
+    <color name="surface_container_lowest">@android:color/system_neutral1_0</color>
+    <color name="surface_container_low">@android:color/system_neutral1_50</color>
+    <color name="surface_container">@android:color/system_neutral1_100</color>
+    <color name="surface_container_high">@android:color/system_neutral1_100</color>
+    <color name="surface_container_highest">@android:color/system_neutral1_200</color>
+
+    <!-- Outline -->
+    <color name="outline">@android:color/system_neutral2_500</color>
+    <color name="outline_variant">@android:color/system_neutral2_200</color>
+
+    <!-- Scrim -->
+    <color name="scrim">#FF000000</color>
+
+    <!-- Error (static M3 defaults — non-dynamic) -->
+    <color name="error">#FFB3261E</color>
+    <color name="on_error">#FFFFFFFF</color>
+    <color name="error_container">#FFF9DEDC</color>
+    <color name="on_error_container">#FF410E0B</color>
+
+    <color name="widget_bg">@android:color/system_accent2_50</color>
+    <color name="widget_bg_alpha">#E6FFFFFF</color>
+</resources>

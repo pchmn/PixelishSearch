@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
+    android:shape="rectangle"
+    android:tint="@color/widget_bg"
+    android:tintMode="src_in">
     <corners android:radius="28dp" />
-    <solid android:color="?android:attr/colorBackgroundFloating" />
+    <solid android:color="@color/widget_bg_alpha" />
 </shape>

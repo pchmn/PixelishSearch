@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- API 34+ semantic tokens — exact M3 mapping -->
+    <color name="surface">@android:color/system_surface_dark</color>
+    <color name="surface_variant">@android:color/system_surface_variant_dark</color>
+    <color name="surface_dim">@android:color/system_surface_dim_dark</color>
+    <color name="surface_bright">@android:color/system_surface_bright_dark</color>
+    <color name="surface_container_lowest">@android:color/system_surface_container_lowest_dark</color>
+    <color name="surface_container_low">@android:color/system_surface_container_low_dark</color>
+    <color name="surface_container">@android:color/system_surface_container_dark</color>
+    <color name="surface_container_high">@android:color/system_surface_container_high_dark</color>
+    <color name="surface_container_highest">@android:color/system_surface_container_highest_dark</color>
+    <color name="outline_variant">@android:color/system_outline_variant_dark</color>
+</resources>
