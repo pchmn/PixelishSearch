@@ -5,15 +5,23 @@ import android.view.View
 import android.view.ViewParent
 import android.view.Window
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
@@ -21,6 +29,7 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -31,23 +40,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pixelish.search.data.AppEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,61 +97,162 @@ fun SearchScreen(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            var query by remember { mutableStateOf("") }
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val focusRequester = remember { FocusRequester() }
+            val context = LocalContext.current
 
             LaunchedEffect(Unit) {
                 focusRequester.requestFocus()
             }
 
-            TextField(
-                value = query,
-                onValueChange = { query = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .focusRequester(focusRequester),
-                placeholder = {
-                    Text(
-                        text = "Search web and more",
+            Column(modifier = Modifier.fillMaxWidth()) {
+                TextField(
+                    value = uiState.query,
+                    onValueChange = viewModel::onQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .focusRequester(focusRequester),
+                    placeholder = {
+                        Text(
+                            text = "Search web and more",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    },
+                    textStyle = LocalTextStyle.current.copy(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                    )
-                },
-                textStyle = LocalTextStyle.current.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                ),
-                leadingIcon = {
-                    Image(
-                        painter = painterResource(id = com.pixelish.search.R.drawable.ic_google_logo),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                    )
-                },
-                trailingIcon = {
-                    Row {
-                        IconButton(onClick = { /* TODO voice */ }) {
-                            Icon(Icons.Outlined.Mic, contentDescription = "Voice search")
+                    ),
+                    leadingIcon = {
+                        Image(
+                            painter = painterResource(id = com.pixelish.search.R.drawable.ic_google_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    },
+                    trailingIcon = {
+                        Row {
+                            IconButton(onClick = { /* TODO voice */ }) {
+                                Icon(Icons.Outlined.Mic, contentDescription = "Voice search")
+                            }
+                            IconButton(onClick = { /* TODO lens */ }) {
+                                Icon(Icons.Outlined.CameraAlt, contentDescription = "Image search")
+                            }
                         }
-                        IconButton(onClick = { /* TODO lens */ }) {
-                            Icon(Icons.Outlined.CameraAlt, contentDescription = "Image search")
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = CircleShape,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                ),
-            )
+                    },
+                    singleLine = true,
+                    shape = CircleShape,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                    ),
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val displayedApps = if (uiState.query.isBlank()) {
+                    uiState.suggestedApps
+                } else {
+                    uiState.apps
+                }.take(4)
+
+                AppRow(
+                    apps = displayedApps,
+                    highlightFirst = uiState.query.isNotBlank(),
+                    onAppClick = { entry ->
+                        context.startActivity(entry.launchIntent)
+                        onClose()
+                    },
+                )
+            }
         }
+    }
+}
+
+private val AppSlotWidth = 88.dp
+
+@Composable
+private fun AppRow(
+    apps: List<AppEntry>,
+    highlightFirst: Boolean,
+    onAppClick: (AppEntry) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        // Toujours 4 slots de largeur fixe — garantit un layout stable même si
+        // moins de 4 apps matchent.
+        repeat(4) { index ->
+            Box(
+                modifier = Modifier.width(AppSlotWidth),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                apps.getOrNull(index)?.let { entry ->
+                    AppItem(
+                        entry = entry,
+                        highlighted = highlightFirst && index == 0,
+                        onClick = { onAppClick(entry) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppItem(
+    entry: AppEntry,
+    highlighted: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(30.dp)
+    val backgroundColor = if (highlighted) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    } else {
+        Color.Transparent
+    }
+
+    Column(
+        modifier = Modifier
+            .width(AppSlotWidth)
+            .clip(shape)
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(top = 16.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        val bitmap = remember(entry.packageName) {
+            entry.icon.toBitmap().asImageBitmap()
+        }
+        Image(
+            bitmap = bitmap,
+            contentDescription = entry.label,
+            modifier = Modifier
+                .size(60.dp)
+                .clip(CircleShape),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = entry.label,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
