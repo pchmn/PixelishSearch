@@ -4,8 +4,10 @@ import android.app.Activity
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +18,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,23 +39,15 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.DeviceFontFamilyName
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
-
-private val GoogleSansText = FontFamily(
-    Font(DeviceFontFamilyName("google-sans"), weight = FontWeight.Normal),
-    Font(DeviceFontFamilyName("google-sans"), weight = FontWeight.Medium),
-    Font(DeviceFontFamilyName("google-sans"), weight = FontWeight.Bold),
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,23 +94,25 @@ fun SearchScreen(
                 onValueChange = { query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 16.dp)
                     .focusRequester(focusRequester),
                 placeholder = {
                     Text(
                         text = "Search web and more",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        fontFamily = GoogleSansText,
                     )
                 },
-                textStyle = TextStyle(
+                textStyle = LocalTextStyle.current.copy(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    fontFamily = GoogleSansText,
                 ),
                 leadingIcon = {
-                    Icon(Icons.Outlined.Search, contentDescription = null)
+                    Image(
+                        painter = painterResource(id = com.pixelish.search.R.drawable.ic_google_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
                 },
                 trailingIcon = {
                     Row {
