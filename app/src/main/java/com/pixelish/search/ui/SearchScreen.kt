@@ -3,9 +3,13 @@ package com.pixelish.search.ui
 import android.app.Activity
 import android.app.SearchManager
 import android.content.ActivityNotFoundException
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.ContactsContract
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
@@ -21,18 +25,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.NorthWest
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,16 +58,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -75,6 +88,9 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pixelish.search.data.AppEntry
+import com.pixelish.search.data.ContactEntry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +133,12 @@ fun SearchScreen(
                 focusRequester.requestFocus()
             }
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
+            ) {
                 TextField(
                     value = uiState.query,
                     onValueChange = viewModel::onQueryChange,
@@ -194,23 +215,66 @@ fun SearchScreen(
                     },
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val (suggestions, leadingIcon) = if (uiState.query.isBlank()) {
-                    uiState.searchHistory to Icons.Outlined.Schedule
-                } else {
-                    uiState.webSuggestions to Icons.Outlined.Search
+                if (displayedApps.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                SuggestionList(
-                    suggestions = suggestions.take(3),
-                    leadingIcon = leadingIcon,
-                    onClick = { suggestion ->
-                        viewModel.onSearchLaunched(suggestion)
-                        launchGoogleSearch(context, suggestion)
-                        onClose()
-                    },
-                )
+                if (uiState.query.isBlank()) {
+                    SuggestionList(
+                        suggestions = uiState.searchHistory.take(3),
+                        leadingIcon = Icons.Outlined.Schedule,
+                        onClick = { suggestion ->
+                            viewModel.onSearchLaunched(suggestion)
+                            launchGoogleSearch(context, suggestion)
+                            onClose()
+                        },
+                    )
+                } else {
+                    if (uiState.webSuggestions.isNotEmpty()) {
+                        SectionHeader(title = "Web Search")
+                        SuggestionList(
+                            suggestions = uiState.webSuggestions.take(3),
+                            leadingIcon = Icons.Outlined.Search,
+                            onClick = { suggestion ->
+                                viewModel.onSearchLaunched(suggestion)
+                                launchGoogleSearch(context, suggestion)
+                                onClose()
+                            },
+                        )
+                    }
+
+                    if (uiState.contacts.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        SectionHeader(title = "Contacts")
+                        val smsIcon = remember(context) {
+                            resolveAppIcon(context, Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:")))
+                        }
+                        val callIcon = remember(context) {
+                            resolveAppIcon(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
+                        }
+                        ContactList(
+                            contacts = uiState.contacts,
+                            smsIcon = smsIcon,
+                            callIcon = callIcon,
+                            onContactClick = { contact ->
+                                openContact(context, contact)
+                                onClose()
+                            },
+                            onMessageClick = { contact ->
+                                contact.phoneNumber?.let {
+                                    launchSms(context, it)
+                                    onClose()
+                                }
+                            },
+                            onCallClick = { contact ->
+                                contact.phoneNumber?.let {
+                                    launchDialer(context, it)
+                                    onClose()
+                                }
+                            },
+                        )
+                    }
+                }
             }
         }
     }
@@ -378,6 +442,227 @@ private fun SuggestionItem(
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             modifier = Modifier.size(20.dp),
         )
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+    )
+}
+
+@Composable
+private fun ContactList(
+    contacts: List<ContactEntry>,
+    smsIcon: ImageBitmap?,
+    callIcon: ImageBitmap?,
+    onContactClick: (ContactEntry) -> Unit,
+    onMessageClick: (ContactEntry) -> Unit,
+    onCallClick: (ContactEntry) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        contacts.forEachIndexed { index, contact ->
+            ContactItem(
+                contact = contact,
+                isFirst = index == 0,
+                isLast = index == contacts.lastIndex,
+                smsIcon = smsIcon,
+                callIcon = callIcon,
+                onClick = { onContactClick(contact) },
+                onMessageClick = { onMessageClick(contact) },
+                onCallClick = { onCallClick(contact) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactItem(
+    contact: ContactEntry,
+    isFirst: Boolean,
+    isLast: Boolean,
+    smsIcon: ImageBitmap?,
+    callIcon: ImageBitmap?,
+    onClick: () -> Unit,
+    onMessageClick: () -> Unit,
+    onCallClick: () -> Unit,
+) {
+    val outer = 28.dp
+    val inner = 6.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) outer else inner,
+        topEnd = if (isFirst) outer else inner,
+        bottomStart = if (isLast) outer else inner,
+        bottomEnd = if (isLast) outer else inner,
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ContactAvatar(contact = contact)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = contact.name,
+            modifier = Modifier.weight(1f),
+            fontSize = 17.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (contact.phoneNumber != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionIconButton(
+                bitmap = smsIcon,
+                fallbackIcon = Icons.AutoMirrored.Outlined.Message,
+                contentDescription = "Send message",
+                onClick = onMessageClick,
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            ActionIconButton(
+                bitmap = callIcon,
+                fallbackIcon = Icons.Outlined.Phone,
+                contentDescription = "Call",
+                onClick = onCallClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactAvatar(contact: ContactEntry) {
+    val photo = rememberContactPhoto(contact.photoUri)
+    val avatarModifier = Modifier
+        .size(48.dp)
+        .clip(CircleShape)
+    if (photo != null) {
+        Image(
+            bitmap = photo,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = avatarModifier,
+        )
+    } else {
+        Box(
+            modifier = avatarModifier
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = contact.name.firstOrNull { it.isLetter() }?.uppercase() ?: "?",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun rememberContactPhoto(uri: Uri?): ImageBitmap? {
+    if (uri == null) return null
+    val context = LocalContext.current
+    var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(uri) {
+        bitmap = withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            }.getOrNull()
+        }
+    }
+    return bitmap
+}
+
+@Composable
+private fun ActionIconButton(
+    bitmap: ImageBitmap?,
+    fallbackIcon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    val baseModifier = Modifier
+        .size(32.dp)
+        .clip(CircleShape)
+        .clickable(onClick = onClick)
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            modifier = baseModifier,
+        )
+    } else {
+        Box(
+            modifier = baseModifier
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = fallbackIcon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+private fun resolveAppIcon(context: Context, intent: Intent): ImageBitmap? {
+    val pm = context.packageManager
+    val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: return null
+    return runCatching {
+        resolveInfo.loadIcon(pm).toBitmap().asImageBitmap()
+    }.getOrNull()
+}
+
+private fun openContact(context: Context, contact: ContactEntry) {
+    val uri = ContentUris.withAppendedId(
+        ContactsContract.Contacts.CONTENT_URI,
+        contact.id,
+    )
+    val intent = Intent(Intent.ACTION_VIEW, uri)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        // Aucune app contacts disponible — on ignore silencieusement.
+    }
+}
+
+private fun launchSms(context: Context, phoneNumber: String) {
+    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$phoneNumber"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+    }
+}
+
+private fun launchDialer(context: Context, phoneNumber: String) {
+    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
     }
 }
 
