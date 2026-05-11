@@ -6,7 +6,7 @@ PixelishSearch is a minimalist Android app that replicates the Pixel Launcher un
 
 - **Kotlin + Jetpack Compose + Material 3** (`material3:1.4.0-alpha15` for Material 3 Expressive).
 - **Always use Material 3 Compose components first.** Before writing a custom component (sheet, button, list, dialog, text field, chip, etc.), check whether an existing `androidx.compose.material3.*` component does the job. Custom is only justified when no M3 component fits (e.g. the current `SuggestionList`).
-- Min SDK 31, target SDK 35. JVM target 17.
+- Min SDK 31, target SDK 37. JVM target 17.
 - Dynamic Color (Material You) everywhere via `dynamicLight/DarkColorScheme` — no hardcoded palette.
 - Font: `GoogleSans` via `DeviceFontFamilyName("google-sans")`, applied to every text style through `appTypography()` in `ui/theme/Theme.kt`.
 

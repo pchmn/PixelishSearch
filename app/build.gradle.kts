@@ -1,9 +1,9 @@
 import java.util.Properties
 
 plugins {
-    id("com.android.application") version "8.7.0"
-    id("org.jetbrains.kotlin.android") version "2.0.21"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -15,12 +15,12 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.pchmn.pixelishsearch"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.pchmn.pixelishsearch"
         minSdk = 31
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
     }
@@ -52,42 +52,44 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
     // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
+    implementation(platform("androidx.compose:compose-bom:2026.05.00"))
 
-    // Material 3 Expressive (alpha au moment où j'écris ça — vérifier la dernière version)
+    // Material 3 Expressive (alpha at the time of writing — check the latest version)
     implementation("androidx.compose.material3:material3:1.4.0-alpha15")
     implementation("androidx.compose.material:material-icons-extended")
 
     // Compose
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.activity:activity-compose:1.13.0")
 
     // Lifecycle + ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
-    // DataStore (compteurs d'usage des apps persistés)
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    // DataStore (persisted app usage counters)
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 
-    // Réseau pour suggestions web (léger, sans Retrofit)
-    implementation("io.ktor:ktor-client-android:2.3.13")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.13")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.13")
+    // Networking for web suggestions (lightweight, no Retrofit)
+    implementation("io.ktor:ktor-client-android:3.4.3")
+    implementation("io.ktor:ktor-client-content-negotiation:3.4.3")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
