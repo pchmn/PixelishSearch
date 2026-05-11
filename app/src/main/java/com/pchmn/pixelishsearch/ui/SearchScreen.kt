@@ -13,9 +13,11 @@ import android.provider.ContactsContract
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,10 +42,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -258,6 +263,7 @@ fun SearchScreen(
                             onClick = { entry ->
                                 replayContactAction(context, entry)
                             },
+                            onDelete = viewModel::removeRecentContact,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
@@ -268,6 +274,7 @@ fun SearchScreen(
                             viewModel.onSearchLaunched(suggestion)
                             launchGoogleSearch(context, suggestion)
                         },
+                        onDelete = viewModel::removeSearchHistory,
                     )
                 } else {
                     if (uiState.webSuggestions.isNotEmpty()) {
@@ -405,6 +412,7 @@ private fun SuggestionList(
     suggestions: List<String>,
     leadingIcon: ImageVector,
     onClick: (String) -> Unit,
+    onDelete: ((String) -> Unit)? = null,
 ) {
     if (suggestions.isEmpty()) return
     Column(
@@ -420,17 +428,20 @@ private fun SuggestionList(
                 isFirst = index == 0,
                 isLast = index == suggestions.lastIndex,
                 onClick = { onClick(suggestion) },
+                onDelete = onDelete?.let { { it(suggestion) } },
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SearchRowItem(
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
     leading: @Composable () -> Unit,
+    onDelete: (() -> Unit)? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     val outer = 28.dp
@@ -441,18 +452,51 @@ private fun SearchRowItem(
         bottomStart = if (isLast) outer else inner,
         bottomEnd = if (isLast) outer else inner,
     )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        leading()
-        Spacer(modifier = Modifier.width(16.dp))
-        content()
+    var menuExpanded by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+                .then(
+                    if (onDelete != null) {
+                        Modifier.combinedClickable(
+                            onClick = onClick,
+                            onLongClick = { menuExpanded = true },
+                        )
+                    } else {
+                        Modifier.clickable(onClick = onClick)
+                    }
+                )
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            leading()
+            Spacer(modifier = Modifier.width(16.dp))
+            content()
+        }
+        if (onDelete != null) {
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                shape = RoundedCornerShape(28.dp),
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Delete") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null,
+                        )
+                    },
+                    onClick = {
+                        menuExpanded = false
+                        onDelete()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -463,11 +507,13 @@ private fun SuggestionItem(
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
     SearchRowItem(
         isFirst = isFirst,
         isLast = isLast,
         onClick = onClick,
+        onDelete = onDelete,
         leading = {
             Box(
                 modifier = Modifier
@@ -693,6 +739,7 @@ private fun ActionIconButton(
 private fun RecentContactList(
     contacts: List<ContactHistoryEntry>,
     onClick: (ContactHistoryEntry) -> Unit,
+    onDelete: (ContactHistoryEntry) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -706,6 +753,7 @@ private fun RecentContactList(
                 isFirst = index == 0,
                 isLast = index == contacts.lastIndex,
                 onClick = { onClick(contact) },
+                onDelete = { onDelete(contact) },
             )
         }
     }
@@ -717,11 +765,13 @@ private fun RecentContactItem(
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     SearchRowItem(
         isFirst = isFirst,
         isLast = isLast,
         onClick = onClick,
+        onDelete = onDelete,
         leading = {
             ContactAvatar(name = contact.name, photoUri = contact.photoUri, size = 32.dp)
         },
