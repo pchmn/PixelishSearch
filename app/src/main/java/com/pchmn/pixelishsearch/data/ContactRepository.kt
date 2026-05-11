@@ -10,7 +10,8 @@ data class ContactEntry(
     val id: Long,
     val name: String,
     val phoneNumber: String?,
-    val photoUri: Uri?
+    val photoUri: Uri?,
+    val starred: Boolean = false,
 )
 
 /**
@@ -19,6 +20,11 @@ data class ContactEntry(
  */
 object ContactRepository {
 
+    // Hard cap on rows pulled from the ContentResolver before in-memory ranking.
+    // We need to over-fetch (vs. the user-visible `limit`) because the SQL sort
+    // is alphabetical — we re-rank by starred + usage score in Kotlin.
+    private const val MAX_CANDIDATES = 50
+
     fun hasPermission(context: Context): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -26,22 +32,28 @@ object ContactRepository {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun search(context: Context, query: String, limit: Int = 4): List<ContactEntry> {
+    fun search(
+        context: Context,
+        query: String,
+        limit: Int = 4,
+        scoreOf: (Long) -> Float = { 0f },
+    ): List<ContactEntry> {
         if (query.isBlank() || !hasPermission(context)) return emptyList()
 
-        val results = mutableListOf<ContactEntry>()
+        val candidates = mutableListOf<ContactEntry>()
 
         val uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
         val projection = arrayOf(
             ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
             ContactsContract.CommonDataKinds.Phone.NUMBER,
-            ContactsContract.CommonDataKinds.Phone.PHOTO_URI
+            ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
+            ContactsContract.Contacts.STARRED,
         )
 
         val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
         val selectionArgs = arrayOf("%$query%")
-        val sortOrder = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC LIMIT $limit"
+        val sortOrder = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC LIMIT $MAX_CANDIDATES"
 
         try {
             context.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
@@ -54,9 +66,9 @@ object ContactRepository {
                     val name = cursor.getString(1) ?: continue
                     val number = cursor.getString(2)
                     val photo = cursor.getString(3)?.let { Uri.parse(it) }
+                    val starred = cursor.getInt(4) == 1
 
-                    results += ContactEntry(id, name, number, photo)
-                    if (results.size >= limit) break
+                    candidates += ContactEntry(id, name, number, photo, starred)
                 }
             }
         } catch (e: SecurityException) {
@@ -64,6 +76,10 @@ object ContactRepository {
             return emptyList()
         }
 
-        return results
+        val ranker = compareByDescending<ContactEntry> { it.starred }
+            .thenByDescending { scoreOf(it.id) }
+            .thenBy { it.name.lowercase() }
+
+        return candidates.sortedWith(ranker).take(limit)
     }
 }

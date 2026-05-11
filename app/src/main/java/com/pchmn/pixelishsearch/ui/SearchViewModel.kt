@@ -47,6 +47,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     // Local snapshot of the app-launch history, kept in sync with the repository's
     // Flow. Read synchronously on every keystroke by runLocalSearch().
     private var historyByPkg: Map<String, AppHistoryEntry> = emptyMap()
+    private var contactHistoryById: Map<Long, ContactHistoryEntry> = emptyMap()
 
     private var webJob: Job? = null
 
@@ -78,6 +79,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch {
             contactHistory.recents.collect { recents ->
+                contactHistoryById = recents.associateBy { it.id }
                 _uiState.value = _uiState.value.copy(recentContacts = recents)
             }
         }
@@ -138,7 +140,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         val apps = AppIndex.search(query, limit = 6) { pkg ->
             historyByPkg[pkg]?.score(now) ?: 0f
         }
-        val contacts = ContactRepository.search(getApplication(), query, limit = 3)
+        val contacts = ContactRepository.search(getApplication(), query, limit = 3) { id ->
+            contactHistoryById[id]?.score(now) ?: 0f
+        }
 
         _uiState.value = _uiState.value.copy(
             query = query,
