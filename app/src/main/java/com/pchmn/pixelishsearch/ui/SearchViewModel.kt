@@ -3,16 +3,14 @@ package com.pchmn.pixelishsearch.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.data.AppEntry
+import com.pchmn.pixelishsearch.data.AppHistoryEntry
 import com.pchmn.pixelishsearch.data.AppIndex
-import com.pchmn.pixelishsearch.data.AppUsageRepository
 import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
-import com.pchmn.pixelishsearch.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.data.ContactRepository
-import com.pchmn.pixelishsearch.data.SearchHistoryRepository
-import com.pchmn.pixelishsearch.data.UsageStat
 import com.pchmn.pixelishsearch.data.WebSuggestRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -37,9 +35,18 @@ data class SearchUiState(
 @OptIn(FlowPreview::class)
 class SearchViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val app = application as PixelishSearchApp
+    private val appHistory get() = app.appHistory
+    private val searchHistory get() = app.searchHistory
+    private val contactHistory get() = app.contactHistory
+
     private val _query = MutableStateFlow("")
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+    // Local snapshot of the app-launch history, kept in sync with the repository's
+    // Flow. Read synchronously on every keystroke by runLocalSearch().
+    private var historyByPkg: Map<String, AppHistoryEntry> = emptyMap()
 
     private var webJob: Job? = null
 
@@ -50,17 +57,19 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         // Default suggestions: top 4 apps by usage score (time decay),
-        // tiebreaker = alphabetical order. Recomputed whenever the index or stats change.
+        // tiebreaker = alphabetical order. Also refreshes the local cache used
+        // by runLocalSearch.
         viewModelScope.launch {
-            combine(AppIndex.apps, AppUsageRepository.stats) { apps, stats ->
-                rankByUsage(apps, stats).take(4)
+            combine(AppIndex.apps, appHistory.recents) { apps, history ->
+                historyByPkg = history.associateBy { it.packageName }
+                rankByUsage(apps, historyByPkg).take(4)
             }.collect { suggested ->
                 _uiState.value = _uiState.value.copy(suggestedApps = suggested)
             }
         }
 
         viewModelScope.launch {
-            SearchHistoryRepository.history.collect { entries ->
+            searchHistory.history.collect { entries ->
                 _uiState.value = _uiState.value.copy(
                     searchHistory = entries.map { it.query }
                 )
@@ -68,7 +77,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch {
-            ContactHistoryRepository.recents.collect { recents ->
+            contactHistory.recents.collect { recents ->
                 _uiState.value = _uiState.value.copy(recentContacts = recents)
             }
         }
@@ -95,21 +104,23 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun onAppLaunched(packageName: String) {
-        AppUsageRepository.recordLaunch(packageName)
+        viewModelScope.launch { appHistory.record(packageName) }
     }
 
     fun onSearchLaunched(query: String) {
-        SearchHistoryRepository.record(query)
+        viewModelScope.launch { searchHistory.record(query) }
     }
 
     fun onContactUsed(contact: ContactEntry, action: ContactAction) {
-        ContactHistoryRepository.record(
-            id = contact.id,
-            name = contact.name,
-            photoUri = contact.photoUri,
-            phoneNumber = contact.phoneNumber,
-            action = action,
-        )
+        viewModelScope.launch {
+            contactHistory.record(
+                id = contact.id,
+                name = contact.name,
+                photoUri = contact.photoUri,
+                phoneNumber = contact.phoneNumber,
+                action = action,
+            )
+        }
     }
 
     private fun runLocalSearch(query: String) {
@@ -123,10 +134,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        val stats = AppUsageRepository.stats.value
         val now = System.currentTimeMillis()
         val apps = AppIndex.search(query, limit = 6) { pkg ->
-            AppUsageRepository.scoreOf(pkg, stats, now)
+            historyByPkg[pkg]?.score(now) ?: 0f
         }
         val contacts = ContactRepository.search(getApplication(), query, limit = 3)
 
@@ -151,12 +161,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun rankByUsage(
         apps: List<AppEntry>,
-        stats: Map<String, UsageStat>,
+        history: Map<String, AppHistoryEntry>,
     ): List<AppEntry> {
         val now = System.currentTimeMillis()
         return apps.sortedWith(
             compareByDescending<AppEntry> {
-                AppUsageRepository.scoreOf(it.packageName, stats, now)
+                history[it.packageName]?.score(now) ?: 0f
             }.thenBy { it.label.lowercase() }
         )
     }

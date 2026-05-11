@@ -94,6 +94,7 @@ import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -273,10 +274,10 @@ fun SearchScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         SectionHeader(title = "Contacts")
                         val smsIcon = remember(context) {
-                            resolveAppIcon(context, Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:")))
+                            resolveAppIcon(context, Intent(Intent.ACTION_SENDTO, "smsto:".toUri()))
                         }
                         val callIcon = remember(context) {
-                            resolveAppIcon(context, Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
+                            resolveAppIcon(context, Intent(Intent.ACTION_DIAL, "tel:".toUri()))
                         }
                         ContactList(
                             contacts = uiState.contacts,
@@ -770,7 +771,7 @@ private fun openContactById(context: Context, contactId: Long) {
 }
 
 private fun launchSms(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$phoneNumber"))
+    val intent = Intent(Intent.ACTION_SENDTO, "smsto:$phoneNumber".toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         context.launchAndDismiss(intent)
@@ -779,7 +780,7 @@ private fun launchSms(context: Context, phoneNumber: String) {
 }
 
 private fun launchDialer(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
+    val intent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         context.launchAndDismiss(intent)
@@ -801,7 +802,7 @@ private fun launchGoogleSearch(context: Context, query: String) {
     }
 
     val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())
-    val fallback = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$encoded"))
+    val fallback = Intent(Intent.ACTION_VIEW, "https://www.google.com/search?q=$encoded".toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     context.launchAndDismiss(fallback)
 }

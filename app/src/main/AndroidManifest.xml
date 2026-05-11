@@ -28,7 +28,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".PixelishApp"
+        android:name=".PixelishSearchApp"
         android:label="PixelishSearch"
         android:icon="@android:drawable/ic_menu_search"
         android:theme="@style/Theme.PixelishSearch"
