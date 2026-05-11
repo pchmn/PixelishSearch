@@ -39,6 +39,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
@@ -169,30 +170,41 @@ fun SearchScreen(
                         )
                     },
                     trailingIcon = {
-                        Row {
-                            IconButton(onClick = {
-                                com.pchmn.pixelishsearch.geminiIntent(context)?.let {
-                                    context.launchAndDismiss(it)
-                                }
-                            }) {
+                        if (uiState.query.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onQueryChange("") }) {
                                 Icon(
-                                    painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
-                                    contentDescription = "Gemini",
+                                    imageVector = Icons.Outlined.Close,
+                                    contentDescription = "Clear",
                                     tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(22.dp),
                                 )
                             }
-                            IconButton(onClick = {
-                                com.pchmn.pixelishsearch.lensIntent(context)?.let {
-                                    context.launchAndDismiss(it)
+                        } else {
+                            Row {
+                                IconButton(onClick = {
+                                    com.pchmn.pixelishsearch.geminiIntent(context)?.let {
+                                        context.launchAndDismiss(it)
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
+                                        contentDescription = "Gemini",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(22.dp),
+                                    )
                                 }
-                            }) {
-                                Icon(
-                                    painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
-                                    contentDescription = "Google Lens",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp),
-                                )
+                                IconButton(onClick = {
+                                    com.pchmn.pixelishsearch.lensIntent(context)?.let {
+                                        context.launchAndDismiss(it)
+                                    }
+                                }) {
+                                    Icon(
+                                        painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
+                                        contentDescription = "Google Lens",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                }
                             }
                         }
                     },
