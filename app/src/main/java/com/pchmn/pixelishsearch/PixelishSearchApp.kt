@@ -4,7 +4,7 @@ import android.app.Application
 import com.pchmn.pixelishsearch.data.AppHistoryRepository
 import com.pchmn.pixelishsearch.data.AppIndex
 import com.pchmn.pixelishsearch.data.ContactHistoryRepository
-import com.pchmn.pixelishsearch.data.SearchHistoryRepository
+import com.pchmn.pixelishsearch.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.data.WebSuggestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ class PixelishSearchApp : Application() {
 
     lateinit var appHistory: AppHistoryRepository
         private set
-    lateinit var searchHistory: SearchHistoryRepository
+    lateinit var searchHistory: WebSearchHistoryRepository
         private set
     lateinit var contactHistory: ContactHistoryRepository
         private set
@@ -35,7 +35,7 @@ class PixelishSearchApp : Application() {
         // from DataStore right away — scores/history are ready when the
         // search screen opens.
         appHistory = AppHistoryRepository(this)
-        searchHistory = SearchHistoryRepository(this)
+        searchHistory = WebSearchHistoryRepository(this)
         contactHistory = ContactHistoryRepository(this)
 
         // Async preload of the index

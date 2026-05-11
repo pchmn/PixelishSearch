@@ -11,7 +11,7 @@ import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.data.ContactRepository
-import com.pchmn.pixelishsearch.data.SearchHistoryEntry
+import com.pchmn.pixelishsearch.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.data.WebSuggestRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -127,7 +127,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun removeSearchHistory(query: String) {
-        viewModelScope.launch { searchHistory.remove(SearchHistoryEntry(query)) }
+        viewModelScope.launch { searchHistory.remove(WebSearchHistoryEntry(query)) }
     }
 
     fun removeRecentContact(entry: ContactHistoryEntry) {
