@@ -25,12 +25,12 @@ import kotlinx.coroutines.launch
 
 data class SearchUiState(
     val query: String = "",
-    val apps: List<AppEntry> = emptyList(),
-    val contacts: List<ContactEntry> = emptyList(),
-    val webSuggestions: List<String> = emptyList(),
-    val suggestedApps: List<AppEntry> = emptyList(),
-    val searchHistory: List<String> = emptyList(),
-    val recentContacts: List<ContactHistoryEntry> = emptyList(),
+    val appRecents: List<AppEntry> = emptyList(),
+    val appResults: List<AppEntry> = emptyList(),
+    val contactRecents: List<ContactHistoryEntry> = emptyList(),
+    val contactResults: List<ContactEntry> = emptyList(),
+    val webRecents: List<String> = emptyList(),
+    val webResults: List<String> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -66,14 +66,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 historyByPkg = history.associateBy { it.packageName }
                 rankByUsage(apps, historyByPkg).take(4)
             }.collect { suggested ->
-                _uiState.value = _uiState.value.copy(suggestedApps = suggested)
+                _uiState.value = _uiState.value.copy(appRecents = suggested)
             }
         }
 
         viewModelScope.launch {
             searchHistory.history.collect { entries ->
                 _uiState.value = _uiState.value.copy(
-                    searchHistory = entries.map { it.query }
+                    webRecents = entries.map { it.query }
                 )
             }
         }
@@ -81,7 +81,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             contactHistory.recents.collect { recents ->
                 contactHistoryById = recents.associateBy { it.id }
-                _uiState.value = _uiState.value.copy(recentContacts = recents)
+                _uiState.value = _uiState.value.copy(contactRecents = recents)
             }
         }
 
@@ -138,9 +138,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         if (query.isBlank()) {
             _uiState.value = _uiState.value.copy(
                 query = query,
-                apps = emptyList(),
-                contacts = emptyList(),
-                webSuggestions = emptyList()
+                appResults = emptyList(),
+                contactResults = emptyList(),
+                webResults = emptyList()
             )
             return
         }
@@ -155,8 +155,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
         _uiState.value = _uiState.value.copy(
             query = query,
-            apps = apps,
-            contacts = contacts
+            appResults = apps,
+            contactResults = contacts
         )
     }
 
@@ -167,7 +167,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             val suggestions = WebSuggestRepository.fetch(query, limit = 5)
             // Make sure the query hasn't changed in the meantime
             if (_query.value == query) {
-                _uiState.value = _uiState.value.copy(webSuggestions = suggestions)
+                _uiState.value = _uiState.value.copy(webResults = suggestions)
             }
         }
     }

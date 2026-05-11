@@ -13,17 +13,14 @@ import android.provider.ContactsContract
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,13 +39,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -238,9 +232,9 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val displayedApps = if (uiState.query.isBlank()) {
-                    uiState.suggestedApps
+                    uiState.appRecents
                 } else {
-                    uiState.apps
+                    uiState.appResults
                 }.take(4)
 
                 AppRow(
@@ -257,9 +251,9 @@ fun SearchScreen(
                 }
 
                 if (uiState.query.isBlank()) {
-                    if (uiState.recentContacts.isNotEmpty()) {
+                    if (uiState.contactRecents.isNotEmpty()) {
                         RecentContactList(
-                            contacts = uiState.recentContacts.take(2),
+                            contacts = uiState.contactRecents.take(2),
                             onClick = { entry ->
                                 replayContactAction(context, entry)
                             },
@@ -268,7 +262,7 @@ fun SearchScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                     SuggestionList(
-                        suggestions = uiState.searchHistory.take(3),
+                        suggestions = uiState.webRecents.take(3),
                         leadingIcon = Icons.Outlined.Schedule,
                         onClick = { suggestion ->
                             viewModel.onSearchLaunched(suggestion)
@@ -277,10 +271,10 @@ fun SearchScreen(
                         onDelete = viewModel::removeSearchHistory,
                     )
                 } else {
-                    if (uiState.webSuggestions.isNotEmpty()) {
+                    if (uiState.webResults.isNotEmpty()) {
                         SectionHeader(title = "Web Search")
                         SuggestionList(
-                            suggestions = uiState.webSuggestions.take(if (displayedApps.isNotEmpty() || uiState.contacts.isNotEmpty()) 3 else 5),
+                            suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
                             leadingIcon = Icons.Outlined.Search,
                             onClick = { suggestion ->
                                 viewModel.onSearchLaunched(suggestion)
@@ -289,7 +283,7 @@ fun SearchScreen(
                         )
                     }
 
-                    if (uiState.contacts.isNotEmpty()) {
+                    if (uiState.contactResults.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         SectionHeader(title = "Contacts")
                         val smsIcon = remember(context) {
@@ -299,7 +293,7 @@ fun SearchScreen(
                             resolveAppIcon(context, Intent(Intent.ACTION_DIAL, "tel:".toUri()))
                         }
                         ContactList(
-                            contacts = uiState.contacts,
+                            contacts = uiState.contactResults,
                             smsIcon = smsIcon,
                             callIcon = callIcon,
                             onContactClick = { contact ->
@@ -430,72 +424,6 @@ private fun SuggestionList(
                 onClick = { onClick(suggestion) },
                 onDelete = onDelete?.let { { it(suggestion) } },
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun SearchRowItem(
-    isFirst: Boolean,
-    isLast: Boolean,
-    onClick: () -> Unit,
-    leading: @Composable () -> Unit,
-    onDelete: (() -> Unit)? = null,
-    content: @Composable RowScope.() -> Unit,
-) {
-    val outer = 28.dp
-    val inner = 6.dp
-    val shape = RoundedCornerShape(
-        topStart = if (isFirst) outer else inner,
-        topEnd = if (isFirst) outer else inner,
-        bottomStart = if (isLast) outer else inner,
-        bottomEnd = if (isLast) outer else inner,
-    )
-    var menuExpanded by remember { mutableStateOf(false) }
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-                .then(
-                    if (onDelete != null) {
-                        Modifier.combinedClickable(
-                            onClick = onClick,
-                            onLongClick = { menuExpanded = true },
-                        )
-                    } else {
-                        Modifier.clickable(onClick = onClick)
-                    }
-                )
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            leading()
-            Spacer(modifier = Modifier.width(16.dp))
-            content()
-        }
-        if (onDelete != null) {
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-                shape = RoundedCornerShape(28.dp),
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Delete") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        menuExpanded = false
-                        onDelete()
-                    },
-                )
-            }
         }
     }
 }
