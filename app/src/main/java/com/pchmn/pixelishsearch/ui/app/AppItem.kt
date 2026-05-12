@@ -3,7 +3,6 @@ package com.pchmn.pixelishsearch.ui.app
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -18,24 +17,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.pchmn.pixelishsearch.data.AppEntry
 import com.pchmn.pixelishsearch.data.AppIconRequest
+import com.pchmn.pixelishsearch.ui.AnchorBox
+import com.pchmn.pixelishsearch.ui.dropdown.DropdownMenuWithArrow
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -64,31 +60,7 @@ fun AppItem(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val density = LocalDensity.current
-    var iconCenterXPx by remember { mutableIntStateOf(0) }
-    var menuLeftXPx by remember { mutableStateOf<Int?>(null) }
-
-    val tipXDp = menuLeftXPx?.let {
-        with(density) { (iconCenterXPx - it).toDp() }
-    } ?: (APP_SLOT_WIDTH / 2)
-
-    val calloutShape = remember(tipXDp) {
-        CalloutShape(
-            cornerRadius = 28.dp,
-            tipWidth = 12.dp,
-            tipHeight = 8.dp,
-            tipX = tipXDp,
-            tipCornerRadius = 2.dp,
-            bottomInset = 8.dp,
-        )
-    }
-
-    Box(
-        modifier = Modifier.onGloballyPositioned { coords ->
-            iconCenterXPx =
-                (coords.localToScreen(Offset.Zero).x + coords.size.width / 2f).toInt()
-        },
-    ) {
+    AnchorBox { xCenter ->
         Column(
             modifier = Modifier
                 .width(APP_SLOT_WIDTH)
@@ -122,14 +94,10 @@ fun AppItem(
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
-        DropdownMenu(
+        DropdownMenuWithArrow(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
-            shape = calloutShape,
-            modifier = Modifier
-                .onGloballyPositioned { coords ->
-                    menuLeftXPx = coords.localToScreen(Offset.Zero).x.toInt()
-                },
+            anchorXCenter = xCenter
         ) {
             DropdownMenuItem(
                 text = { Text("App info") },

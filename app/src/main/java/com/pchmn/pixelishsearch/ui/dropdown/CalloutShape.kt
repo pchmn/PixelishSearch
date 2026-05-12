@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.ui.app
+package com.pchmn.pixelishsearch.ui.dropdown
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
