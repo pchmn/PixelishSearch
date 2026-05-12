@@ -65,6 +65,24 @@ object AppIndex {
         }
     }
 
+    /**
+     * Re-enumerates from PackageManager and persists if the list changed.
+     * Triggered by [PackageReceiver] when an app is installed / removed /
+     * updated, so the next user tap reflects the new state without waiting
+     * for the process to be restarted.
+     */
+    fun refresh(context: Context, scope: CoroutineScope) {
+        scope.launch {
+            val cacheRepo = AppIndexCacheRepository(context)
+            val fresh = enumerate(context)
+            val freshCached = fresh.map { it.toCached() }
+            if (freshCached != cacheRepo.read()) {
+                _apps.value = fresh
+                cacheRepo.write(freshCached)
+            }
+        }
+    }
+
     private fun enumerate(context: Context): List<AppEntry> {
         val pm = context.packageManager
         val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
