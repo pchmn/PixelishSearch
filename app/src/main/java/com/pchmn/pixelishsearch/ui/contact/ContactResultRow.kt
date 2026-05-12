@@ -52,7 +52,9 @@ fun ContactResultRow(
     ) {
         Text(
             text = contact.name,
-            modifier = Modifier.weight(1f).padding(start = 2.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 2.dp),
             fontSize = 17.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,

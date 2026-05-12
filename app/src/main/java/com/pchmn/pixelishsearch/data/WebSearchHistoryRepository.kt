@@ -11,11 +11,12 @@ data class WebSearchHistoryEntry(
     override val usageCount: Int = 0,
 ) : HistoryEntry
 
-class WebSearchHistoryRepository(context: Context) : HistoryRepository<WebSearchHistoryEntry, String>(
-    dataStore = context.applicationContext.searchHistoryDataStore,
-    serializer = WebSearchHistoryEntry.serializer(),
-    maxEntries = 50,
-) {
+class WebSearchHistoryRepository(context: Context) :
+    HistoryRepository<WebSearchHistoryEntry, String>(
+        dataStore = context.applicationContext.searchHistoryDataStore,
+        serializer = WebSearchHistoryEntry.serializer(),
+        maxEntries = 50,
+    ) {
     override fun keyOf(item: WebSearchHistoryEntry) = item.query.lowercase()
     override fun withUpdatedMetadata(item: WebSearchHistoryEntry, timestamp: Long, count: Int) =
         item.copy(lastUsedEpochMillis = timestamp, usageCount = count)

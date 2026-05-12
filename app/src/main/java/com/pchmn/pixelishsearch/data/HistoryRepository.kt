@@ -47,7 +47,14 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { prefs ->
             prefs[key]
-                ?.let { runCatching { json.decodeFromString(ListSerializer(serializer), it) }.getOrNull() }
+                ?.let {
+                    runCatching {
+                        json.decodeFromString(
+                            ListSerializer(serializer),
+                            it
+                        )
+                    }.getOrNull()
+                }
                 ?.sortedByDescending { it.lastUsedEpochMillis }
                 .orEmpty()
         }
@@ -55,7 +62,14 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
     protected suspend fun upsert(item: T) {
         dataStore.edit { prefs ->
             val current = prefs[key]
-                ?.let { runCatching { json.decodeFromString(ListSerializer(serializer), it) }.getOrNull() }
+                ?.let {
+                    runCatching {
+                        json.decodeFromString(
+                            ListSerializer(serializer),
+                            it
+                        )
+                    }.getOrNull()
+                }
                 .orEmpty()
             val existing = current.find { keyOf(it) == keyOf(item) }
             val now = System.currentTimeMillis()
@@ -72,7 +86,14 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
     suspend fun remove(item: T) {
         dataStore.edit { prefs ->
             val current = prefs[key]
-                ?.let { runCatching { json.decodeFromString(ListSerializer(serializer), it) }.getOrNull() }
+                ?.let {
+                    runCatching {
+                        json.decodeFromString(
+                            ListSerializer(serializer),
+                            it
+                        )
+                    }.getOrNull()
+                }
                 .orEmpty()
             val targetKey = keyOf(item)
             val filtered = current.filterNot { keyOf(it) == targetKey }

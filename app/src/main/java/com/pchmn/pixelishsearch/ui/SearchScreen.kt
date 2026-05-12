@@ -1,20 +1,12 @@
 package com.pchmn.pixelishsearch.ui
 
 import android.app.Activity
-import android.app.SearchManager
-import android.content.ActivityNotFoundException
-import android.content.ContentUris
 import android.content.Context
-import android.content.Intent
-import android.provider.ContactsContract
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,16 +18,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,35 +42,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pchmn.pixelishsearch.data.AppEntry
 import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
-import androidx.core.net.toUri
 import com.pchmn.pixelishsearch.launchContactDetails
 import com.pchmn.pixelishsearch.launchDialer
 import com.pchmn.pixelishsearch.launchGoogleSearch
@@ -90,7 +68,6 @@ import com.pchmn.pixelishsearch.ui.app.AppList
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
 import com.pchmn.pixelishsearch.ui.contact.ContactResultList
 import com.pchmn.pixelishsearch.ui.websearch.WebSearchList
-import com.pchmn.pixelishsearch.ui.websearch.WebSearchRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,13 +77,14 @@ fun SearchScreen(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isDark = isSystemInDarkTheme()
-
+    
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = sheetState,
         modifier = Modifier.statusBarsPadding(),
-        containerColor = if(isDark) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-            .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+        containerColor = if (isDark) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+            .compositeOver(MaterialTheme.colorScheme.surface)
+            .copy(0.6f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
             .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f),
         scrimColor = Color.White.copy(alpha = 0.1f),
     ) {
@@ -324,8 +302,16 @@ private fun SectionHeader(title: String) {
 private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
     val phone = entry.phoneNumber
     when (entry.action) {
-        ContactAction.MESSAGE -> if (phone != null) launchSms(context, phone) else launchContactDetails(context, entry.id)
-        ContactAction.CALL -> if (phone != null) launchDialer(context, phone) else launchContactDetails(context, entry.id)
+        ContactAction.MESSAGE -> if (phone != null) launchSms(
+            context,
+            phone
+        ) else launchContactDetails(context, entry.id)
+
+        ContactAction.CALL -> if (phone != null) launchDialer(
+            context,
+            phone
+        ) else launchContactDetails(context, entry.id)
+
         ContactAction.CARD -> launchContactDetails(context, entry.id)
     }
 }

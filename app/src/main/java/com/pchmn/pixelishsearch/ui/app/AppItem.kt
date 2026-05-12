@@ -30,7 +30,6 @@ import androidx.core.graphics.drawable.toBitmap
 import com.pchmn.pixelishsearch.data.AppEntry
 
 
-
 @Composable
 fun AppItem(
     entry: AppEntry,

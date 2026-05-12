@@ -53,24 +53,26 @@ object ContactRepository {
 
         val selection = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
         val selectionArgs = arrayOf("%$query%")
-        val sortOrder = "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC LIMIT $MAX_CANDIDATES"
+        val sortOrder =
+            "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC LIMIT $MAX_CANDIDATES"
 
         try {
-            context.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)?.use { cursor ->
-                val seen = mutableSetOf<Long>()
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(0)
-                    if (id in seen) continue
-                    seen += id
+            context.contentResolver.query(uri, projection, selection, selectionArgs, sortOrder)
+                ?.use { cursor ->
+                    val seen = mutableSetOf<Long>()
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(0)
+                        if (id in seen) continue
+                        seen += id
 
-                    val name = cursor.getString(1) ?: continue
-                    val number = cursor.getString(2)
-                    val photo = cursor.getString(3)?.let { Uri.parse(it) }
-                    val starred = cursor.getInt(4) == 1
+                        val name = cursor.getString(1) ?: continue
+                        val number = cursor.getString(2)
+                        val photo = cursor.getString(3)?.let { Uri.parse(it) }
+                        val starred = cursor.getInt(4) == 1
 
-                    candidates += ContactEntry(id, name, number, photo, starred)
+                        candidates += ContactEntry(id, name, number, photo, starred)
+                    }
                 }
-            }
         } catch (e: SecurityException) {
             // Permission revoked during the session
             return emptyList()

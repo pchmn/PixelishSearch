@@ -1,12 +1,12 @@
 package com.pchmn.pixelishsearch.data
 
 import android.net.Uri
+import androidx.core.net.toUri
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import androidx.core.net.toUri
 
 object UriSerializer : KSerializer<Uri> {
     override val descriptor = PrimitiveSerialDescriptor("Uri", PrimitiveKind.STRING)

@@ -8,7 +8,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.os.Build
 import android.provider.ContactsContract
 import androidx.core.net.toUri
 import java.net.URLEncoder
@@ -118,17 +117,17 @@ fun launchGoogleSearch(context: Context, query: String) {
  */
 fun Context.launchAndDismiss(intent: Intent) {
     startActivity(intent)
-/*    val activity = findActivity() ?: return
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        // overrideActivityTransition must be called BEFORE finish().
-        activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
-        // activity.finish()
-    } else {
-        // overridePendingTransition must be called AFTER finish().
-        // activity.finish()
-        @Suppress("DEPRECATION")
-        activity.overridePendingTransition(0, 0)
-    }*/
+    /*    val activity = findActivity() ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // overrideActivityTransition must be called BEFORE finish().
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0)
+            // activity.finish()
+        } else {
+            // overridePendingTransition must be called AFTER finish().
+            // activity.finish()
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }*/
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

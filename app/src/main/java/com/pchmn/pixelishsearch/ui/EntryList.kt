@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun <T>EntryList(
+fun <T> EntryList(
     entries: List<T>,
     content: @Composable ColumnScope.() -> Unit,
 ) {

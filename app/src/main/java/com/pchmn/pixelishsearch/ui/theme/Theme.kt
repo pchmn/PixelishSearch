@@ -62,6 +62,7 @@ fun PixelishTheme(
             if (darkTheme) dynamicDarkColorScheme(context)
             else dynamicLightColorScheme(context)
         }
+
         darkTheme -> FallbackDark
         else -> FallbackLight
     }
