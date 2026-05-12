@@ -1,7 +1,12 @@
 package com.pchmn.pixelishsearch
 
 import android.app.Application
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
 import com.pchmn.pixelishsearch.data.AppHistoryRepository
+import com.pchmn.pixelishsearch.data.AppIconFetcher
+import com.pchmn.pixelishsearch.data.AppIconKeyer
 import com.pchmn.pixelishsearch.data.AppIndex
 import com.pchmn.pixelishsearch.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.data.ContactRepository
@@ -16,7 +21,7 @@ import kotlinx.coroutines.SupervisorJob
  * so the search Activity has nothing to do at launch.
  * This is the key to beating PixelSearch on cold start speed.
  */
-class PixelishSearchApp : Application() {
+class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -49,6 +54,19 @@ class PixelishSearchApp : Application() {
         // doesn't pay the binder + provider startup cost.
         ContactRepository.warmUp(this, appScope)
     }
+
+    /**
+     * Coil's singleton ImageLoader, wired with our custom keyer + fetcher so that
+     * `AsyncImage(model = AppIconRequest(pkg, lastUpdateTime))` resolves icons
+     * through PackageManager once and caches them on disk thereafter.
+     */
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader.Builder(context)
+            .components {
+                add(AppIconKeyer())
+                add(AppIconFetcher.Factory())
+            }
+            .build()
 
     companion object {
         lateinit var instance: PixelishSearchApp

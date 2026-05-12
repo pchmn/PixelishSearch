@@ -14,7 +14,9 @@ data class AppEntry(
     val label: String,
     val packageName: String,
     val icon: Drawable,
-    val launchIntent: Intent
+    val launchIntent: Intent,
+    // Used as the Coil cache key suffix so icon updates invalidate automatically.
+    val lastUpdateTime: Long,
 ) {
     // Lowercased, accent-stripped label for fast matching
     val normalizedLabel: String = label.lowercase()
@@ -58,13 +60,18 @@ object AppIndex {
                         val launchIntent =
                             pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
 
+                        val lastUpdateTime = runCatching {
+                            pm.getPackageInfo(pkg, 0).lastUpdateTime
+                        }.getOrDefault(0L)
+
                         AppEntry(
                             label = ri.loadLabel(pm).toString(),
                             packageName = pkg,
                             icon = ri.loadIcon(pm),
                             launchIntent = launchIntent.apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
+                            },
+                            lastUpdateTime = lastUpdateTime,
                         )
                     } catch (e: PackageManager.NameNotFoundException) {
                         null

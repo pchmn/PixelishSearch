@@ -91,5 +91,10 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:3.4.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.4.3")
 
+    // Coil 3 for app-icon caching (in-memory + on-disk PNG cache).
+    // Custom fetcher resolves "AppIconRequest" via PackageManager; disk cache
+    // means subsequent cold starts decode from data dir instead of the APK.
+    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
