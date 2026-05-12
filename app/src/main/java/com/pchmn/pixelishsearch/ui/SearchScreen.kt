@@ -84,6 +84,8 @@ import com.pchmn.pixelishsearch.launchAndDismiss
 import androidx.core.net.toUri
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
 import com.pchmn.pixelishsearch.ui.contact.ContactResultList
+import com.pchmn.pixelishsearch.ui.websearch.WebSearchList
+import com.pchmn.pixelishsearch.ui.websearch.WebSearchRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -250,7 +252,7 @@ fun SearchScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-                    SuggestionList(
+                    WebSearchList(
                         suggestions = uiState.webRecents.take(3),
                         leadingIcon = Icons.Outlined.Schedule,
                         onClick = { suggestion ->
@@ -262,7 +264,7 @@ fun SearchScreen(
                 } else {
                     if (uiState.webResults.isNotEmpty()) {
                         SectionHeader(title = "Web Search")
-                        SuggestionList(
+                        WebSearchList(
                             suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
                             leadingIcon = Icons.Outlined.Search,
                             onClick = { suggestion ->
@@ -378,77 +380,6 @@ private fun AppItem(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
             color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun SuggestionList(
-    suggestions: List<String>,
-    leadingIcon: ImageVector,
-    onClick: (String) -> Unit,
-    onDelete: ((String) -> Unit)? = null,
-) {
-    EntryList(entries = suggestions) {
-        suggestions.forEachIndexed { index, suggestion ->
-            SuggestionItem(
-                text = suggestion,
-                leadingIcon = leadingIcon,
-                isFirst = index == 0,
-                isLast = index == suggestions.lastIndex,
-                onClick = { onClick(suggestion) },
-                onDelete = onDelete?.let { { it(suggestion) } },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SuggestionItem(
-    text: String,
-    leadingIcon: ImageVector,
-    isFirst: Boolean,
-    isLast: Boolean,
-    onClick: () -> Unit,
-    onDelete: (() -> Unit)? = null,
-) {
-    EntryRow(
-        isFirst = isFirst,
-        isLast = isLast,
-        onClick = onClick,
-        onDelete = onDelete,
-        leading = {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = leadingIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        },
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.weight(1f),
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontWeight = FontWeight.Medium,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Outlined.NorthWest,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.size(20.dp),
         )
     }
 }
