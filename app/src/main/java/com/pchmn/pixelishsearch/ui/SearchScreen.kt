@@ -5,51 +5,36 @@ import android.content.Context
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -77,7 +62,7 @@ fun SearchScreen(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isDark = isSystemInDarkTheme()
-    
+
     ModalBottomSheet(
         onDismissRequest = onClose,
         sheetState = sheetState,
@@ -104,12 +89,13 @@ fun SearchScreen(
 
         Box(modifier = Modifier.fillMaxSize()) {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val focusRequester = remember { FocusRequester() }
             val context = LocalContext.current
 
-            LaunchedEffect(Unit) {
-                focusRequester.requestFocus()
-            }
+            val displayedApps = if (uiState.query.isBlank()) {
+                uiState.appRecents
+            } else {
+                uiState.appResults
+            }.take(4)
 
             Column(
                 modifier = Modifier
@@ -117,72 +103,19 @@ fun SearchScreen(
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
             ) {
-                TextField(
+                SearchField(
                     value = uiState.query,
                     onValueChange = viewModel::onQueryChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .focusRequester(focusRequester),
-                    placeholder = {
-                        Text(
-                            text = "Search web and more",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    },
-                    textStyle = LocalTextStyle.current.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    leadingIcon = {
-                        Image(
-                            painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.ic_google_logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    },
-                    trailingIcon = {
-                        if (uiState.query.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onQueryChange("") }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Close,
-                                    contentDescription = "Clear",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(22.dp),
-                                )
-                            }
-                        } else {
-                            Row {
-                                IconButton(onClick = {
-                                    com.pchmn.pixelishsearch.geminiIntent(context)?.let {
-                                        context.launchAndDismiss(it)
-                                    }
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
-                                        contentDescription = "Gemini",
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(22.dp),
-                                    )
-                                }
-                                IconButton(onClick = {
-                                    com.pchmn.pixelishsearch.lensIntent(context)?.let {
-                                        context.launchAndDismiss(it)
-                                    }
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
-                                        contentDescription = "Google Lens",
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(22.dp),
-                                    )
-                                }
-                            }
+                    onGeminiClick = {
+                        com.pchmn.pixelishsearch.geminiIntent(context)?.let {
+                            context.launchAndDismiss(it)
                         }
                     },
-                    singleLine = true,
-                    shape = CircleShape,
+                    onLensClick = {
+                        com.pchmn.pixelishsearch.lensIntent(context)?.let {
+                            context.launchAndDismiss(it)
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(
                         onSearch = {
@@ -192,24 +125,10 @@ fun SearchScreen(
                                 launchGoogleSearch(context, query)
                             }
                         }
-                    ),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                    ),
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-
-                val displayedApps = if (uiState.query.isBlank()) {
-                    uiState.appRecents
-                } else {
-                    uiState.appResults
-                }.take(4)
 
                 AppList(
                     apps = displayedApps,
@@ -255,10 +174,10 @@ fun SearchScreen(
                                 launchGoogleSearch(context, suggestion)
                             },
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
 
                     if (uiState.contactResults.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
                         SectionHeader(title = "Contacts")
                         ContactResultList(
                             contacts = uiState.contactResults,
