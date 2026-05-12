@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class AppEntry(
     val label: String,
@@ -36,41 +38,43 @@ object AppIndex {
     private val _isLoaded = MutableStateFlow(false)
     val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
 
-    fun preload(context: Context) {
+    fun preload(context: Context, scope: CoroutineScope) {
         if (_isLoaded.value) return
-
-        val pm = context.packageManager
-        val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-        }
-
-        val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
-
-        val entries = resolveInfos
-            .mapNotNull { ri ->
-                try {
-                    val pkg = ri.activityInfo.packageName
-                    // Exclude our own app
-                    if (pkg == context.packageName) return@mapNotNull null
-
-                    val launchIntent = pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
-
-                    AppEntry(
-                        label = ri.loadLabel(pm).toString(),
-                        packageName = pkg,
-                        icon = ri.loadIcon(pm),
-                        launchIntent = launchIntent.apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    )
-                } catch (e: PackageManager.NameNotFoundException) {
-                    null
-                }
+        scope.launch {
+            val pm = context.packageManager
+            val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                addCategory(Intent.CATEGORY_LAUNCHER)
             }
-            .sortedBy { it.label.lowercase() }
 
-        _apps.value = entries
-        _isLoaded.value = true
+            val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
+
+            val entries = resolveInfos
+                .mapNotNull { ri ->
+                    try {
+                        val pkg = ri.activityInfo.packageName
+                        // Exclude our own app
+                        if (pkg == context.packageName) return@mapNotNull null
+
+                        val launchIntent =
+                            pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
+
+                        AppEntry(
+                            label = ri.loadLabel(pm).toString(),
+                            packageName = pkg,
+                            icon = ri.loadIcon(pm),
+                            launchIntent = launchIntent.apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        )
+                    } catch (e: PackageManager.NameNotFoundException) {
+                        null
+                    }
+                }
+                .sortedBy { it.label.lowercase() }
+
+            _apps.value = entries
+            _isLoaded.value = true
+        }
     }
 
     /**

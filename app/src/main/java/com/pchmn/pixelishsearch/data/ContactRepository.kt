@@ -5,6 +5,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.ContactsContract
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class ContactEntry(
     val id: Long,
@@ -30,6 +33,27 @@ object ContactRepository {
             context,
             android.Manifest.permission.READ_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Fires a trivial query against the Contacts provider so its (separate)
+     * process is alive and the binder connection is warm before the user
+     * types their first character. Costs nothing if the provider is already up.
+     * Call from Application.onCreate().
+     */
+    fun warmUp(context: Context, scope: CoroutineScope) {
+        if (!hasPermission(context)) return
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID),
+                    null,
+                    null,
+                    "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} ASC LIMIT 1"
+                )?.use { /* drain */ }
+            }
+        }
     }
 
     fun search(

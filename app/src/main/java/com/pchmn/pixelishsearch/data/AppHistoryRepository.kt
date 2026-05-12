@@ -1,7 +1,8 @@
 package com.pchmn.pixelishsearch.data
 
 import android.content.Context
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,15 +13,19 @@ data class AppHistoryEntry(
 ) : HistoryEntry
 
 
-class AppHistoryRepository(context: Context) : HistoryRepository<AppHistoryEntry, String>(
+class AppHistoryRepository(
+    context: Context,
+    scope: CoroutineScope,
+) : HistoryRepository<AppHistoryEntry, String>(
     dataStore = context.applicationContext.appHistoryDatastore,
     serializer = AppHistoryEntry.serializer(),
+    scope = scope,
 ) {
     override fun keyOf(item: AppHistoryEntry) = item.packageName
     override fun withUpdatedMetadata(item: AppHistoryEntry, timestamp: Long, count: Int) =
         item.copy(lastUsedEpochMillis = timestamp, usageCount = count)
 
-    val recents: Flow<List<AppHistoryEntry>> = items
+    val recents: StateFlow<List<AppHistoryEntry>> = items
 
     suspend fun record(packageName: String) {
         if (packageName.isBlank()) return

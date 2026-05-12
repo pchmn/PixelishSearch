@@ -53,11 +53,6 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private var webJob: Job? = null
 
     init {
-        // Ensures the index is loaded (in case the app is launched before preload finishes)
-        viewModelScope.launch {
-            AppIndex.preload(application)
-        }
-
         // Default suggestions: top 4 apps by usage score (time decay),
         // tiebreaker = alphabetical order. Also refreshes the local cache used
         // by runLocalSearch.

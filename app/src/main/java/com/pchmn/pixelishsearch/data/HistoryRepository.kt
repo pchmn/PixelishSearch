@@ -6,9 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -35,6 +38,7 @@ interface HistoryEntry {
 abstract class HistoryRepository<T : HistoryEntry, K>(
     private val dataStore: DataStore<Preferences>,
     private val serializer: KSerializer<T>,
+    scope: CoroutineScope,
     private val maxEntries: Int = 20,
 ) {
     private val key = stringPreferencesKey("entries")
@@ -43,7 +47,10 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
     protected abstract fun keyOf(item: T): K
     protected abstract fun withUpdatedMetadata(item: T, timestamp: Long, count: Int): T
 
-    val items: Flow<List<T>> = dataStore.data
+    // Hot StateFlow: starts collecting from DataStore as soon as the repo is
+    // constructed (in Application.onCreate), so the decoded list is already in
+    // memory when the search screen subscribes.
+    val items: StateFlow<List<T>> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { prefs ->
             prefs[key]
@@ -58,6 +65,7 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
                 ?.sortedByDescending { it.lastUsedEpochMillis }
                 .orEmpty()
         }
+        .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     protected suspend fun upsert(item: T) {
         dataStore.edit { prefs ->
