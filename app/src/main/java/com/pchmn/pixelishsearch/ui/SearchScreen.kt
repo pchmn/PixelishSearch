@@ -82,6 +82,11 @@ import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
 import androidx.core.net.toUri
+import com.pchmn.pixelishsearch.launchContactDetails
+import com.pchmn.pixelishsearch.launchDialer
+import com.pchmn.pixelishsearch.launchGoogleSearch
+import com.pchmn.pixelishsearch.launchSms
+import com.pchmn.pixelishsearch.ui.app.AppList
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
 import com.pchmn.pixelishsearch.ui.contact.ContactResultList
 import com.pchmn.pixelishsearch.ui.websearch.WebSearchList
@@ -228,7 +233,7 @@ fun SearchScreen(
                     uiState.appResults
                 }.take(4)
 
-                AppRow(
+                AppList(
                     apps = displayedApps,
                     highlightFirst = uiState.query.isNotBlank(),
                     onAppClick = { entry ->
@@ -281,7 +286,7 @@ fun SearchScreen(
                             contacts = uiState.contactResults,
                             onContactClick = { contact ->
                                 viewModel.onContactUsed(contact, ContactAction.CARD)
-                                openContactById(context, contact.id)
+                                launchContactDetails(context, contact.id)
                             },
                             onMessageClick = { contact ->
                                 contact.phoneNumber?.let {
@@ -303,87 +308,6 @@ fun SearchScreen(
     }
 }
 
-private val AppSlotWidth = 88.dp
-
-@Composable
-private fun AppRow(
-    apps: List<AppEntry>,
-    highlightFirst: Boolean,
-    onAppClick: (AppEntry) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        // Always 4 fixed-width slots — keeps the layout stable even if
-        // fewer than 4 apps match.
-        repeat(4) { index ->
-            Box(
-                modifier = Modifier.width(AppSlotWidth),
-                contentAlignment = Alignment.TopCenter,
-            ) {
-                apps.getOrNull(index)?.let { entry ->
-                    AppItem(
-                        entry = entry,
-                        highlighted = highlightFirst && index == 0,
-                        onClick = { onAppClick(entry) },
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AppItem(
-    entry: AppEntry,
-    highlighted: Boolean,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(30.dp)
-    val backgroundColor = if (highlighted) {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-    } else {
-        Color.Transparent
-    }
-
-    Column(
-        modifier = Modifier
-            .width(AppSlotWidth)
-            .clip(shape)
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(top = 16.dp, bottom = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        val bitmap = remember(entry.packageName) {
-            entry.icon.toBitmap().asImageBitmap()
-        }
-        Image(
-            bitmap = bitmap,
-            contentDescription = entry.label,
-            modifier = Modifier
-                .size(60.dp)
-                .clip(CircleShape),
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = entry.label,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
 @Composable
 private fun SectionHeader(title: String) {
     Text(
@@ -400,61 +324,10 @@ private fun SectionHeader(title: String) {
 private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
     val phone = entry.phoneNumber
     when (entry.action) {
-        ContactAction.MESSAGE -> if (phone != null) launchSms(context, phone) else openContactById(context, entry.id)
-        ContactAction.CALL -> if (phone != null) launchDialer(context, phone) else openContactById(context, entry.id)
-        ContactAction.CARD -> openContactById(context, entry.id)
+        ContactAction.MESSAGE -> if (phone != null) launchSms(context, phone) else launchContactDetails(context, entry.id)
+        ContactAction.CALL -> if (phone != null) launchDialer(context, phone) else launchContactDetails(context, entry.id)
+        ContactAction.CARD -> launchContactDetails(context, entry.id)
     }
-}
-
-private fun openContactById(context: Context, contactId: Long) {
-    val uri = ContentUris.withAppendedId(
-        ContactsContract.Contacts.CONTENT_URI,
-        contactId,
-    )
-    val intent = Intent(Intent.ACTION_VIEW, uri)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    try {
-        context.launchAndDismiss(intent)
-    } catch (_: ActivityNotFoundException) {
-        // No contacts app available — silently ignore.
-    }
-}
-
-private fun launchSms(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_SENDTO, "smsto:$phoneNumber".toUri())
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    try {
-        context.launchAndDismiss(intent)
-    } catch (_: ActivityNotFoundException) {
-    }
-}
-
-private fun launchDialer(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    try {
-        context.launchAndDismiss(intent)
-    } catch (_: ActivityNotFoundException) {
-    }
-}
-
-private fun launchGoogleSearch(context: Context, query: String) {
-    val googleApp = Intent(Intent.ACTION_WEB_SEARCH).apply {
-        putExtra(SearchManager.QUERY, query)
-        setPackage("com.google.android.googlequicksearchbox")
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    try {
-        context.launchAndDismiss(googleApp)
-        return
-    } catch (_: ActivityNotFoundException) {
-        // Google app unavailable, fall back to the browser.
-    }
-
-    val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())
-    val fallback = Intent(Intent.ACTION_VIEW, "https://www.google.com/search?q=$encoded".toUri())
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.launchAndDismiss(fallback)
 }
 
 private fun View.findDialogWindow(): Window? {
