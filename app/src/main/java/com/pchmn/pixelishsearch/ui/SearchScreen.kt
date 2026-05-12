@@ -6,9 +6,6 @@ import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.provider.ContactsContract
 import android.view.View
 import android.view.ViewParent
@@ -37,10 +34,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.NorthWest
-import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,20 +52,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -80,7 +71,6 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
@@ -92,9 +82,11 @@ import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import com.pchmn.pixelishsearch.ui.contact.RecentContactItem
+import com.pchmn.pixelishsearch.ui.contact.RecentContactList
+import com.pchmn.pixelishsearch.ui.contact.ResultContactItem
+import com.pchmn.pixelishsearch.ui.contact.ResultContactList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -286,16 +278,8 @@ fun SearchScreen(
                     if (uiState.contactResults.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         SectionHeader(title = "Contacts")
-                        val smsIcon = remember(context) {
-                            resolveAppIcon(context, Intent(Intent.ACTION_SENDTO, "smsto:".toUri()))
-                        }
-                        val callIcon = remember(context) {
-                            resolveAppIcon(context, Intent(Intent.ACTION_DIAL, "tel:".toUri()))
-                        }
-                        ContactList(
+                        ResultContactList(
                             contacts = uiState.contactResults,
-                            smsIcon = smsIcon,
-                            callIcon = callIcon,
                             onContactClick = { contact ->
                                 viewModel.onContactUsed(contact, ContactAction.CARD)
                                 openContactById(context, contact.id)
@@ -408,13 +392,7 @@ private fun SuggestionList(
     onClick: (String) -> Unit,
     onDelete: ((String) -> Unit)? = null,
 ) {
-    if (suggestions.isEmpty()) return
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
+    EntryList(entries = suggestions) {
         suggestions.forEachIndexed { index, suggestion ->
             SuggestionItem(
                 text = suggestion,
@@ -437,7 +415,7 @@ private fun SuggestionItem(
     onClick: () -> Unit,
     onDelete: (() -> Unit)? = null,
 ) {
-    SearchRowItem(
+    EntryRow(
         isFirst = isFirst,
         isLast = isLast,
         onClick = onClick,
@@ -491,244 +469,6 @@ private fun SectionHeader(title: String) {
     )
 }
 
-@Composable
-private fun ContactList(
-    contacts: List<ContactEntry>,
-    smsIcon: ImageBitmap?,
-    callIcon: ImageBitmap?,
-    onContactClick: (ContactEntry) -> Unit,
-    onMessageClick: (ContactEntry) -> Unit,
-    onCallClick: (ContactEntry) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        contacts.forEachIndexed { index, contact ->
-            ContactItem(
-                contact = contact,
-                isFirst = index == 0,
-                isLast = index == contacts.lastIndex,
-                smsIcon = smsIcon,
-                callIcon = callIcon,
-                onClick = { onContactClick(contact) },
-                onMessageClick = { onMessageClick(contact) },
-                onCallClick = { onCallClick(contact) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun ContactItem(
-    contact: ContactEntry,
-    isFirst: Boolean,
-    isLast: Boolean,
-    smsIcon: ImageBitmap?,
-    callIcon: ImageBitmap?,
-    onClick: () -> Unit,
-    onMessageClick: () -> Unit,
-    onCallClick: () -> Unit,
-) {
-    val outer = 28.dp
-    val inner = 6.dp
-    val shape = RoundedCornerShape(
-        topStart = if (isFirst) outer else inner,
-        topEnd = if (isFirst) outer else inner,
-        bottomStart = if (isLast) outer else inner,
-        bottomEnd = if (isLast) outer else inner,
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ContactAvatar(name = contact.name, photoUri = contact.photoUri)
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = contact.name,
-            modifier = Modifier.weight(1f),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (contact.phoneNumber != null) {
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionIconButton(
-                bitmap = smsIcon,
-                fallbackIcon = Icons.AutoMirrored.Outlined.Message,
-                contentDescription = "Send message",
-                onClick = onMessageClick,
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            ActionIconButton(
-                bitmap = callIcon,
-                fallbackIcon = Icons.Outlined.Phone,
-                contentDescription = "Call",
-                onClick = onCallClick,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ContactAvatar(
-    name: String,
-    photoUri: Uri?,
-    size: Dp = 48.dp,
-) {
-    val photo = rememberContactPhoto(photoUri)
-    val avatarModifier = Modifier
-        .size(size)
-        .clip(CircleShape)
-    if (photo != null) {
-        Image(
-            bitmap = photo,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = avatarModifier,
-        )
-    } else {
-        Box(
-            modifier = avatarModifier
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = name.firstOrNull { it.isLetter() }?.uppercase() ?: "?",
-                fontSize = (size.value * 0.42f).sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun rememberContactPhoto(uri: Uri?): ImageBitmap? {
-    if (uri == null) return null
-    val context = LocalContext.current
-    var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
-    LaunchedEffect(uri) {
-        bitmap = withContext(Dispatchers.IO) {
-            runCatching {
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
-    }
-    return bitmap
-}
-
-@Composable
-private fun ActionIconButton(
-    bitmap: ImageBitmap?,
-    fallbackIcon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-) {
-    val baseModifier = Modifier
-        .size(32.dp)
-        .clip(CircleShape)
-        .clickable(onClick = onClick)
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap,
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
-            modifier = baseModifier,
-        )
-    } else {
-        Box(
-            modifier = baseModifier
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = fallbackIcon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun RecentContactList(
-    contacts: List<ContactHistoryEntry>,
-    onClick: (ContactHistoryEntry) -> Unit,
-    onDelete: (ContactHistoryEntry) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        contacts.forEachIndexed { index, contact ->
-            RecentContactItem(
-                contact = contact,
-                isFirst = index == 0,
-                isLast = index == contacts.lastIndex,
-                onClick = { onClick(contact) },
-                onDelete = { onDelete(contact) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun RecentContactItem(
-    contact: ContactHistoryEntry,
-    isFirst: Boolean,
-    isLast: Boolean,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    SearchRowItem(
-        isFirst = isFirst,
-        isLast = isLast,
-        onClick = onClick,
-        onDelete = onDelete,
-        leading = {
-            ContactAvatar(name = contact.name, photoUri = contact.photoUri, size = 32.dp)
-        },
-    ) {
-        Text(
-            text = contact.name,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = " · ${contact.action.label()}",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-private fun ContactAction.label(): String = when (this) {
-    ContactAction.CARD -> "Contacts"
-    ContactAction.MESSAGE -> "Message"
-    ContactAction.CALL -> "Phone"
-}
-
 private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
     val phone = entry.phoneNumber
     when (entry.action) {
@@ -736,14 +476,6 @@ private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
         ContactAction.CALL -> if (phone != null) launchDialer(context, phone) else openContactById(context, entry.id)
         ContactAction.CARD -> openContactById(context, entry.id)
     }
-}
-
-private fun resolveAppIcon(context: Context, intent: Intent): ImageBitmap? {
-    val pm = context.packageManager
-    val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: return null
-    return runCatching {
-        resolveInfo.loadIcon(pm).toBitmap().asImageBitmap()
-    }.getOrNull()
 }
 
 private fun openContactById(context: Context, contactId: Long) {

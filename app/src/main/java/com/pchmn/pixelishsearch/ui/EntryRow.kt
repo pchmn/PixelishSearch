@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +32,8 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SearchRowItem(
+fun EntryRow(
+    padding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
@@ -64,7 +66,7 @@ fun SearchRowItem(
                         Modifier.clickable(onClick = onClick)
                     }
                 )
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(padding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             leading()
