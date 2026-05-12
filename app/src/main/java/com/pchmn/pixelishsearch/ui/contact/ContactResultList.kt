@@ -14,7 +14,7 @@ import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.ui.EntryList
 
 @Composable
-fun ResultContactList(
+fun ContactResultList(
     contacts: List<ContactEntry>,
     onContactClick: (ContactEntry) -> Unit,
     onMessageClick: (ContactEntry) -> Unit,
@@ -32,7 +32,7 @@ fun ResultContactList(
 
     EntryList(entries = contacts) {
         contacts.forEachIndexed { index, contact ->
-            ResultContactItem(
+            ContactResultRow(
                 contact = contact,
                 isFirst = index == 0,
                 isLast = index == contacts.lastIndex,

@@ -31,7 +31,7 @@ import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.ui.EntryRow
 
 @Composable
-fun ResultContactItem(
+fun ContactResultRow(
     contact: ContactEntry,
     isFirst: Boolean,
     isLast: Boolean,

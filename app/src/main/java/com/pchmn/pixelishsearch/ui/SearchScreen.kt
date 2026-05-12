@@ -79,14 +79,11 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.data.AppEntry
 import com.pchmn.pixelishsearch.data.ContactAction
-import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
 import androidx.core.net.toUri
-import com.pchmn.pixelishsearch.ui.contact.RecentContactItem
-import com.pchmn.pixelishsearch.ui.contact.RecentContactList
-import com.pchmn.pixelishsearch.ui.contact.ResultContactItem
-import com.pchmn.pixelishsearch.ui.contact.ResultContactList
+import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
+import com.pchmn.pixelishsearch.ui.contact.ContactResultList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -244,7 +241,7 @@ fun SearchScreen(
 
                 if (uiState.query.isBlank()) {
                     if (uiState.contactRecents.isNotEmpty()) {
-                        RecentContactList(
+                        ContactRecentList(
                             contacts = uiState.contactRecents.take(2),
                             onClick = { entry ->
                                 replayContactAction(context, entry)
@@ -278,7 +275,7 @@ fun SearchScreen(
                     if (uiState.contactResults.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
                         SectionHeader(title = "Contacts")
-                        ResultContactList(
+                        ContactResultList(
                             contacts = uiState.contactResults,
                             onContactClick = { contact ->
                                 viewModel.onContactUsed(contact, ContactAction.CARD)

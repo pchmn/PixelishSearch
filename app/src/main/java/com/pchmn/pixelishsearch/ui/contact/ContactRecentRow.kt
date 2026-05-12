@@ -12,7 +12,7 @@ import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.ui.EntryRow
 
 @Composable
-fun RecentContactItem(
+fun ContactRecentRow(
     contact: ContactHistoryEntry,
     isFirst: Boolean,
     isLast: Boolean,
