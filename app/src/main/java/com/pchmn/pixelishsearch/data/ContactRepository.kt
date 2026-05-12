@@ -47,7 +47,7 @@ object ContactRepository {
             ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
             ContactsContract.CommonDataKinds.Phone.NUMBER,
-            ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
+            ContactsContract.CommonDataKinds.Phone.PHOTO_THUMBNAIL_URI,
             ContactsContract.Contacts.STARRED,
         )
 

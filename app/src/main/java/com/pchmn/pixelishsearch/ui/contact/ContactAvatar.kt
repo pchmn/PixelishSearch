@@ -1,7 +1,9 @@
 package com.pchmn.pixelishsearch.ui.contact
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -66,15 +68,24 @@ fun ContactAvatar(
 private fun rememberContactPhoto(uri: Uri?): ImageBitmap? {
     if (uri == null) return null
     val context = LocalContext.current
-    var bitmap by remember(uri) { mutableStateOf<ImageBitmap?>(null) }
+    var bitmap by remember(uri) { mutableStateOf(photoCache.get(uri)) }
     LaunchedEffect(uri) {
-        bitmap = withContext(Dispatchers.IO) {
-            runCatching {
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    BitmapFactory.decodeStream(input)?.asImageBitmap()
-                }
-            }.getOrNull()
+        if (bitmap != null) return@LaunchedEffect
+        val decoded = withContext(Dispatchers.IO) {
+            decodeContactPhoto(context, uri)
+        }
+        if (decoded != null) {
+            photoCache.put(uri, decoded)
+            bitmap = decoded
         }
     }
     return bitmap
 }
+
+private fun decodeContactPhoto(context: Context, uri: Uri): ImageBitmap? = runCatching {
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input)?.asImageBitmap()
+    }
+}.getOrNull()
+
+private val photoCache = LruCache<Uri, ImageBitmap>(64)
