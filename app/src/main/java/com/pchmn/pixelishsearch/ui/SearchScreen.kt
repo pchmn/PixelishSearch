@@ -1,9 +1,5 @@
 package com.pchmn.pixelishsearch.ui
 
-import android.content.Context
-import android.view.View
-import android.view.ViewParent
-import android.view.Window
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,10 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogWindowProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.data.ContactAction
-import com.pchmn.pixelishsearch.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.launchAndDismiss
 import com.pchmn.pixelishsearch.launchContactDetails
 import com.pchmn.pixelishsearch.launchDialer
@@ -44,6 +38,7 @@ import com.pchmn.pixelishsearch.ui.app.AppList
 import com.pchmn.pixelishsearch.ui.bottomsheet.BottomSheet
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
 import com.pchmn.pixelishsearch.ui.contact.ContactResultList
+import com.pchmn.pixelishsearch.ui.contact.replayContactAction
 import com.pchmn.pixelishsearch.ui.websearch.WebSearchList
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,30 +181,4 @@ private fun SectionHeader(title: String) {
         fontWeight = FontWeight.Medium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
     )
-}
-
-private fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
-    val phone = entry.phoneNumber
-    when (entry.action) {
-        ContactAction.MESSAGE -> if (phone != null) launchSms(
-            context,
-            phone
-        ) else launchContactDetails(context, entry.id)
-
-        ContactAction.CALL -> if (phone != null) launchDialer(
-            context,
-            phone
-        ) else launchContactDetails(context, entry.id)
-
-        ContactAction.CARD -> launchContactDetails(context, entry.id)
-    }
-}
-
-private fun View.findDialogWindow(): Window? {
-    var p: ViewParent? = parent
-    while (p != null) {
-        if (p is DialogWindowProvider) return p.window
-        p = p.parent
-    }
-    return null
 }
