@@ -1,8 +1,5 @@
 package com.pchmn.pixelishsearch.ui.contact
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,21 +17,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toUri
 import com.pchmn.pixelishsearch.data.ContactEntry
 import com.pchmn.pixelishsearch.ui.EntryRow
 
@@ -43,18 +35,12 @@ fun ResultContactItem(
     contact: ContactEntry,
     isFirst: Boolean,
     isLast: Boolean,
+    smsIcon: ImageBitmap?,
+    callIcon: ImageBitmap?,
     onClick: () -> Unit,
     onMessageClick: () -> Unit,
     onCallClick: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val smsIcon = remember(context) {
-        resolveAppIcon(context, Intent(Intent.ACTION_SENDTO, "smsto:".toUri()))
-    }
-    val callIcon = remember(context) {
-        resolveAppIcon(context, Intent(Intent.ACTION_DIAL, "tel:".toUri()))
-    }
-
     EntryRow(
         padding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         isFirst = isFirst,
@@ -124,12 +110,4 @@ private fun ActionIconButton(
             )
         }
     }
-}
-
-private fun resolveAppIcon(context: Context, intent: Intent): ImageBitmap? {
-    val pm = context.packageManager
-    val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) ?: return null
-    return runCatching {
-        resolveInfo.loadIcon(pm).toBitmap().asImageBitmap()
-    }.getOrNull()
 }
