@@ -40,6 +40,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val appHistory get() = app.appHistory
     private val searchHistory get() = app.searchHistory
     private val contactHistory get() = app.contactHistory
+    private val hiddenApps get() = app.hiddenApps
 
     private val _query = MutableStateFlow("")
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -57,9 +58,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // tiebreaker = alphabetical order. Also refreshes the local cache used
         // by runLocalSearch.
         viewModelScope.launch {
-            combine(AppIndex.apps, appHistory.recents) { apps, history ->
+            combine(
+                AppIndex.apps,
+                appHistory.recents,
+                hiddenApps.hidden,
+            ) { apps, history, hidden ->
                 historyByPkg = history.associateBy { it.packageName }
-                rankByUsage(apps, historyByPkg).take(4)
+                rankByUsage(apps.filterNot { it.packageName in hidden }, historyByPkg).take(4)
             }.collect { suggested ->
                 _uiState.value = _uiState.value.copy(appRecents = suggested)
             }
@@ -123,6 +128,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removeSearchHistory(query: String) {
         viewModelScope.launch { searchHistory.remove(WebSearchHistoryEntry(query)) }
+    }
+
+    fun hideAppFromRecents(packageName: String) {
+        viewModelScope.launch { hiddenApps.hide(packageName) }
     }
 
     fun removeRecentContact(entry: ContactHistoryEntry) {

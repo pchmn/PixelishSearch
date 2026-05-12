@@ -19,6 +19,9 @@ fun AppList(
     apps: List<AppEntry>,
     highlightFirst: Boolean,
     onAppClick: (AppEntry) -> Unit,
+    onAppInfo: (AppEntry) -> Unit,
+    onAddToHomeScreen: (AppEntry) -> Unit,
+    onHideFromRecents: (AppEntry) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -38,6 +41,9 @@ fun AppList(
                         entry = entry,
                         highlighted = highlightFirst && index == 0,
                         onClick = { onAppClick(entry) },
+                        onAppInfo = { onAppInfo(entry) },
+                        onAddToHomeScreen = { onAddToHomeScreen(entry) },
+                        onHideFromRecents = { onHideFromRecents(entry) },
                     )
                 }
             }

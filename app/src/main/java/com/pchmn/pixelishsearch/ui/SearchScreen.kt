@@ -30,10 +30,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.launchAndDismiss
+import com.pchmn.pixelishsearch.launchAppInfo
 import com.pchmn.pixelishsearch.launchContactDetails
 import com.pchmn.pixelishsearch.launchDialer
 import com.pchmn.pixelishsearch.launchGoogleSearch
 import com.pchmn.pixelishsearch.launchSms
+import com.pchmn.pixelishsearch.pinAppShortcut
 import com.pchmn.pixelishsearch.ui.app.AppList
 import com.pchmn.pixelishsearch.ui.bottomsheet.BottomSheet
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
@@ -102,6 +104,9 @@ fun SearchScreen(
                         viewModel.onAppLaunched(entry.packageName)
                         context.launchAndDismiss(entry.launchIntent)
                     },
+                    onAppInfo = { entry -> launchAppInfo(context, entry.packageName) },
+                    onAddToHomeScreen = { entry -> pinAppShortcut(context, entry) },
+                    onHideFromRecents = { entry -> viewModel.hideAppFromRecents(entry.packageName) },
                 )
 
                 if (displayedApps.isNotEmpty()) {

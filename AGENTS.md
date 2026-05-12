@@ -30,7 +30,7 @@ Code lives in `app/src/main/java/com/pchmn/pixelishsearch/`.
 **Ultra-fast cold start** is the main architectural goal. Multiple layers contribute:
 
 1. **`PixelishSearchApp`** (`Application`) — at process creation:
-   - Constructs the three history repos (`AppHistory`, `WebSearchHistory`, `ContactHistory`); each `.stateIn(appScope, Eagerly, emptyList())` starts collecting DataStore eagerly on `Dispatchers.Default`.
+   - Constructs the three history repos (`AppHistory`, `WebSearchHistory`, `ContactHistory`) + the `HiddenAppsRepository`; each `.stateIn(appScope, Eagerly, ...)` starts collecting DataStore eagerly on `Dispatchers.Default`.
    - `AppIndex.preload(this, appScope)` — async, see below.
    - `WebSuggestRepository.warmUp(appScope)` — fires a dummy request to warm the TLS connection to Google Suggest.
    - `ContactRepository.warmUp(this, appScope)` — fires a `LIMIT 1` query so the (out-of-process) Contacts ContentProvider is alive and the binder is warm.
@@ -59,11 +59,12 @@ Code lives in `app/src/main/java/com/pchmn/pixelishsearch/`.
   - Each entry implements `HistoryEntry` with an exponential time-decay `score()` (14-day half-life).
 - **`ContactRepository`** (object) — live search via `ContentResolver` (`READ_CONTACTS` permission), plus `warmUp(context, scope)`.
 - **`WebSuggestRepository`** (object) — Google Suggest API via Ktor + `LruCache`, plus `warmUp(scope)`.
+- **`HiddenAppsRepository`** — DataStore-backed `Set<String>` of packages the user opted out of the default suggestion strip ("Don't suggest app" menu). Exposes a hot `hidden: StateFlow<Set<String>>` and `hide` / `unhide` mutators. Hidden apps stay searchable; they're only filtered out of `appRecents`.
 
 ### UI (`ui/`)
 
-- **`SearchScreen`** — a `BottomSheet` (custom wrapper around `ModalBottomSheet`) containing `SearchField`, an `AppList` (4 fixed slots), and either history (`WebSearchList` + `ContactRecentList`) or live results (`WebSearchList` + `ContactResultList`) depending on whether the query is blank.
-- **`SearchViewModel`** — orchestrates everything: instant local search on every keystroke, web search debounced at 90ms, `combine` of `AppIndex.apps` + `appHistory.recents` for the default suggestions. **No defensive `AppIndex.preload` call** — `Application.onCreate` is always run first.
+- **`SearchScreen`** — a `BottomSheet` (custom wrapper around `ModalBottomSheet`) containing `SearchField`, an `AppList` (4 fixed slots), and either history (`WebSearchList` + `ContactRecentList`) or live results (`WebSearchList` + `ContactResultList`) depending on whether the query is blank. Long-pressing an `AppItem` opens a Material 3 `DropdownMenu` with **App info** (`Settings.ACTION_APPLICATION_DETAILS_SETTINGS`), **Add to home screen** (`ShortcutManager.requestPinShortcut`) and **Don't suggest app** (`HiddenAppsRepository.hide`).
+- **`SearchViewModel`** — orchestrates everything: instant local search on every keystroke, web search debounced at 90ms, `combine` of `AppIndex.apps` + `appHistory.recents` + `hiddenApps.hidden` for the default suggestions (hidden packages are filtered out before ranking). **No defensive `AppIndex.preload` call** — `Application.onCreate` is always run first.
 - Subpackages: `ui/app/` (AppList, AppItem), `ui/contact/` (ContactResultList, ContactRecentList, ContactUtils, ContactAvatar), `ui/websearch/` (WebSearchList, WebSearchRow), `ui/bottomsheet/` (BottomSheet wrapper), `ui/theme/`.
 - The `ModalBottomSheet` lives in its own Dialog window: to make status / nav bar icons follow the theme, retrieve that window via `findDialogWindow()` and call `WindowCompat.getInsetsController(...)` from a `SideEffect`.
 

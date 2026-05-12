@@ -8,8 +8,17 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.Icon
+import android.net.Uri
 import android.provider.ContactsContract
+import android.provider.Settings
 import androidx.core.net.toUri
+import com.pchmn.pixelishsearch.data.AppEntry
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -56,6 +65,48 @@ fun lensIntent(context: Context): Intent? {
         ?.let { return it }
 
     return null
+}
+
+fun launchAppInfo(context: Context, packageName: String) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        .setData(Uri.fromParts("package", packageName, null))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.launchAndDismiss(intent)
+    } catch (_: ActivityNotFoundException) {
+    }
+}
+
+/**
+ * Asks the current launcher to pin a shortcut that re-launches [entry]'s app.
+ * The launcher displays its own confirmation dialog — we don't get a callback
+ * unless we pass a PendingIntent, which we don't need.
+ */
+fun pinAppShortcut(context: Context, entry: AppEntry) {
+    val sm = context.getSystemService(ShortcutManager::class.java) ?: return
+    if (!sm.isRequestPinShortcutSupported) return
+
+    val icon = runCatching {
+        val drawable = context.packageManager.getApplicationIcon(entry.packageName)
+        Icon.createWithBitmap(drawable.toBitmap())
+    }.getOrNull()
+
+    val builder = ShortcutInfo.Builder(context, "pin-${entry.packageName}")
+        .setShortLabel(entry.label)
+        .setIntent(entry.launchIntent)
+    if (icon != null) builder.setIcon(icon)
+
+    runCatching { sm.requestPinShortcut(builder.build(), null) }
+}
+
+private fun Drawable.toBitmap(): Bitmap {
+    val width = intrinsicWidth.coerceAtLeast(1)
+    val height = intrinsicHeight.coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    setBounds(0, 0, canvas.width, canvas.height)
+    draw(canvas)
+    return bitmap
 }
 
 fun launchContactDetails(context: Context, contactId: Long) {
