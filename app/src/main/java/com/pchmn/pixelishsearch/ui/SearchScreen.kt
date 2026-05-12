@@ -1,11 +1,9 @@
 package com.pchmn.pixelishsearch.ui
 
-import android.app.Activity
 import android.content.Context
 import android.view.View
 import android.view.ViewParent
 import android.view.Window
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,23 +21,17 @@ import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.data.ContactAction
 import com.pchmn.pixelishsearch.data.ContactHistoryEntry
@@ -50,6 +41,7 @@ import com.pchmn.pixelishsearch.launchDialer
 import com.pchmn.pixelishsearch.launchGoogleSearch
 import com.pchmn.pixelishsearch.launchSms
 import com.pchmn.pixelishsearch.ui.app.AppList
+import com.pchmn.pixelishsearch.ui.bottomsheet.BottomSheet
 import com.pchmn.pixelishsearch.ui.contact.ContactRecentList
 import com.pchmn.pixelishsearch.ui.contact.ContactResultList
 import com.pchmn.pixelishsearch.ui.websearch.WebSearchList
@@ -61,42 +53,20 @@ fun SearchScreen(
     onClose: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val isDark = isSystemInDarkTheme()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    ModalBottomSheet(
+    val displayedApps = if (uiState.query.isBlank()) {
+        uiState.appRecents
+    } else {
+        uiState.appResults
+    }.take(4)
+
+    BottomSheet(
         onDismissRequest = onClose,
         sheetState = sheetState,
-        modifier = Modifier.statusBarsPadding(),
-        containerColor = if (isDark) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-            .compositeOver(MaterialTheme.colorScheme.surface)
-            .copy(0.6f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
-            .compositeOver(MaterialTheme.colorScheme.surface).copy(0.6f),
-        scrimColor = Color.White.copy(alpha = 0.1f),
     ) {
-        // The ModalBottomSheet's internal dialog window doesn't automatically follow
-        // the system theme. Force the status/nav bar icons to match the theme:
-        //   - light theme → dark icons (isAppearanceLight* = true)
-        //   - dark theme → white icons (isAppearanceLight* = false)
-        val view = LocalView.current
-
-        SideEffect {
-            val sheetWindow = view.findDialogWindow() ?: (view.context as Activity).window
-            WindowCompat.getInsetsController(sheetWindow, view).apply {
-                isAppearanceLightStatusBars = false
-                isAppearanceLightNavigationBars = !isDark
-            }
-        }
-
         Box(modifier = Modifier.fillMaxSize()) {
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val context = LocalContext.current
-
-            val displayedApps = if (uiState.query.isBlank()) {
-                uiState.appRecents
-            } else {
-                uiState.appResults
-            }.take(4)
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
