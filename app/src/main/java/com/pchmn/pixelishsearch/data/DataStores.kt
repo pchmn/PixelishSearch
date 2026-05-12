@@ -6,3 +6,4 @@ import androidx.datastore.preferences.preferencesDataStore
 val Context.appHistoryDatastore by preferencesDataStore(name = "app_history")
 val Context.searchHistoryDataStore by preferencesDataStore(name = "search_history")
 val Context.contactHistoryDataStore by preferencesDataStore(name = "contact_history")
+val Context.appIndexCacheDataStore by preferencesDataStore(name = "app_index_cache")

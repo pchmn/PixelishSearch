@@ -3,7 +3,6 @@ package com.pchmn.pixelishsearch.data
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +12,6 @@ import kotlinx.coroutines.launch
 data class AppEntry(
     val label: String,
     val packageName: String,
-    val icon: Drawable,
     val launchIntent: Intent,
     // Used as the Coil cache key suffix so icon updates invalidate automatically.
     val lastUpdateTime: Long,
@@ -43,45 +41,61 @@ object AppIndex {
     fun preload(context: Context, scope: CoroutineScope) {
         if (_isLoaded.value) return
         scope.launch {
-            val pm = context.packageManager
-            val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
-                addCategory(Intent.CATEGORY_LAUNCHER)
+            val cacheRepo = AppIndexCacheRepository(context)
+
+            // Phase A — hydrate from the persisted cache so the UI can render
+            // the AppRow with real names + Coil disk-cached icons within ms,
+            // without waiting on PackageManager.
+            val cached = cacheRepo.read()
+            if (cached.isNotEmpty() && _apps.value.isEmpty()) {
+                _apps.value = cached.map { it.toAppEntry() }
             }
 
-            val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
+            // Phase B — authoritative enumeration. Picks up newly installed /
+            // uninstalled / renamed apps. Cheap now that icons are loaded by
+            // Coil on demand.
+            val fresh = enumerate(context)
+            val freshCached = fresh.map { it.toCached() }
+            if (freshCached != cached) {
+                _apps.value = fresh
+                cacheRepo.write(freshCached)
+            }
 
-            val entries = resolveInfos
-                .mapNotNull { ri ->
-                    try {
-                        val pkg = ri.activityInfo.packageName
-                        // Exclude our own app
-                        if (pkg == context.packageName) return@mapNotNull null
-
-                        val launchIntent =
-                            pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
-
-                        val lastUpdateTime = runCatching {
-                            pm.getPackageInfo(pkg, 0).lastUpdateTime
-                        }.getOrDefault(0L)
-
-                        AppEntry(
-                            label = ri.loadLabel(pm).toString(),
-                            packageName = pkg,
-                            icon = ri.loadIcon(pm),
-                            launchIntent = launchIntent.apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            },
-                            lastUpdateTime = lastUpdateTime,
-                        )
-                    } catch (e: PackageManager.NameNotFoundException) {
-                        null
-                    }
-                }
-                .sortedBy { it.label.lowercase() }
-
-            _apps.value = entries
             _isLoaded.value = true
         }
+    }
+
+    private fun enumerate(context: Context): List<AppEntry> {
+        val pm = context.packageManager
+        val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+        return pm.queryIntentActivities(mainIntent, 0)
+            .mapNotNull { ri ->
+                try {
+                    val pkg = ri.activityInfo.packageName
+                    if (pkg == context.packageName) return@mapNotNull null
+
+                    val launchIntent =
+                        pm.getLaunchIntentForPackage(pkg) ?: return@mapNotNull null
+
+                    val lastUpdateTime = runCatching {
+                        pm.getPackageInfo(pkg, 0).lastUpdateTime
+                    }.getOrDefault(0L)
+
+                    AppEntry(
+                        label = ri.loadLabel(pm).toString(),
+                        packageName = pkg,
+                        launchIntent = launchIntent.apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        },
+                        lastUpdateTime = lastUpdateTime,
+                    )
+                } catch (_: PackageManager.NameNotFoundException) {
+                    null
+                }
+            }
+            .sortedBy { it.label.lowercase() }
     }
 
     /**
