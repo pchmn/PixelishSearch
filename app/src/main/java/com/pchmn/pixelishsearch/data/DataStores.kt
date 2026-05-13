@@ -8,3 +8,4 @@ val Context.searchHistoryDataStore by preferencesDataStore(name = "search_histor
 val Context.contactHistoryDataStore by preferencesDataStore(name = "contact_history")
 val Context.appIndexCacheDataStore by preferencesDataStore(name = "app_index_cache")
 val Context.hiddenAppsDataStore by preferencesDataStore(name = "hidden_apps")
+val Context.settingsDataStore by preferencesDataStore(name = "settings")

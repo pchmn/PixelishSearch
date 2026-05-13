@@ -11,6 +11,7 @@ import com.pchmn.pixelishsearch.data.AppIndex
 import com.pchmn.pixelishsearch.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.data.ContactRepository
 import com.pchmn.pixelishsearch.data.HiddenAppsRepository
+import com.pchmn.pixelishsearch.data.SettingsRepository
 import com.pchmn.pixelishsearch.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.data.WebSuggestRepository
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +35,8 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var hiddenApps: HiddenAppsRepository
         private set
+    lateinit var settings: SettingsRepository
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +49,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         searchHistory = WebSearchHistoryRepository(this, appScope)
         contactHistory = ContactHistoryRepository(this, appScope)
         hiddenApps = HiddenAppsRepository(this, appScope)
+        settings = SettingsRepository(this, appScope)
 
         // Async preload of the index
         AppIndex.preload(this@PixelishSearchApp, appScope)

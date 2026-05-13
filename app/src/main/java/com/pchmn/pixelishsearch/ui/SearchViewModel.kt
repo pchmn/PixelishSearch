@@ -41,6 +41,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val searchHistory get() = app.searchHistory
     private val contactHistory get() = app.contactHistory
     private val hiddenApps get() = app.hiddenApps
+    private val settings get() = app.settings
 
     private val _query = MutableStateFlow("")
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -79,9 +80,23 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch {
-            contactHistory.recents.collect { recents ->
+            combine(
+                contactHistory.recents,
+                settings.contactSearchEnabled,
+            ) { recents, enabled ->
                 contactHistoryById = recents.associateBy { it.id }
-                _uiState.value = _uiState.value.copy(contactRecents = recents)
+                if (enabled) recents else emptyList()
+            }.collect { displayed ->
+                _uiState.value = _uiState.value.copy(contactRecents = displayed)
+            }
+        }
+
+        // Re-run the local search when the contact-search toggle flips so
+        // results / recents reflect the new state without waiting for the
+        // next keystroke.
+        viewModelScope.launch {
+            settings.contactSearchEnabled.collect {
+                runLocalSearch(_query.value)
             }
         }
 
@@ -153,9 +168,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         val apps = AppIndex.search(query, limit = 6) { pkg ->
             historyByPkg[pkg]?.score(now) ?: 0f
         }
-        val contacts = ContactRepository.search(getApplication(), query, limit = 3) { id ->
-            contactHistoryById[id]?.score(now) ?: 0f
-        }
+        val contacts = if (settings.contactSearchEnabled.value) {
+            ContactRepository.search(getApplication(), query, limit = 3) { id ->
+                contactHistoryById[id]?.score(now) ?: 0f
+            }
+        } else emptyList()
 
         _uiState.value = _uiState.value.copy(
             query = query,

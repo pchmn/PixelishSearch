@@ -49,6 +49,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Settings screen, launched from the search Activity's gear icon -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="Settings"
+            android:theme="@style/Theme.PixelishSearch" />
+
         <!-- Homescreen widget -->
         <receiver
             android:name=".widget.SearchWidget"
