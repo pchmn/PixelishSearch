@@ -60,7 +60,7 @@ fun AppItem(
     }
     var menuExpanded by remember { mutableStateOf(false) }
 
-    AnchorBox { xCenter ->
+    AnchorBox { bounds ->
         Column(
             modifier = Modifier
                 .width(APP_SLOT_WIDTH)
@@ -97,7 +97,7 @@ fun AppItem(
         DropdownMenuWithArrow(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
-            anchorXCenter = xCenter
+            anchorBounds = bounds,
         ) {
             DropdownMenuItem(
                 text = { Text("App info") },
