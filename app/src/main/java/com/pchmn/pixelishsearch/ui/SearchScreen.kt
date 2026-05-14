@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -155,14 +156,14 @@ fun SearchScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Settings,
-                                contentDescription = "Settings",
+                                contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.settings_title),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
                 } else {
                     if (uiState.webResults.isNotEmpty()) {
-                        SectionHeader(title = "Web Search")
+                        SectionHeader(title = stringResource(com.pchmn.pixelishsearch.R.string.search_section_web))
                         WebSearchList(
                             suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
                             leadingIcon = Icons.Outlined.Search,
@@ -175,7 +176,7 @@ fun SearchScreen(
                     }
 
                     if (uiState.contactResults.isNotEmpty()) {
-                        SectionHeader(title = "Contacts")
+                        SectionHeader(title = stringResource(com.pchmn.pixelishsearch.R.string.search_section_contacts))
                         ContactResultList(
                             contacts = uiState.contactResults,
                             onContactClick = { contact ->

@@ -30,12 +30,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.data.AppEntry
 import com.pchmn.pixelishsearch.data.AppIconRequest
 import com.pchmn.pixelishsearch.ui.AnchorBox
@@ -100,7 +102,7 @@ fun AppItem(
             anchorBounds = bounds,
         ) {
             DropdownMenuItem(
-                text = { Text("App info") },
+                text = { Text(stringResource(R.string.app_action_info)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Info,
@@ -115,7 +117,7 @@ fun AppItem(
                 contentPadding = PaddingValues(16.dp, top = 16.dp, end = 22.dp, bottom = 16.dp)
             )
             DropdownMenuItem(
-                text = { Text("Add to home screen") },
+                text = { Text(stringResource(com.pchmn.pixelishsearch.R.string.app_action_pin)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -130,7 +132,7 @@ fun AppItem(
                 contentPadding = PaddingValues(16.dp, top = 16.dp, end = 22.dp, bottom = 16.dp)
             )
             DropdownMenuItem(
-                text = { Text("Don't suggest app") },
+                text = { Text(stringResource(com.pchmn.pixelishsearch.R.string.app_action_hide)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Block,

@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,14 +67,14 @@ fun ContactResultRow(
             ActionIconButton(
                 bitmap = smsIcon,
                 fallbackIcon = Icons.AutoMirrored.Outlined.Message,
-                contentDescription = "Send message",
+                contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.contact_action_message),
                 onClick = onMessageClick,
             )
             Spacer(modifier = Modifier.width(16.dp))
             ActionIconButton(
                 bitmap = callIcon,
                 fallbackIcon = Icons.Outlined.Phone,
-                contentDescription = "Call",
+                contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.contact_action_call),
                 onClick = onCallClick,
             )
         }

@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.pchmn.pixelishsearch.ui.dropdown.DropdownMenuWithArrow
@@ -87,7 +88,7 @@ fun EntryRow(
                     anchorBounds = bounds,
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Delete") },
+                        text = { Text(stringResource(com.pchmn.pixelishsearch.R.string.action_delete)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Delete,

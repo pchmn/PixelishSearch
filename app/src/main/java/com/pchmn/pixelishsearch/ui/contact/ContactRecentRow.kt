@@ -3,6 +3,8 @@ package com.pchmn.pixelishsearch.ui.contact
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,8 +49,12 @@ fun ContactRecentRow(
     }
 }
 
-private fun ContactAction.label(): String = when (this) {
-    ContactAction.CARD -> "Contacts"
-    ContactAction.MESSAGE -> "Message"
-    ContactAction.CALL -> "Phone"
-}
+@Composable
+@ReadOnlyComposable
+private fun ContactAction.label(): String = stringResource(
+    when (this) {
+        ContactAction.CARD -> com.pchmn.pixelishsearch.R.string.contact_label_card
+        ContactAction.MESSAGE -> com.pchmn.pixelishsearch.R.string.contact_label_message
+        ContactAction.CALL -> com.pchmn.pixelishsearch.R.string.contact_label_call
+    }
+)

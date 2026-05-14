@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +53,7 @@ fun SearchField(
             .focusRequester(focusRequester),
         placeholder = {
             Text(
-                text = "Search web and more",
+                text = stringResource(com.pchmn.pixelishsearch.R.string.search_placeholder),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -73,7 +74,7 @@ fun SearchField(
                 IconButton(onClick = { onValueChange("") }) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = "Clear",
+                        contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.search_clear),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(22.dp),
                     )
@@ -83,7 +84,7 @@ fun SearchField(
                     IconButton(onClick = onGeminiClick) {
                         Icon(
                             painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.gemini_icon),
-                            contentDescription = "Gemini",
+                            contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.search_gemini),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(22.dp),
                         )
@@ -91,7 +92,7 @@ fun SearchField(
                     IconButton(onClick = onLensClick) {
                         Icon(
                             painter = painterResource(id = com.pchmn.pixelishsearch.R.drawable.google_lens_icon),
-                            contentDescription = "Google Lens",
+                            contentDescription = stringResource(com.pchmn.pixelishsearch.R.string.search_lens),
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(22.dp),
                         )

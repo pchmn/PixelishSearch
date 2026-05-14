@@ -1,9 +1,13 @@
 package com.pchmn.pixelishsearch.ui.settings
 
 import android.Manifest
+import android.app.LocaleManager
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.LocaleList
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,21 +21,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Contacts
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -45,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,7 +64,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.PixelishSearchApp
+import com.pchmn.pixelishsearch.R
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +122,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = stringResource(R.string.settings_title),
                         fontWeight = FontWeight.Medium,
                     )
                 },
@@ -129,7 +141,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(R.string.action_back),
                             )
                         }
                         Spacer(Modifier.width(8.dp))
@@ -146,13 +158,13 @@ fun SettingsScreen(onBack: () -> Unit) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            SectionHeader("General")
+            SectionHeader(stringResource(R.string.settings_section_general))
 
             SettingsGroup {
                 SwitchPreference(
                     icon = Icons.Outlined.Contacts,
-                    title = "Search contacts",
-                    subtitle = "Show matching contacts in search results",
+                    title = stringResource(R.string.settings_contact_search_title),
+                    subtitle = stringResource(R.string.settings_contact_search_subtitle),
                     checked = effectiveContactToggle,
                     onCheckedChange = { newValue ->
                         if (newValue) {
@@ -168,8 +180,114 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                SectionHeader(stringResource(R.string.settings_section_appearance))
+                SettingsGroup {
+                    LanguagePreference()
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun LanguagePreference() {
+    val context = LocalContext.current
+    val localeManager = remember { context.getSystemService(LocaleManager::class.java) }
+    var currentTag by remember {
+        mutableStateOf(
+            localeManager.applicationLocales.takeIf { !it.isEmpty }?.get(0)?.language
+        )
+    }
+    var showDialog by remember { mutableStateOf(false) }
+
+    val options: List<Pair<String?, String>> = listOf(
+        null to stringResource(R.string.settings_language_system),
+        "en" to stringResource(R.string.language_en),
+        "fr" to stringResource(R.string.language_fr),
+        "es" to stringResource(R.string.language_es),
+        "de" to stringResource(R.string.language_de),
+        "it" to stringResource(R.string.language_it),
+    )
+    val currentLabel = options.firstOrNull { it.first == currentTag }?.second ?: options[0].second
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable { showDialog = true }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Language,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.width(20.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.settings_language_title),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = currentLabel,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(R.string.settings_language_title)) },
+            text = {
+                Column {
+                    options.forEach { (tag, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .selectable(
+                                    selected = tag == currentTag,
+                                    onClick = {
+                                        localeManager.applicationLocales = if (tag == null) {
+                                            LocaleList.getEmptyLocaleList()
+                                        } else {
+                                            LocaleList(Locale.forLanguageTag(tag))
+                                        }
+                                        currentTag = tag
+                                        showDialog = false
+                                    },
+                                )
+                                .padding(vertical = 10.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = tag == currentTag,
+                                onClick = null,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(text = label, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
     }
 }
 

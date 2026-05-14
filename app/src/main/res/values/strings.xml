@@ -1,6 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PixelishSearch</string>
+
+    <!-- Widget -->
     <string name="widget_search_hint">Search</string>
-    <string name="widget_description">Recherche unifiée style Pixel</string>
+    <string name="widget_description">Pixel-style unified search</string>
+
+    <!-- Search screen -->
+    <string name="search_placeholder">Search web and more</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_gemini">Gemini</string>
+    <string name="search_lens">Google Lens</string>
+    <string name="search_section_web">Web Search</string>
+    <string name="search_section_contacts">Contacts</string>
+
+    <!-- App item dropdown -->
+    <string name="app_action_info">App info</string>
+    <string name="app_action_pin">Add to home screen</string>
+    <string name="app_action_hide">Don\'t suggest app</string>
+
+    <!-- Contact actions / labels -->
+    <string name="contact_action_message">Send message</string>
+    <string name="contact_action_call">Call</string>
+    <string name="contact_label_card">Contacts</string>
+    <string name="contact_label_message">Message</string>
+    <string name="contact_label_call">Phone</string>
+
+    <!-- Generic -->
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_general">General</string>
+    <string name="settings_contact_search_title">Search contacts</string>
+    <string name="settings_contact_search_subtitle">Show matching contacts in search results</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_system">System default</string>
+
+    <!-- Languages (shown in the in-app picker) -->
+    <string name="language_en">English</string>
+    <string name="language_fr">Français</string>
+    <string name="language_es">Español</string>
+    <string name="language_de">Deutsch</string>
+    <string name="language_it">Italiano</string>
 </resources>

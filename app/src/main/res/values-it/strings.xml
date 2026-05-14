@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_search_hint">Cerca</string>
+    <string name="widget_description">Ricerca unificata in stile Pixel</string>
+
+    <string name="search_placeholder">Cerca sul Web e altro</string>
+    <string name="search_clear">Cancella</string>
+    <string name="search_gemini">Gemini</string>
+    <string name="search_lens">Google Lens</string>
+    <string name="search_section_web">Ricerca Web</string>
+    <string name="search_section_contacts">Contatti</string>
+
+    <string name="app_action_info">Informazioni app</string>
+    <string name="app_action_pin">Aggiungi alla schermata Home</string>
+    <string name="app_action_hide">Non suggerire questa app</string>
+
+    <string name="contact_action_message">Invia messaggio</string>
+    <string name="contact_action_call">Chiama</string>
+    <string name="contact_label_card">Contatti</string>
+    <string name="contact_label_message">Messaggio</string>
+    <string name="contact_label_call">Telefono</string>
+
+    <string name="action_delete">Elimina</string>
+    <string name="action_back">Indietro</string>
+
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_section_general">Generali</string>
+    <string name="settings_contact_search_title">Cerca nei contatti</string>
+    <string name="settings_contact_search_subtitle">Mostra i contatti corrispondenti nei risultati</string>
+    <string name="settings_section_appearance">Aspetto</string>
+    <string name="settings_language_title">Lingua</string>
+    <string name="settings_language_system">Lingua di sistema</string>
+</resources>

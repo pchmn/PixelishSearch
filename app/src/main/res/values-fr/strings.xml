@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_search_hint">Rechercher</string>
+    <string name="widget_description">Recherche unifiée style Pixel</string>
+
+    <string name="search_placeholder">Recherche Web/applis</string>
+    <string name="search_clear">Effacer</string>
+    <string name="search_gemini">Gemini</string>
+    <string name="search_lens">Google Lens</string>
+    <string name="search_section_web">Recherche Web</string>
+    <string name="search_section_contacts">Contacts</string>
+
+    <string name="app_action_info">Infos sur l\'appli</string>
+    <string name="app_action_pin">Ajouter à l\'écran d\'accueil</string>
+    <string name="app_action_hide">Ne plus suggérer cette appli</string>
+
+    <string name="contact_action_message">Envoyer un message</string>
+    <string name="contact_action_call">Appeler</string>
+    <string name="contact_label_card">Contacts</string>
+    <string name="contact_label_message">Message</string>
+    <string name="contact_label_call">Téléphone</string>
+
+    <string name="action_delete">Supprimer</string>
+    <string name="action_back">Retour</string>
+
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_section_general">Général</string>
+    <string name="settings_contact_search_title">Rechercher dans les contacts</string>
+    <string name="settings_contact_search_subtitle">Afficher les contacts correspondants dans les résultats</string>
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_language_title">Langue</string>
+    <string name="settings_language_system">Langue du système</string>
+</resources>

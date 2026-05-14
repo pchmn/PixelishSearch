@@ -28,7 +28,7 @@
         android:tint="@color/on_primary_container"
         android:layout_marginEnd="20dp"
         android:padding="4dp"
-        android:contentDescription="Gemini" />
+        android:contentDescription="@string/search_gemini" />
 
     <ImageView
         android:id="@+id/widget_lens"
@@ -37,6 +37,6 @@
         android:src="@drawable/google_lens_icon"
         android:tint="@color/on_primary_container"
         android:padding="4dp"
-        android:contentDescription="Google Lens" />
+        android:contentDescription="@string/search_lens" />
 
 </LinearLayout>
