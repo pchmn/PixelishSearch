@@ -18,7 +18,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Settings
 import androidx.core.net.toUri
-import com.pchmn.pixelishsearch.data.AppEntry
+import com.pchmn.pixelishsearch.search.apps.data.AppEntry
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 

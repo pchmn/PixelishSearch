@@ -6,10 +6,10 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
-import com.pchmn.pixelishsearch.MainActivity
 import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.geminiIntent
 import com.pchmn.pixelishsearch.lensIntent
+import com.pchmn.pixelishsearch.search.MainActivity
 
 /**
  * Homescreen widget that looks like the native Pixel search bar.

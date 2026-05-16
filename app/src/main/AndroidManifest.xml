@@ -18,6 +18,7 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="https" />
         </intent>
+
         <package android:name="com.google.android.googlequicksearchbox" />
         <package android:name="com.google.android.apps.bard" />
     </queries>
@@ -38,7 +39,7 @@
 
         <!-- Search Activity: transparent, animated from the bottom -->
         <activity
-            android:name=".MainActivity"
+            android:name=".search.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.PixelishSearch.Transparent"
             android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
@@ -52,7 +53,7 @@
 
         <!-- Settings screen, launched from the search Activity's gear icon -->
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:exported="false"
             android:label="@string/settings_title"
             android:theme="@style/Theme.PixelishSearch" />
@@ -71,7 +72,7 @@
 
         <!-- Preloads the index on boot for ultra-fast cold start -->
         <receiver
-            android:name=".data.BootReceiver"
+            android:name=".search.apps.data.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -82,12 +83,13 @@
              added apps appear in the search without waiting for the next
              cold start. -->
         <receiver
-            android:name=".data.PackageReceiver"
+            android:name=".search.apps.data.PackageReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />
                 <action android:name="android.intent.action.PACKAGE_REMOVED" />
                 <action android:name="android.intent.action.PACKAGE_REPLACED" />
+
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>

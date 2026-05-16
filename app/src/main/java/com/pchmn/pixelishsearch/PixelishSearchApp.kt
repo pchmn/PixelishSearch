@@ -4,16 +4,16 @@ import android.app.Application
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import com.pchmn.pixelishsearch.data.AppHistoryRepository
-import com.pchmn.pixelishsearch.data.AppIconFetcher
-import com.pchmn.pixelishsearch.data.AppIconKeyer
-import com.pchmn.pixelishsearch.data.AppIndex
-import com.pchmn.pixelishsearch.data.ContactHistoryRepository
-import com.pchmn.pixelishsearch.data.ContactRepository
-import com.pchmn.pixelishsearch.data.HiddenAppsRepository
-import com.pchmn.pixelishsearch.data.SettingsRepository
-import com.pchmn.pixelishsearch.data.WebSearchHistoryRepository
-import com.pchmn.pixelishsearch.data.WebSuggestRepository
+import com.pchmn.pixelishsearch.settings.data.SettingsRepository
+import com.pchmn.pixelishsearch.search.apps.data.AppHistoryRepository
+import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
+import com.pchmn.pixelishsearch.search.apps.data.AppIconKeyer
+import com.pchmn.pixelishsearch.search.apps.data.AppIndex
+import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
+import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
+import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
+import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,7 +56,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
 
         // Warm up the TLS connection to Google Suggest so the first real call
         // doesn't have to pay DNS + TCP + TLS handshake cost.
-        WebSuggestRepository.warmUp(appScope)
+        WebSuggestionsRepository.warmUp(appScope)
 
         // Wake the (out-of-process) Contacts provider so the first keystroke
         // doesn't pay the binder + provider startup cost.
