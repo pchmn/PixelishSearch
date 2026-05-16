@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.core.data.HistoryRepository
-import com.pchmn.pixelishsearch.data.contactHistoryDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable

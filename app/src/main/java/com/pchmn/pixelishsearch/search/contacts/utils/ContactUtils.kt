@@ -1,11 +1,11 @@
-package com.pchmn.pixelishsearch.search.contacts.ui
+package com.pchmn.pixelishsearch.search.contacts.utils
 
 import android.content.Context
-import com.pchmn.pixelishsearch.launchContactDetails
-import com.pchmn.pixelishsearch.launchDialer
-import com.pchmn.pixelishsearch.launchSms
 import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
+import com.pchmn.pixelishsearch.search.contacts.data.launchContactDetails
+import com.pchmn.pixelishsearch.search.contacts.data.launchDialer
+import com.pchmn.pixelishsearch.search.contacts.data.launchSms
 
 fun replayContactAction(context: Context, entry: ContactHistoryEntry) {
     val phone = entry.phoneNumber

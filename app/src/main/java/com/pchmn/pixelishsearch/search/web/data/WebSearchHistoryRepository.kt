@@ -3,7 +3,6 @@ package com.pchmn.pixelishsearch.search.web.data
 import android.content.Context
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.core.data.HistoryRepository
-import com.pchmn.pixelishsearch.data.searchHistoryDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable

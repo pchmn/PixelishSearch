@@ -36,23 +36,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.R
-import com.pchmn.pixelishsearch.geminiIntent
-import com.pchmn.pixelishsearch.launchAndDismiss
-import com.pchmn.pixelishsearch.launchAppInfo
-import com.pchmn.pixelishsearch.launchContactDetails
-import com.pchmn.pixelishsearch.launchDialer
-import com.pchmn.pixelishsearch.launchGoogleSearch
-import com.pchmn.pixelishsearch.launchSms
-import com.pchmn.pixelishsearch.lensIntent
-import com.pchmn.pixelishsearch.pinAppShortcut
-import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
-import com.pchmn.pixelishsearch.settings.SettingsActivity
-import com.pchmn.pixelishsearch.search.apps.ui.AppList
+import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 import com.pchmn.pixelishsearch.core.ui.components.BottomSheet
+import com.pchmn.pixelishsearch.search.apps.data.geminiIntent
+import com.pchmn.pixelishsearch.search.apps.data.launchAppInfo
+import com.pchmn.pixelishsearch.search.apps.data.lensIntent
+import com.pchmn.pixelishsearch.search.apps.data.pinAppShortcut
+import com.pchmn.pixelishsearch.search.apps.ui.AppList
+import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
+import com.pchmn.pixelishsearch.search.contacts.data.launchContactDetails
+import com.pchmn.pixelishsearch.search.contacts.data.launchDialer
+import com.pchmn.pixelishsearch.search.contacts.data.launchSms
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactRecentList
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
-import com.pchmn.pixelishsearch.search.contacts.ui.replayContactAction
+import com.pchmn.pixelishsearch.search.contacts.utils.replayContactAction
+import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
+import com.pchmn.pixelishsearch.settings.SettingsActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
