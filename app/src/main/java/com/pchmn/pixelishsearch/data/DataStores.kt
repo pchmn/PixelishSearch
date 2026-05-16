@@ -9,3 +9,4 @@ val Context.contactHistoryDataStore by preferencesDataStore(name = "contact_hist
 val Context.appIndexCacheDataStore by preferencesDataStore(name = "app_index_cache")
 val Context.hiddenAppsDataStore by preferencesDataStore(name = "hidden_apps")
 val Context.settingsDataStore by preferencesDataStore(name = "settings")
+val Context.updateDataStore by preferencesDataStore(name = "update")

@@ -96,5 +96,8 @@ dependencies {
     // means subsequent cold starts decode from data dir instead of the APK.
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
 
+    // WorkManager for the periodic GitHub-release update check
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
