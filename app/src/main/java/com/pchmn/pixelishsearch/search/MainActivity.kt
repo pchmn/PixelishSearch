@@ -10,9 +10,11 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.search.ui.SearchScreen
 import com.pchmn.pixelishsearch.search.ui.SearchViewModel
 import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
+import com.pchmn.pixelishsearch.update.data.UpdateChecker
 
 class MainActivity : ComponentActivity() {
 
@@ -47,6 +49,8 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
+        triggerUpdateCheck()
     }
 
     /**
@@ -59,5 +63,18 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         vm.reset()
+        triggerUpdateCheck()
+    }
+
+    /**
+     * Fire-and-forget GitHub release check. Because the activity is
+     * `singleTask + excludeFromRecents`, the user can't kill it from the
+     * recents screen — the process can live for days, so we can't rely on
+     * `Application.onCreate` to re-run the check. `UpdateChecker` throttles
+     * internally, so calling this every time the search opens is cheap.
+     */
+    private fun triggerUpdateCheck() {
+        val app = application as PixelishSearchApp
+        UpdateChecker.check(app.backgroundScope, app.updates, app.currentVersionName())
     }
 }

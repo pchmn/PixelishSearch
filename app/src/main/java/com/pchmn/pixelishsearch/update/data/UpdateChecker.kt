@@ -9,7 +9,20 @@ object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
 
+    // Minimum gap between two successful checks. The check is now triggered on
+    // every `MainActivity.onCreate` / `onNewIntent` (i.e. every time the user
+    // opens the search), so we throttle to avoid spamming the GitHub API.
+    private const val MIN_INTERVAL_MS = 6L * 60 * 60 * 1000  // 6 hours
+
+    @Volatile
+    private var lastCheckedAt = 0L
+
+    @Synchronized
     fun check(scope: CoroutineScope, repo: UpdateRepository, currentVersion: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastCheckedAt < MIN_INTERVAL_MS) return
+        lastCheckedAt = now
+
         scope.launch(Dispatchers.IO) {
             val release = when (val result = GithubReleaseApi.fetchLatest()) {
                 is LatestReleaseResult.Found -> result.release
@@ -19,7 +32,12 @@ object UpdateChecker {
                     repo.clear()
                     return@launch
                 }
-                LatestReleaseResult.Error -> return@launch
+                LatestReleaseResult.Error -> {
+                    // Network / parsing failure: reset the throttle so the
+                    // next user action retries instead of waiting 6 hours.
+                    lastCheckedAt = 0L
+                    return@launch
+                }
             }
             if (release.draft || release.prerelease) return@launch
 

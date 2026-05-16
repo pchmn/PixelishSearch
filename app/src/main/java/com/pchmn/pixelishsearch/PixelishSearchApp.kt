@@ -14,7 +14,6 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
-import com.pchmn.pixelishsearch.update.data.UpdateChecker
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,13 +65,15 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // Wake the (out-of-process) Contacts provider so the first keystroke
         // doesn't pay the binder + provider startup cost.
         ContactRepository.warmUp(this, appScope)
-
-        // Background check for a new GitHub release; persists the result so the
-        // banner is available instantly on the next cold start.
-        UpdateChecker.check(appScope, updates, currentVersionName())
     }
 
-    private fun currentVersionName(): String =
+    /**
+     * Background scope shared with `MainActivity` for the GitHub update check
+     * (triggered on every search reopen, throttled inside `UpdateChecker`).
+     */
+    val backgroundScope: CoroutineScope get() = appScope
+
+    fun currentVersionName(): String =
         runCatching { packageManager.getPackageInfo(packageName, 0).versionName }
             .getOrNull()
             .orEmpty()

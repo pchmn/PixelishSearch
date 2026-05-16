@@ -110,11 +110,11 @@ DataStore delegates are colocated with each sub-feature: `search/apps/data/AppDa
 
 ### Update (`update/`)
 
-Self-update from GitHub Releases. The check is a one-shot fire-and-forget from `PixelishSearchApp.onCreate` (no WorkManager) — same `(scope, ...)` pattern as the other warmups. The APK is **only** downloaded on demand, when the user taps "Install" inside `UpdateActivity`; the persisted DataStore entry just stores the release metadata (`versionName`, `changelog`, `downloadUrl`).
+Self-update from GitHub Releases. No WorkManager. The check is fire-and-forget from `MainActivity.onCreate` *and* `onNewIntent` — not `Application.onCreate`, because `MainActivity` is `singleTask + excludeFromRecents` so the user can't kill the process from the recents screen, and `Application.onCreate` may not run again for days. `UpdateChecker` throttles internally so calling it on every search reopen is cheap. The APK is **only** downloaded on demand, when the user taps "Install" inside `UpdateActivity`; the persisted DataStore entry just stores the release metadata (`versionName`, `changelog`, `downloadUrl`).
 
-- **`data/GithubReleaseApi`** — Ktor client against `https://api.github.com/repos/pchmn/PixelishSearch/releases/latest`, plus `parseVersion` / `compareVersions` helpers.
+- **`data/GithubReleaseApi`** — Ktor client against `https://api.github.com/repos/pchmn/PixelishSearch/releases/latest`, plus `parseVersion` / `compareVersions` (semver-aware: pre-release suffixes like `-beta.2` are parsed and compared per spec). `fetchLatest()` returns a `LatestReleaseResult` sealed type (`Found` / `NotFound` / `Error`) so the caller can clear stale state on HTTP 404 while ignoring transient network errors.
 - **`data/UpdateRepository`** — DataStore-backed (`updateDataStore`) `available: StateFlow<UpdateInfo?>`. `UpdateInfo` only carries metadata (`versionName`, `changelog`, `downloadUrl`).
-- **`data/UpdateChecker.check(scope, repo, currentVersion)`** — fetches the latest release, compares the tag against the running version, and writes `UpdateInfo` (or `clear()`s the flag if we're already up to date).
+- **`data/UpdateChecker.check(scope, repo, currentVersion)`** — throttled (6h window, in-memory; the error path resets the throttle so the next call retries). Fetches the latest release, compares the tag against the running version, and writes `UpdateInfo`. Clears the flag if we're already up to date or if GitHub returns 404 (all releases deleted).
 - **`data/UpdateInstaller`** — downloads the APK to `getExternalFilesDir("updates")` with a progress callback, then hands it to the system installer via a `FileProvider` URI (authority `${applicationId}.fileprovider`, paths declared in `res/xml/file_provider_paths.xml`). If `packageManager.canRequestPackageInstalls()` returns false, the screen routes through `ACTION_MANAGE_UNKNOWN_APP_SOURCES` first and re-checks on resume.
 - **`UpdateActivity` + `ui/UpdateScreen`** — opaque activity (`Theme.PixelishSearch`) with a `LargeTopAppBar`, current vs. new version, plain-text changelog, and "Install" / "Cancel" buttons. The screen drives a tiny local state machine (`Idle` / `Downloading(progress)` / `Failed`); a `LinearProgressIndicator` shows download progress.
 - **`SearchScreen` badge** — when `updates.available != null`, a `SystemUpdate` `IconButton` (tinted with `colorScheme.primary`) appears to the left of the gear icon and launches `UpdateActivity`.
@@ -138,8 +138,8 @@ Self-update from GitHub Releases. The check is a one-shot fire-and-forget from `
   AppIndex.preload(this, appScope)
   WebSuggestionsRepository.warmUp(appScope)
   ContactRepository.warmUp(this, appScope)
-  UpdateChecker.check(appScope, updates, currentVersionName())
   ```
+  `UpdateChecker.check(...)` follows the same `(scope, ...)` shape but is **not** in `Application.onCreate` — see the Update section for why.
 - **No DI framework.** Singletons are Kotlin `object`s, stateful repos are classes constructed in `PixelishSearchApp.onCreate` and exposed as `lateinit var` properties.
 - **DataStore flows are hot.** Every `HistoryRepository<T>.items` is a `StateFlow` started eagerly so the search VM doesn't pay a decode cost when it subscribes.
 - **i18n.** All user-facing strings live in `res/values/strings.xml` (English default) with translations in `values-fr/`, `values-es/`, `values-de/`, `values-it/`. Supported locales are declared in `res/xml/locale_config.xml` and referenced from `<application android:localeConfig=...>`, which exposes the native per-app language picker in Android 13+ system settings. The in-app picker in `SettingsScreen` uses `LocaleManager.setApplicationLocales` (API 33+); on 31/32 the row is hidden and the app follows the system locale.
