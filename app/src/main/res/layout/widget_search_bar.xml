@@ -25,7 +25,7 @@
         android:layout_width="26dp"
         android:layout_height="26dp"
         android:src="@drawable/gemini_icon"
-        android:tint="@color/on_primary_container"
+        android:tint="@color/widget_color"
         android:layout_marginEnd="20dp"
         android:padding="4dp"
         android:contentDescription="@string/search_gemini" />
@@ -35,7 +35,7 @@
         android:layout_width="26dp"
         android:layout_height="26dp"
         android:src="@drawable/google_lens_icon"
-        android:tint="@color/on_primary_container"
+        android:tint="@color/widget_color"
         android:padding="4dp"
         android:contentDescription="@string/search_lens" />
 

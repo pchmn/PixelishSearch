@@ -16,10 +16,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Downloading
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -164,7 +164,7 @@ fun SearchScreen(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.SystemUpdate,
+                                    imageVector = Icons.Outlined.Downloading,
                                     contentDescription = stringResource(R.string.update_available_badge),
                                     tint = MaterialTheme.colorScheme.primary,
                                 )

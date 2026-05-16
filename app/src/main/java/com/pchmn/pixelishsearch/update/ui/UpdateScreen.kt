@@ -151,9 +151,10 @@ fun UpdateScreen(onBack: () -> Unit) {
         },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier
@@ -250,16 +251,16 @@ private fun VersionsBlock(currentVersion: String, newVersion: String) {
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
         Text(
-            text = stringResource(R.string.update_current_version, currentVersion),
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
             text = stringResource(R.string.update_new_version, newVersion),
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.update_current_version, currentVersion),
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
