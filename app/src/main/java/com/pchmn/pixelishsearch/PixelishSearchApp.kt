@@ -14,6 +14,8 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
+import com.pchmn.pixelishsearch.update.data.UpdateChecker
+import com.pchmn.pixelishsearch.update.data.UpdateRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,6 +39,8 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var settings: SettingsRepository
         private set
+    lateinit var updates: UpdateRepository
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -50,6 +54,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         contactHistory = ContactHistoryRepository(this, appScope)
         hiddenApps = HiddenAppsRepository(this, appScope)
         settings = SettingsRepository(this, appScope)
+        updates = UpdateRepository(this, appScope)
 
         // Async preload of the index
         AppIndex.preload(this@PixelishSearchApp, appScope)
@@ -61,7 +66,16 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // Wake the (out-of-process) Contacts provider so the first keystroke
         // doesn't pay the binder + provider startup cost.
         ContactRepository.warmUp(this, appScope)
+
+        // Background check for a new GitHub release; persists the result so the
+        // banner is available instantly on the next cold start.
+        UpdateChecker.check(appScope, updates, currentVersionName())
     }
+
+    private fun currentVersionName(): String =
+        runCatching { packageManager.getPackageInfo(packageName, 0).versionName }
+            .getOrNull()
+            .orEmpty()
 
     /**
      * Coil's singleton ImageLoader, wired with our custom keyer + fetcher so that

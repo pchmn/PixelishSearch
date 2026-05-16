@@ -43,7 +43,7 @@ pixelishsearch/
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
 ├── settings/                         # SettingsActivity + data/SettingsRepository + ui/SettingsScreen
-├── update/data/                      # GithubReleaseApi, UpdateRepository, UpdateDataStore (init, not wired yet)
+├── update/                           # Self-update from GitHub Releases (UpdateActivity + data/ + ui/UpdateScreen)
 └── widget/                           # SearchWidget (AppWidgetProvider)
 ```
 
@@ -110,10 +110,15 @@ DataStore delegates are colocated with each sub-feature: `search/apps/data/AppDa
 
 ### Update (`update/`)
 
-Self-update module — currently scaffolded and **not wired into `PixelishSearchApp` yet**. Reuse the preload/warmup pattern when integrating it.
+Self-update from GitHub Releases. The check is a one-shot fire-and-forget from `PixelishSearchApp.onCreate` (no WorkManager) — same `(scope, ...)` pattern as the other warmups. The APK is **only** downloaded on demand, when the user taps "Install" inside `UpdateActivity`; the persisted DataStore entry just stores the release metadata (`versionName`, `changelog`, `downloadUrl`).
 
 - **`data/GithubReleaseApi`** — Ktor client against `https://api.github.com/repos/pchmn/PixelishSearch/releases/latest`, plus `parseVersion` / `compareVersions` helpers.
-- **`data/UpdateRepository`** — DataStore-backed (`updateDataStore`) `available: StateFlow<UpdateInfo?>` representing a downloaded-and-ready-to-install APK (kept in the app's external files dir for FileProvider exposure).
+- **`data/UpdateRepository`** — DataStore-backed (`updateDataStore`) `available: StateFlow<UpdateInfo?>`. `UpdateInfo` only carries metadata (`versionName`, `changelog`, `downloadUrl`).
+- **`data/UpdateChecker.check(scope, repo, currentVersion)`** — fetches the latest release, compares the tag against the running version, and writes `UpdateInfo` (or `clear()`s the flag if we're already up to date).
+- **`data/UpdateInstaller`** — downloads the APK to `getExternalFilesDir("updates")` with a progress callback, then hands it to the system installer via a `FileProvider` URI (authority `${applicationId}.fileprovider`, paths declared in `res/xml/file_provider_paths.xml`). If `packageManager.canRequestPackageInstalls()` returns false, the screen routes through `ACTION_MANAGE_UNKNOWN_APP_SOURCES` first and re-checks on resume.
+- **`UpdateActivity` + `ui/UpdateScreen`** — opaque activity (`Theme.PixelishSearch`) with a `LargeTopAppBar`, current vs. new version, plain-text changelog, and "Install" / "Cancel" buttons. The screen drives a tiny local state machine (`Idle` / `Downloading(progress)` / `Failed`); a `LinearProgressIndicator` shows download progress.
+- **`SearchScreen` badge** — when `updates.available != null`, a `SystemUpdate` `IconButton` (tinted with `colorScheme.primary`) appears to the left of the gear icon and launches `UpdateActivity`.
+- **Manifest** — declares the `REQUEST_INSTALL_PACKAGES` permission (Android requests it interactively via the system page) and registers the `androidx.core.content.FileProvider`.
 
 ### Widget
 
@@ -133,6 +138,7 @@ Self-update module — currently scaffolded and **not wired into `PixelishSearch
   AppIndex.preload(this, appScope)
   WebSuggestionsRepository.warmUp(appScope)
   ContactRepository.warmUp(this, appScope)
+  UpdateChecker.check(appScope, updates, currentVersionName())
   ```
 - **No DI framework.** Singletons are Kotlin `object`s, stateful repos are classes constructed in `PixelishSearchApp.onCreate` and exposed as `lateinit var` properties.
 - **DataStore flows are hot.** Every `HistoryRepository<T>.items` is a `StateFlow` started eagerly so the search VM doesn't pay a decode cost when it subscribes.

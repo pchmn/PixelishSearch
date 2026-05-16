@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- App-private external files dir: getExternalFilesDir(...). No
+         permission needed, and FileProvider can grant temporary read access
+         to the system installer. -->
+    <external-files-path
+        name="updates"
+        path="updates/" />
+</paths>

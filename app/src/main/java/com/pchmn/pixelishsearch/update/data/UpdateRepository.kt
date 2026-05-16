@@ -15,16 +15,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * A downloaded, ready-to-install release. `apkPath` points to a file in the
- * app's external files dir (no permission needed, and FileProvider can expose
- * it to the package installer).
+ * Last known available release. We don't download the APK in advance — it's
+ * fetched on demand when the user taps "Update". Persisted so the banner shows
+ * instantly on cold start, before the background check finishes.
  */
 @Serializable
 data class UpdateInfo(
     val versionName: String,
     val changelog: String,
-    val apkPath: String,
-    val downloadedAt: Long,
+    val downloadUrl: String,
 )
 
 class UpdateRepository(

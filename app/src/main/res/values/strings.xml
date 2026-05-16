@@ -45,4 +45,18 @@
     <string name="language_es">Español</string>
     <string name="language_de">Deutsch</string>
     <string name="language_it">Italiano</string>
+
+    <!-- Self-update -->
+    <string name="update_title">Update</string>
+    <string name="update_available_badge">Update available</string>
+    <string name="update_current_version">Current version: %1$s</string>
+    <string name="update_new_version">New version: %1$s</string>
+    <string name="update_changelog_header">What\'s new</string>
+    <string name="update_action_install">Install</string>
+    <string name="update_action_cancel">Cancel</string>
+    <string name="update_status_downloading">Downloading…</string>
+    <string name="update_status_failed">Download failed. Try again.</string>
+    <string name="update_permission_required_title">Allow installs from PixelishSearch</string>
+    <string name="update_permission_required_subtitle">Android needs this permission to install updates downloaded outside the Play Store.</string>
+    <string name="update_action_grant_permission">Open settings</string>
 </resources>

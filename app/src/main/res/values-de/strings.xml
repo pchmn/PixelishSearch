@@ -30,4 +30,17 @@
     <string name="settings_section_appearance">Darstellung</string>
     <string name="settings_language_title">Sprache</string>
     <string name="settings_language_system">Systemsprache</string>
+
+    <string name="update_title">Aktualisierung</string>
+    <string name="update_available_badge">Aktualisierung verfügbar</string>
+    <string name="update_current_version">Aktuelle Version: %1$s</string>
+    <string name="update_new_version">Neue Version: %1$s</string>
+    <string name="update_changelog_header">Neuerungen</string>
+    <string name="update_action_install">Installieren</string>
+    <string name="update_action_cancel">Abbrechen</string>
+    <string name="update_status_downloading">Wird heruntergeladen…</string>
+    <string name="update_status_failed">Download fehlgeschlagen. Versuche es erneut.</string>
+    <string name="update_permission_required_title">Installation aus PixelishSearch erlauben</string>
+    <string name="update_permission_required_subtitle">Android benötigt diese Berechtigung, um ein Update zu installieren, das außerhalb des Play Store heruntergeladen wurde.</string>
+    <string name="update_action_grant_permission">Einstellungen öffnen</string>
 </resources>

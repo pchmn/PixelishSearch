@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 import com.pchmn.pixelishsearch.core.ui.components.BottomSheet
@@ -53,6 +55,7 @@ import com.pchmn.pixelishsearch.search.contacts.utils.replayContactAction
 import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
 import com.pchmn.pixelishsearch.settings.SettingsActivity
+import com.pchmn.pixelishsearch.update.UpdateActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +66,8 @@ fun SearchScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val app = context.applicationContext as PixelishSearchApp
+    val updateInfo by app.updates.available.collectAsStateWithLifecycle()
 
     val displayedApps = if (uiState.query.isBlank()) {
         uiState.appRecents
@@ -150,6 +155,21 @@ fun SearchScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.End,
                     ) {
+                        if (updateInfo != null) {
+                            IconButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(context, UpdateActivity::class.java)
+                                    )
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.SystemUpdate,
+                                    contentDescription = stringResource(R.string.update_available_badge),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
                         IconButton(
                             onClick = {
                                 context.startActivity(
