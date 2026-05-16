@@ -28,6 +28,18 @@ data class GithubAsset(
     val size: Long = 0,
 )
 
+/**
+ * Outcome of a `/releases/latest` call. We distinguish "no release exists"
+ * (HTTP 404) from "couldn't reach GitHub" so the caller can clear a stale
+ * cached `UpdateInfo` in the former case without doing so on a transient
+ * network failure.
+ */
+sealed interface LatestReleaseResult {
+    data class Found(val release: GithubRelease) : LatestReleaseResult
+    data object NotFound : LatestReleaseResult
+    data object Error : LatestReleaseResult
+}
+
 object GithubReleaseApi {
     private const val OWNER = "pchmn"
     private const val REPO = "PixelishSearch"
@@ -38,6 +50,7 @@ object GithubReleaseApi {
             connectTimeout = 5_000
             socketTimeout = 10_000
         }
+        expectSuccess = false
     }
 
     private val json = Json {
@@ -45,14 +58,26 @@ object GithubReleaseApi {
         coerceInputValues = true
     }
 
-    suspend fun fetchLatest(): GithubRelease? = withContext(Dispatchers.IO) {
-        runCatching {
-            val raw = client.get(LATEST_URL) {
+    suspend fun fetchLatest(): LatestReleaseResult = withContext(Dispatchers.IO) {
+        try {
+            val response = client.get(LATEST_URL) {
                 header("Accept", "application/vnd.github+json")
                 header("X-GitHub-Api-Version", "2022-11-28")
-            }.bodyAsText()
-            json.decodeFromString(GithubRelease.serializer(), raw)
-        }.getOrNull()
+            }
+            when (response.status.value) {
+                404 -> LatestReleaseResult.NotFound
+                in 200..299 -> {
+                    runCatching {
+                        LatestReleaseResult.Found(
+                            json.decodeFromString(GithubRelease.serializer(), response.bodyAsText())
+                        )
+                    }.getOrElse { LatestReleaseResult.Error }
+                }
+                else -> LatestReleaseResult.Error
+            }
+        } catch (e: Exception) {
+            LatestReleaseResult.Error
+        }
     }
 }
 

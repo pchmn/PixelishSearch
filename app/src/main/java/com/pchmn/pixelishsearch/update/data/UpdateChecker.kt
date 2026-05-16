@@ -11,7 +11,16 @@ object UpdateChecker {
 
     fun check(scope: CoroutineScope, repo: UpdateRepository, currentVersion: String) {
         scope.launch(Dispatchers.IO) {
-            val release = GithubReleaseApi.fetchLatest() ?: return@launch
+            val release = when (val result = GithubReleaseApi.fetchLatest()) {
+                is LatestReleaseResult.Found -> result.release
+                LatestReleaseResult.NotFound -> {
+                    // No releases on GitHub anymore (all deleted) — drop any
+                    // stale cached UpdateInfo so the badge disappears.
+                    repo.clear()
+                    return@launch
+                }
+                LatestReleaseResult.Error -> return@launch
+            }
             if (release.draft || release.prerelease) return@launch
 
             val tag = release.tagName
