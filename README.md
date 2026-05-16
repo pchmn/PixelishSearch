@@ -30,42 +30,47 @@ Minimalist Android app that replicates the Pixel Launcher unified search UI (pre
 
 ## Architecture
 
+The code is organised **by feature**, with two shared packages: `core/` for *technical* primitives (theme, generic Compose components, intent helper, history base class) and `common/` for *domain* primitives shared across features. Each feature owns its own `data/` and `ui/` subpackages.
+
 ```
 app/src/main/
 ├── java/com/pchmn/pixelishsearch/
-│   ├── MainActivity.kt                  # Transparent search activity
 │   ├── PixelishSearchApp.kt             # Application: preloads index, warmups, Coil setup
-│   ├── LaunchIntents.kt                 # Helpers: launch Gemini, Lens, dialer, SMS, etc.
-│   ├── data/
-│   │   ├── AppIndex.kt                  # In-memory app index, 2-phase preload + refresh
-│   │   ├── AppIndexCacheRepository.kt   # Persisted snapshot of the app list (DataStore)
-│   │   ├── AppIconFetcher.kt            # Coil custom fetcher + keyer for app icons
-│   │   ├── HistoryRepository.kt         # Abstract base: hot StateFlow over DataStore
-│   │   ├── AppHistoryRepository.kt      # Per-package launch stats with decay scoring
-│   │   ├── WebSearchHistoryRepository.kt
-│   │   ├── ContactHistoryRepository.kt  # Per-contact recent actions
-│   │   ├── ContactRepository.kt         # Live contact search + provider warmup
-│   │   ├── WebSuggestRepository.kt      # Google Suggest API (Ktor) + warmup
-│   │   ├── DataStores.kt                # DataStore delegates
-│   │   ├── UriSerializer.kt
-│   │   ├── BootReceiver.kt              # Re-preloads on BOOT_COMPLETED
-│   │   └── PackageReceiver.kt           # Refreshes cache on install / uninstall / update
-│   ├── ui/
-│   │   ├── SearchScreen.kt              # Bottom sheet: input + apps + suggestions
-│   │   ├── SearchViewModel.kt           # Orchestrates local + debounced web search
-│   │   ├── SearchField.kt
-│   │   ├── EntryList.kt, EntryRow.kt
-│   │   ├── app/                         # AppList, AppItem (Coil AsyncImage)
-│   │   ├── contact/                     # ContactResultList, ContactRecentList, utils
-│   │   ├── websearch/                   # WebSearchList, WebSearchRow
-│   │   ├── bottomsheet/                 # BottomSheet wrapper
-│   │   └── theme/Theme.kt               # Material 3 + Dynamic Color + Google Sans
-│   └── widget/
-│       └── SearchWidget.kt              # AppWidgetProvider
+│   ├── core/                            # Shared technical code (no domain knowledge)
+│   │   ├── data/
+│   │   │   ├── HistoryRepository.kt     # Abstract base: hot StateFlow over DataStore
+│   │   │   └── LaunchIntents.kt         # launchAndDismiss helper
+│   │   └── ui/
+│   │       ├── components/              # BottomSheet, EntryList, EntryRow, AnchorBox, dropdown/
+│   │       └── theme/Theme.kt           # Material 3 + Dynamic Color + Google Sans
+│   ├── common/                          # Shared domain code (currently empty)
+│   ├── search/
+│   │   ├── MainActivity.kt              # Transparent search activity
+│   │   ├── ui/                          # SearchScreen, SearchField, SearchViewModel
+│   │   ├── apps/
+│   │   │   ├── data/                    # AppIndex(+Cache), AppHistory, HiddenApps,
+│   │   │   │                            #   AppIconFetcher, AppLauncher (Gemini/Lens/info/pin),
+│   │   │   │                            #   BootReceiver, PackageReceiver, AppDataStore
+│   │   │   └── ui/                      # AppList, AppItem (Coil AsyncImage)
+│   │   ├── contacts/
+│   │   │   ├── data/                    # ContactRepository (+warmup), ContactHistory,
+│   │   │   │                            #   ContactLauncher (call/SMS/details), UriSerializer
+│   │   │   ├── ui/                      # ContactResult/Recent List+Row, ContactAvatar
+│   │   │   └── utils/ContactUtils.kt
+│   │   └── web/
+│   │       ├── data/                    # WebSuggestionsRepository (Ktor + warmup),
+│   │       │                            #   WebSearchHistory, WebSearchLauncher
+│   │       └── ui/                      # WebSearchList, WebSearchRow
+│   ├── settings/
+│   │   ├── SettingsActivity.kt
+│   │   ├── data/SettingsRepository.kt   # contactSearchEnabled
+│   │   └── ui/SettingsScreen.kt         # Material 3, language picker (API 33+)
+│   ├── update/data/                     # GithubReleaseApi, UpdateRepository (scaffolded)
+│   └── widget/SearchWidget.kt           # AppWidgetProvider
 └── res/
     ├── layout/widget_search_bar.xml
-    ├── xml/widget_info.xml
-    └── drawable/, anim/, values/
+    ├── xml/widget_info.xml, locale_config.xml
+    └── drawable/, anim/, values/, values-{fr,es,de,it}/
 ```
 
 ## Performance
@@ -74,7 +79,7 @@ Cold start of the search activity is the main goal. The path is optimized at eve
 
 - **`PixelishSearchApp` (Application)** preloads everything async at process creation:
   - `AppIndex.preload` (2-phase: hydrate from persisted cache → re-enumerate)
-  - `WebSuggestRepository.warmUp` warms the TLS handshake to Google Suggest
+  - `WebSuggestionsRepository.warmUp` warms the TLS handshake to Google Suggest
   - `ContactRepository.warmUp` wakes the (out-of-process) Contacts provider
   - History repos start collecting DataStore eagerly via hot `StateFlow`s
 - **Persisted app index** (`AppIndexCacheRepository`) — the launcher list is cached in DataStore. On any subsequent cold start, the `AppRow` populates from disk in ~5-10ms without any PackageManager call.
