@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -18,12 +17,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,9 +40,7 @@ fun SearchField(
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
+    var requested = remember { false }
 
     TextField(
         value = value,
@@ -51,7 +48,13 @@ fun SearchField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .focusRequester(focusRequester),
+            .focusRequester(focusRequester)
+            .onPlaced {
+                if (!requested) {
+                    requested = true
+                    focusRequester.requestFocus()
+                }
+            },
         placeholder = {
             Text(
                 text = stringResource(R.string.search_placeholder),
@@ -102,7 +105,7 @@ fun SearchField(
             }
         },
         singleLine = true,
-        shape = CircleShape,
+//        shape = CircleShape,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         colors = TextFieldDefaults.colors(

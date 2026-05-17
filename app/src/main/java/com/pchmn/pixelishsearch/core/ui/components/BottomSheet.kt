@@ -11,13 +11,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SheetValue.Hidden
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 
@@ -25,7 +30,10 @@ import androidx.core.view.WindowCompat
 @ExperimentalMaterial3Api
 fun BottomSheet(
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: SheetState = rememberSheetState(
+        initialValue = SheetValue.Expanded,
+        skipPartiallyExpanded = true
+    ),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()
@@ -46,7 +54,7 @@ fun BottomSheet(
         //   - dark theme → white icons (isAppearanceLight* = false)
         val view = LocalView.current
 
-        SideEffect {
+        LaunchedEffect(Unit) {
             val sheetWindow = view.findDialogWindow() ?: (view.context as Activity).window
             WindowCompat.getInsetsController(sheetWindow, view).apply {
                 isAppearanceLightStatusBars = false
@@ -55,6 +63,43 @@ fun BottomSheet(
         }
 
         content()
+    }
+}
+
+@Composable
+@ExperimentalMaterial3Api
+internal fun rememberSheetState(
+    skipPartiallyExpanded: Boolean = false,
+    confirmValueChange: (SheetValue) -> Boolean = { true },
+    initialValue: SheetValue = Hidden,
+    skipHiddenState: Boolean = false,
+    positionalThreshold: Dp = 56.dp,
+    velocityThreshold: Dp = 125.dp,
+): SheetState {
+    val density = LocalDensity.current
+    val positionalThresholdToPx = { with(density) { positionalThreshold.toPx() } }
+    val velocityThresholdToPx = { with(density) { velocityThreshold.toPx() } }
+    return rememberSaveable(
+        skipPartiallyExpanded,
+        confirmValueChange,
+        skipHiddenState,
+        saver =
+            SheetState.Saver(
+                skipPartiallyExpanded = skipPartiallyExpanded,
+                positionalThreshold = positionalThresholdToPx,
+                velocityThreshold = velocityThresholdToPx,
+                confirmValueChange = confirmValueChange,
+                skipHiddenState = skipHiddenState,
+            ),
+    ) {
+        SheetState(
+            skipPartiallyExpanded,
+            positionalThresholdToPx,
+            velocityThresholdToPx,
+            initialValue,
+            confirmValueChange,
+            skipHiddenState,
+        )
     }
 }
 

@@ -24,8 +24,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -40,6 +40,7 @@ import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 import com.pchmn.pixelishsearch.core.ui.components.BottomSheet
+import com.pchmn.pixelishsearch.core.ui.components.rememberSheetState
 import com.pchmn.pixelishsearch.search.apps.data.geminiIntent
 import com.pchmn.pixelishsearch.search.apps.data.launchAppInfo
 import com.pchmn.pixelishsearch.search.apps.data.lensIntent
@@ -63,7 +64,10 @@ fun SearchScreen(
     viewModel: SearchViewModel,
     onClose: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberSheetState(
+        initialValue = SheetValue.Expanded,
+        skipPartiallyExpanded = true
+    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val app = context.applicationContext as PixelishSearchApp
