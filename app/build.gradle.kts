@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("androidx.baselineprofile")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -48,6 +49,10 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+        // The androidx.baselineprofile plugin auto-creates the additional
+        // `nonMinifiedRelease` (used to generate the profile) and
+        // `benchmarkRelease` (used to measure with the profile applied)
+        // variants — no need to declare them here.
     }
 
     compileOptions {
@@ -66,7 +71,24 @@ kotlin {
     }
 }
 
+// Wire the baseline profile produced by :benchmark into all release-flavor
+// variants of :app. The plugin generates `baseline-prof.txt` from the
+// `BaselineProfileGenerator` test and packages it into the APK.
+baselineProfile {
+    // Cold-start use case: also generate a startup-profile so the runtime
+    // pre-compiles the startup-critical methods even before the user opens the
+    // search screen.
+    saveInSrc = true
+    automaticGenerationDuringBuild = false
+}
+
 dependencies {
+    "baselineProfile"(project(":benchmark"))
+
+    // Installs the bundled baseline profile into the ART runtime on first
+    // launch (required so the profile actually takes effect).
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2026.05.00"))
 

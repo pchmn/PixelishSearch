@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Macrobenchmark / baseline profile runner needs to read other apps'
+         start-time stats and launch the target app. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
+    <queries>
+        <package android:name="com.pchmn.pixelishsearch" />
+    </queries>
+
+</manifest>

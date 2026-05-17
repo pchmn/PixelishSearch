@@ -19,3 +19,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "PixelishSearch"
 include(":app")
+include(":benchmark")
