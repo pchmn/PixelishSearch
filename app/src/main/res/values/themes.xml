@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- Base theme. No windowLightStatusBar/Navigation: left to Android,
          which picks based on the system theme via enableEdgeToEdge() in MainActivity. -->
@@ -14,10 +14,5 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowAnimationStyle">@null</item>
-    </style>
-
-    <style name="SlideUpAnimation" parent="@android:style/Animation">
-        <item name="android:activityOpenEnterAnimation">@anim/slide_in_bottom</item>
-        <item name="android:activityCloseExitAnimation">@anim/slide_out_bottom</item>
     </style>
 </resources>

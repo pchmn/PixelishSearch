@@ -19,13 +19,24 @@ data class AppEntry(
     val lastUpdateTime: Long,
 ) {
     // Lowercased, accent-stripped label for fast matching
-    val normalizedLabel: String = label.lowercase()
-        .replace("[àáâãäå]".toRegex(), "a")
-        .replace("[èéêë]".toRegex(), "e")
-        .replace("[ìíîï]".toRegex(), "i")
-        .replace("[òóôõö]".toRegex(), "o")
-        .replace("[ùúûü]".toRegex(), "u")
-        .replace("[ç]".toRegex(), "c")
+    val normalizedLabel: String = label.normalizeForSearch()
+}
+
+internal fun String.normalizeForSearch(): String {
+    val sb = StringBuilder(length)
+    for (c in this) {
+        when (c) {
+            'à', 'á', 'â', 'ã', 'ä', 'å', 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å' -> sb.append('a')
+            'è', 'é', 'ê', 'ë', 'È', 'É', 'Ê', 'Ë' -> sb.append('e')
+            'ì', 'í', 'î', 'ï', 'Ì', 'Í', 'Î', 'Ï' -> sb.append('i')
+            'ò', 'ó', 'ô', 'õ', 'ö', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö' -> sb.append('o')
+            'ù', 'ú', 'û', 'ü', 'Ù', 'Ú', 'Û', 'Ü' -> sb.append('u')
+            'ç', 'Ç' -> sb.append('c')
+            '\'', '’', '‘', '`', '´' -> Unit
+            else -> sb.append(c.lowercaseChar())
+        }
+    }
+    return sb.toString()
 }
 
 /**
@@ -152,13 +163,7 @@ object AppIndex {
         scoreOf: (String) -> Float = { 0f },
     ): List<AppEntry> {
         if (query.isBlank()) return emptyList()
-        val q = query.lowercase()
-            .replace("[àáâãäå]".toRegex(), "a")
-            .replace("[èéêë]".toRegex(), "e")
-            .replace("[ìíîï]".toRegex(), "i")
-            .replace("[òóôõö]".toRegex(), "o")
-            .replace("[ùúûü]".toRegex(), "u")
-            .replace("[ç]".toRegex(), "c")
+        val q = query.normalizeForSearch()
 
         val all = _apps.value
         val startsWith = mutableListOf<AppEntry>()

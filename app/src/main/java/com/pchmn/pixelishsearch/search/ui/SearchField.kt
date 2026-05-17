@@ -68,7 +68,7 @@ fun SearchField(
         ),
         leadingIcon = {
             Image(
-                painter = painterResource(id = R.drawable.ic_google_logo),
+                painter = painterResource(id = R.drawable.ic_google_logo_themed),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
             )
