@@ -33,8 +33,8 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_general">General</string>
-    <string name="settings_contact_search_title">Search contacts</string>
-    <string name="settings_contact_search_subtitle">Show matching contacts in search results</string>
+    <string name="settings_contact_search_title">Contacts</string>
+    <string name="settings_contact_search_subtitle">Include in search results</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_language_system">System default</string>
