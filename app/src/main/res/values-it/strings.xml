@@ -31,6 +31,13 @@
     <string name="settings_language_title">Lingua</string>
     <string name="settings_language_system">Lingua di sistema</string>
 
+    <string name="settings_section_about">Informazioni</string>
+    <string name="update_settings_title">Cerca aggiornamenti</string>
+    <string name="update_settings_current_version">Versione attuale: %1$s</string>
+    <string name="update_settings_available">Versione %1$s disponibile</string>
+    <string name="update_status_checking">Verifica in corso…</string>
+    <string name="update_status_up_to_date">App aggiornata</string>
+    <string name="update_status_check_failed">Verifica non riuscita. Riprova.</string>
     <string name="update_title">Aggiornamento</string>
     <string name="update_available_badge">Aggiornamento disponibile</string>
     <string name="update_current_version">Versione attuale: %1$s</string>

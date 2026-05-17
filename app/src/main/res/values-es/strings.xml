@@ -31,6 +31,13 @@
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_system">Idioma del sistema</string>
 
+    <string name="settings_section_about">Acerca de</string>
+    <string name="update_settings_title">Buscar actualizaciones</string>
+    <string name="update_settings_current_version">Versión actual: %1$s</string>
+    <string name="update_settings_available">Versión %1$s disponible</string>
+    <string name="update_status_checking">Buscando…</string>
+    <string name="update_status_up_to_date">Está al día</string>
+    <string name="update_status_check_failed">Error al buscar. Vuelve a intentarlo.</string>
     <string name="update_title">Actualización</string>
     <string name="update_available_badge">Actualización disponible</string>
     <string name="update_current_version">Versión actual: %1$s</string>

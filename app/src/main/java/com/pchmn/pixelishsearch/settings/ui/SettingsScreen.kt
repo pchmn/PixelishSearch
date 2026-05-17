@@ -29,7 +29,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -44,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,8 +69,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
+import com.pchmn.pixelishsearch.update.UpdateActivity
+import com.pchmn.pixelishsearch.update.data.CheckOutcome
+import com.pchmn.pixelishsearch.update.data.UpdateChecker
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
+import android.content.Intent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,7 +196,101 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
 
+            SectionHeader(stringResource(R.string.settings_section_about))
+            SettingsGroup {
+                UpdateCheckPreference()
+            }
+
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+private sealed interface CheckUiState {
+    data object Idle : CheckUiState
+    data object Checking : CheckUiState
+    data object UpToDate : CheckUiState
+    data object Failed : CheckUiState
+}
+
+@Composable
+private fun UpdateCheckPreference() {
+    val context = LocalContext.current
+    val app = context.applicationContext as PixelishSearchApp
+    val scope = rememberCoroutineScope()
+
+    val update by app.updates.available.collectAsStateWithLifecycle()
+    val currentVersion = remember { app.currentVersionName() }
+    var state by remember { mutableStateOf<CheckUiState>(CheckUiState.Idle) }
+
+    // Auto-clear the transient "up to date" / "failed" states after a few
+    // seconds so the row settles back to its default subtitle.
+    LaunchedEffect(state) {
+        if (state is CheckUiState.UpToDate || state is CheckUiState.Failed) {
+            delay(3_000)
+            state = CheckUiState.Idle
+        }
+    }
+
+    val available = update
+    val subtitle = when {
+        available != null -> stringResource(R.string.update_settings_available, available.versionName)
+        state is CheckUiState.Checking -> stringResource(R.string.update_status_checking)
+        state is CheckUiState.UpToDate -> stringResource(R.string.update_status_up_to_date)
+        state is CheckUiState.Failed -> stringResource(R.string.update_status_check_failed)
+        else -> stringResource(R.string.update_settings_current_version, currentVersion)
+    }
+
+    val isChecking = state is CheckUiState.Checking
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(enabled = !isChecking) {
+                state = CheckUiState.Checking
+                scope.launch {
+                    state = when (UpdateChecker.checkNow(app.updates, currentVersion)) {
+                        is CheckOutcome.Available -> {
+                            context.startActivity(Intent(context, UpdateActivity::class.java))
+                            CheckUiState.Idle
+                        }
+                        CheckOutcome.UpToDate -> CheckUiState.UpToDate
+                        CheckOutcome.Failed -> CheckUiState.Failed
+                    }
+                }
+            }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.SystemUpdate,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.width(20.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.update_settings_title),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (isChecking) {
+            Spacer(Modifier.width(16.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+            )
         }
     }
 }
