@@ -1,36 +1,43 @@
 # PixelishSearch
 
-Minimalist Android app that replicates the Pixel Launcher unified search UI (pre-November 2025 Feature Drop), lighter and faster than PixelSearch.
+Minimalist Android app that aims to stay as close as possible to the native Pixel Launcher unified
+search UI (pre-November 2025 Feature Drop). Inspired by PixelSearch.
 
 ## Features
 
-- Installed apps search (local, instant)
-- Default app suggestions ranked by usage frequency + recency (14-day half-life decay)
-- Search history (recent queries) with manual removal
-- Contact suggestions (with permission) + recent contact actions (call, SMS, view)
-- Web suggestions via Google Suggest API
-- Homescreen widget that opens the search
-- Transparent search activity with blur-behind effect over the launcher
-- Persistent app index cache + Coil disk cache for icons → near-instant cold start
-- Material 3 Expressive + Dynamic Color (matches the system theme)
-- Automatic dark / light mode
-- Google Sans font
+- Search across installed apps, contacts (with permission), web (Google Suggest) and recent queries
+- Default apps ranked by usage frequency + recency (14-day half-life decay)
+- Recent contact actions (call, SMS, view) and search history with manual removal
+- Homescreen widget + transparent search activity with blur-behind over the launcher
+- Material 3 Expressive, Dynamic Color, auto dark/light, Google Sans
 
-## Stack
+## Installation
 
-- Kotlin
-- Jetpack Compose + Material 3 (`1.4.0-alpha15` for Expressive)
+Grab the latest APK from the [Releases](https://github.com/pchmn/PixelishSearch/releases) page and
+install it.
+
+To replace the native search bar in the Pixel Launcher, run:
+
+```bash
+adb shell settings put secure selected_search_engine com.pchmn.pixelishsearch
+adb shell am force-stop com.google.android.apps.nexuslauncher
+```
+
+## Development
+
+### Stack
+
+- Kotlin + Jetpack Compose + Material 3 Expressive (`1.4.0-alpha15`)
 - Coroutines + Flow (hot `StateFlow`s for repos)
 - DataStore Preferences (usage stats, history, persisted app index)
-- Coil 3 (in-memory + disk cache for app icons, custom `PackageManager` fetcher)
-- Ktor (Google Suggest client)
-- Min SDK 31 (Android 12, for Dynamic Color)
-- Target SDK 37
-- JVM target 17
+- Coil 3 (custom `PackageManager` fetcher) + Ktor (Google Suggest)
+- Min SDK 31 / Target SDK 37 / JVM 17
 
-## Architecture
+### Architecture
 
-The code is organised **by feature**, with two shared packages: `core/` for *technical* primitives (theme, generic Compose components, intent helper, history base class) and `common/` for *domain* primitives shared across features. Each feature owns its own `data/` and `ui/` subpackages.
+The code is organised **by feature**, with two shared packages: `core/` for *technical* primitives (
+theme, generic Compose components, intent helper, history base class) and `common/` for *domain*
+primitives shared across features. Each feature owns its own `data/` and `ui/` subpackages.
 
 ```
 app/src/main/
@@ -73,25 +80,33 @@ app/src/main/
     └── drawable/, anim/, values/, values-{fr,es,de,it}/
 ```
 
-## Performance
+### Performance
 
-Cold start of the search activity is the main goal. The path is optimized at every layer:
+Cold start of the search activity is the main goal:
 
 - **`PixelishSearchApp` (Application)** preloads everything async at process creation:
-  - `AppIndex.preload` (2-phase: hydrate from persisted cache → re-enumerate)
-  - `WebSuggestionsRepository.warmUp` warms the TLS handshake to Google Suggest
-  - `ContactRepository.warmUp` wakes the (out-of-process) Contacts provider
-  - History repos start collecting DataStore eagerly via hot `StateFlow`s
-- **Persisted app index** (`AppIndexCacheRepository`) — the launcher list is cached in DataStore. On any subsequent cold start, the `AppRow` populates from disk in ~5-10ms without any PackageManager call.
-- **Coil-cached icons** — `AppIconFetcher` resolves icons via PackageManager once; subsequent loads hit Coil's disk cache (PNG). Cache key includes `lastUpdateTime` so updates invalidate automatically.
-- **`PackageReceiver`** listens for installs / uninstalls / updates and refreshes the cache so changes appear at the next tap without restarting the process.
+    - `AppIndex.preload` (2-phase: hydrate from persisted cache → re-enumerate)
+    - `WebSuggestionsRepository.warmUp` warms the TLS handshake to Google Suggest
+    - `ContactRepository.warmUp` wakes the (out-of-process) Contacts provider
+    - History repos start collecting DataStore eagerly via hot `StateFlow`s
+- **Persisted app index** (`AppIndexCacheRepository`) — the launcher list is cached in DataStore. On
+  any subsequent cold start, the `AppRow` populates from disk in ~5-10ms without any PackageManager
+  call.
+- **Coil-cached icons** — `AppIconFetcher` resolves icons via PackageManager once; subsequent loads
+  hit Coil's disk cache (PNG). Cache key includes `lastUpdateTime` so updates invalidate
+  automatically.
+- **`PackageReceiver`** listens for installs / uninstalls / updates and refreshes the cache so
+  changes appear at the next tap without restarting the process.
 - **`BootReceiver`** retriggers the preload on `BOOT_COMPLETED` to warm DataStore page caches.
-- **Activity** launches with a transparent theme and `FLAG_BLUR_BEHIND` to render the search sheet directly over the launcher, no app transition.
-- **First-frame tuned** — `windowSoftInputMode=adjustPan`, `ModalBottomSheet` starts at `SheetValue.Expanded`, baseline profile packaged into release builds.
+- **Activity** launches with a transparent theme and `FLAG_BLUR_BEHIND` to render the search sheet
+  directly over the launcher, no app transition. `ModalBottomSheet` starts at `SheetValue.Expanded`
+  and a baseline profile is packaged into release builds.
 
-Net result on a Pixel 9 release build: ~120-135ms `TotalTime` (`adb shell am start -W`), ~150-170ms to a fully stable screen. See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the cold-start path, baseline profile / macrobenchmark workflow, and Perfetto profiling.
+Net result on a Pixel 9 release build: ~120-135ms `TotalTime` (`adb shell am start -W`), ~150-170ms
+to a fully stable screen. See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the cold-start path,
+baseline profile / macrobenchmark workflow, and Perfetto profiling.
 
-## Build
+### Commands
 
 ```bash
 ./gradlew assembleDebug         # debug APK
@@ -101,11 +116,10 @@ Net result on a Pixel 9 release build: ~120-135ms `TotalTime` (`adb shell am sta
 ./gradlew lint                  # Android lint
 ```
 
-For the baseline profile and startup-benchmark workflow, see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
+For the baseline profile and startup-benchmark workflow, see [
+`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
 
-Note: debug-build cold start performance is not representative due to missing R8 / AOT optimizations. Always measure on release.
-
-## Setup
+### Setup
 
 1. Open in Android Studio (Koala 2026 or newer)
 2. Sync Gradle
