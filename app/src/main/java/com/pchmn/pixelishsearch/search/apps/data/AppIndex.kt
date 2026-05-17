@@ -3,6 +3,8 @@ package com.pchmn.pixelishsearch.search.apps.data
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Trace
+import androidx.tracing.trace
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,29 +43,50 @@ object AppIndex {
     fun preload(context: Context, scope: CoroutineScope) {
         if (_isLoaded.value) return
         scope.launch {
-            val cacheRepo = AppIndexCacheRepository(context)
+            // Async section: the coroutine may hop dispatcher threads on suspension,
+            // so we use beginAsyncSection (cross-thread safe) instead of trace { }.
+            val preloadCookie = ASYNC_COOKIE_PRELOAD
+            Trace.beginAsyncSection("AppIndex.preload", preloadCookie)
+            try {
+                val cacheRepo = AppIndexCacheRepository(context)
 
-            // Phase A — hydrate from the persisted cache so the UI can render
-            // the AppRow with real names + Coil disk-cached icons within ms,
-            // without waiting on PackageManager.
-            val cached = cacheRepo.read()
-            if (cached.isNotEmpty() && _apps.value.isEmpty()) {
-                _apps.value = cached.map { it.toAppEntry() }
+                // Phase A — hydrate from the persisted cache so the UI can render
+                // the AppRow with real names + Coil disk-cached icons within ms,
+                // without waiting on PackageManager.
+                val readCookie = ASYNC_COOKIE_READ_CACHE
+                Trace.beginAsyncSection("AppIndex.phaseA.readCache", readCookie)
+                val cached = try { cacheRepo.read() }
+                    finally { Trace.endAsyncSection("AppIndex.phaseA.readCache", readCookie) }
+
+                if (cached.isNotEmpty() && _apps.value.isEmpty()) {
+                    trace("AppIndex.phaseA.hydrate") {
+                        _apps.value = cached.map { it.toAppEntry() }
+                    }
+                }
+
+                // Phase B — authoritative enumeration. Picks up newly installed /
+                // uninstalled / renamed apps. Cheap now that icons are loaded by
+                // Coil on demand.
+                val fresh = trace("AppIndex.phaseB.enumerate") { enumerate(context) }
+                val freshCached = fresh.map { it.toCached() }
+                if (freshCached != cached) {
+                    _apps.value = fresh
+                    val writeCookie = ASYNC_COOKIE_WRITE_CACHE
+                    Trace.beginAsyncSection("AppIndex.phaseB.writeCache", writeCookie)
+                    try { cacheRepo.write(freshCached) }
+                    finally { Trace.endAsyncSection("AppIndex.phaseB.writeCache", writeCookie) }
+                }
+
+                _isLoaded.value = true
+            } finally {
+                Trace.endAsyncSection("AppIndex.preload", preloadCookie)
             }
-
-            // Phase B — authoritative enumeration. Picks up newly installed /
-            // uninstalled / renamed apps. Cheap now that icons are loaded by
-            // Coil on demand.
-            val fresh = enumerate(context)
-            val freshCached = fresh.map { it.toCached() }
-            if (freshCached != cached) {
-                _apps.value = fresh
-                cacheRepo.write(freshCached)
-            }
-
-            _isLoaded.value = true
         }
     }
+
+    private const val ASYNC_COOKIE_PRELOAD = 1
+    private const val ASYNC_COOKIE_READ_CACHE = 2
+    private const val ASYNC_COOKIE_WRITE_CACHE = 3
 
     /**
      * Re-enumerates from PackageManager and persists if the list changed.

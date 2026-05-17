@@ -1,6 +1,7 @@
 package com.pchmn.pixelishsearch
 
 import android.app.Application
+import androidx.tracing.trace
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -41,30 +42,38 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
     lateinit var updates: UpdateRepository
         private set
 
-    override fun onCreate() {
+    override fun onCreate() = trace("PixelishSearchApp.onCreate") {
         super.onCreate()
         instance = this
 
         // Eagerly construct repositories so their StateFlows start collecting
         // from DataStore right away — scores/history are ready when the
         // search screen opens.
-        appHistory = AppHistoryRepository(this, appScope)
-        searchHistory = WebSearchHistoryRepository(this, appScope)
-        contactHistory = ContactHistoryRepository(this, appScope)
-        hiddenApps = HiddenAppsRepository(this, appScope)
-        settings = SettingsRepository(this, appScope)
-        updates = UpdateRepository(this, appScope)
+        trace("repos.construct") {
+            appHistory = AppHistoryRepository(this, appScope)
+            searchHistory = WebSearchHistoryRepository(this, appScope)
+            contactHistory = ContactHistoryRepository(this, appScope)
+            hiddenApps = HiddenAppsRepository(this, appScope)
+            settings = SettingsRepository(this, appScope)
+            updates = UpdateRepository(this, appScope)
+        }
 
         // Async preload of the index
-        AppIndex.preload(this@PixelishSearchApp, appScope)
+        trace("AppIndex.preload.dispatch") {
+            AppIndex.preload(this@PixelishSearchApp, appScope)
+        }
 
         // Warm up the TLS connection to Google Suggest so the first real call
         // doesn't have to pay DNS + TCP + TLS handshake cost.
-        WebSuggestionsRepository.warmUp(appScope)
+        trace("WebSuggestionsRepository.warmUp.dispatch") {
+            WebSuggestionsRepository.warmUp(appScope)
+        }
 
         // Wake the (out-of-process) Contacts provider so the first keystroke
         // doesn't pay the binder + provider startup cost.
-        ContactRepository.warmUp(this, appScope)
+        trace("ContactRepository.warmUp.dispatch") {
+            ContactRepository.warmUp(this, appScope)
+        }
     }
 
     /**
@@ -84,12 +93,14 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
      * through PackageManager once and caches them on disk thereafter.
      */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
-        ImageLoader.Builder(context)
-            .components {
-                add(AppIconKeyer())
-                add(AppIconFetcher.Factory())
-            }
-            .build()
+        trace("Coil.newImageLoader") {
+            ImageLoader.Builder(context)
+                .components {
+                    add(AppIconKeyer())
+                    add(AppIconFetcher.Factory())
+                }
+                .build()
+        }
 
     companion object {
         lateinit var instance: PixelishSearchApp

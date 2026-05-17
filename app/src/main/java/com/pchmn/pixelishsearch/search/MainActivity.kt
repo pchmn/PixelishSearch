@@ -10,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.tracing.trace
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.search.ui.SearchScreen
 import com.pchmn.pixelishsearch.search.ui.SearchViewModel
@@ -20,33 +21,39 @@ class MainActivity : ComponentActivity() {
 
     private val vm: SearchViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) = trace("MainActivity.onCreate") {
         super.onCreate(savedInstanceState)
 
         // Edge-to-edge with fully transparent status / nav bars (scrims = TRANSPARENT).
         // Light/dark pairing (icon color) is still handled automatically by auto()
         // based on the system theme.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-        )
+        trace("MainActivity.enableEdgeToEdge") {
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+            )
+        }
 
         // "Pixel Search" effect: blur + slight dim of the wallpaper / content behind.
-        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        window.setDimAmount(0.35f)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-            window.attributes = window.attributes.apply {
-                blurBehindRadius = 80
+        trace("MainActivity.windowFlags") {
+            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            window.setDimAmount(0.35f)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                window.attributes = window.attributes.apply {
+                    blurBehindRadius = 80
+                }
             }
         }
 
-        setContent {
-            PixelishTheme {
-                SearchScreen(
-                    viewModel = vm,
-                    onClose = { finish() }
-                )
+        trace("MainActivity.setContent") {
+            setContent {
+                PixelishTheme {
+                    SearchScreen(
+                        viewModel = vm,
+                        onClose = { finish() }
+                    )
+                }
             }
         }
 

@@ -86,6 +86,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
+    // Tracing (Trace.beginSection / endSection visible in Perfetto)
+    implementation("androidx.tracing:tracing-ktx:1.2.0")
+
     // DataStore (persisted app usage counters)
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
