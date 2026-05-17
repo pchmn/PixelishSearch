@@ -35,7 +35,7 @@ import com.pchmn.pixelishsearch.core.ui.components.dropdown.DropdownMenuWithArro
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EntryRow(
-    padding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+    padding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,

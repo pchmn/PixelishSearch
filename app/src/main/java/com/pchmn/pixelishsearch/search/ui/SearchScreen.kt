@@ -164,9 +164,9 @@ fun SearchScreen(
                                 },
                             ) {
                                 Icon(
-                                    painter = painterResource(R.drawable.ic_downloading),
+                                    painter = painterResource(R.drawable.ic_deployed_code_update),
                                     contentDescription = stringResource(R.string.update_available_badge),
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                         }
