@@ -2,11 +2,13 @@ package com.pchmn.pixelishsearch.settings.ui
 
 import android.Manifest
 import android.app.LocaleManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.LocaleList
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,11 +27,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Contacts
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,9 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,7 +72,6 @@ import com.pchmn.pixelishsearch.update.data.UpdateChecker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
-import android.content.Intent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,7 +145,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                                 .size(40.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                painter = painterResource(R.drawable.ic_arrow_back),
                                 contentDescription = stringResource(R.string.action_back),
                             )
                         }
@@ -171,7 +167,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             SettingsGroup {
                 SwitchPreference(
-                    icon = Icons.Outlined.Contacts,
+                    icon = R.drawable.ic_contacts,
                     title = stringResource(R.string.settings_contact_search_title),
                     subtitle = stringResource(R.string.settings_contact_search_subtitle),
                     checked = effectiveContactToggle,
@@ -234,7 +230,11 @@ private fun UpdateCheckPreference() {
 
     val available = update
     val subtitle = when {
-        available != null -> stringResource(R.string.update_settings_available, available.versionName)
+        available != null -> stringResource(
+            R.string.update_settings_available,
+            available.versionName
+        )
+
         state is CheckUiState.Checking -> stringResource(R.string.update_status_checking)
         state is CheckUiState.UpToDate -> stringResource(R.string.update_status_up_to_date)
         state is CheckUiState.Failed -> stringResource(R.string.update_status_check_failed)
@@ -256,6 +256,7 @@ private fun UpdateCheckPreference() {
                             context.startActivity(Intent(context, UpdateActivity::class.java))
                             CheckUiState.Idle
                         }
+
                         CheckOutcome.UpToDate -> CheckUiState.UpToDate
                         CheckOutcome.Failed -> CheckUiState.Failed
                     }
@@ -265,7 +266,7 @@ private fun UpdateCheckPreference() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Outlined.SystemUpdate,
+            painter = painterResource(R.drawable.ic_deployed_code_update),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp),
@@ -327,7 +328,7 @@ private fun LanguagePreference() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Outlined.Language,
+            painter = painterResource(R.drawable.ic_language),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp),
@@ -419,7 +420,7 @@ private fun SettingsGroup(content: @Composable () -> Unit) {
 
 @Composable
 private fun SwitchPreference(
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     title: String,
     subtitle: String?,
     checked: Boolean,
@@ -435,7 +436,7 @@ private fun SwitchPreference(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = icon,
+            painter = painterResource(icon),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp),

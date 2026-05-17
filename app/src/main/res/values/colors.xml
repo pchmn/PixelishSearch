@@ -52,6 +52,7 @@
     <color name="error_container">#FFF9DEDC</color>
     <color name="on_error_container">#FF410E0B</color>
 
+    <color name="icon_color">@android:color/system_accent1_600</color>
     <color name="widget_bg">@android:color/system_accent2_50</color>
     <color name="widget_color">@android:color/system_accent1_700</color>
     <color name="widget_bg_alpha">#F2FFFFFF</color>

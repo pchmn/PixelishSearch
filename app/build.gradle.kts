@@ -94,7 +94,6 @@ dependencies {
 
     // Material 3 Expressive (alpha at the time of writing — check the latest version)
     implementation("androidx.compose.material3:material3:1.4.0-alpha15")
-    implementation("androidx.compose.material:material-icons-extended")
 
     // Compose
     implementation("androidx.compose.ui:ui")

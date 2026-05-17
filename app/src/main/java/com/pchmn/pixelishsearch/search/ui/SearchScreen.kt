@@ -15,11 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Downloading
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -146,7 +142,7 @@ fun SearchScreen(
                     }
                     WebSearchList(
                         suggestions = uiState.webRecents.take(3),
-                        leadingIcon = Icons.Outlined.Schedule,
+                        leadingIcon = R.drawable.ic_schedule,
                         onClick = { suggestion ->
                             viewModel.onSearchLaunched(suggestion)
                             launchGoogleSearch(context, suggestion)
@@ -168,7 +164,7 @@ fun SearchScreen(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Downloading,
+                                    painter = painterResource(R.drawable.ic_downloading),
                                     contentDescription = stringResource(R.string.update_available_badge),
                                     tint = MaterialTheme.colorScheme.primary,
                                 )
@@ -182,7 +178,7 @@ fun SearchScreen(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Settings,
+                                painter = painterResource(R.drawable.ic_settings),
                                 contentDescription = stringResource(R.string.settings_title),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
@@ -193,7 +189,7 @@ fun SearchScreen(
                         SectionHeader(title = stringResource(R.string.search_section_web))
                         WebSearchList(
                             suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
-                            leadingIcon = Icons.Outlined.Search,
+                            leadingIcon = R.drawable.ic_search,
                             onClick = { suggestion ->
                                 viewModel.onSearchLaunched(suggestion)
                                 launchGoogleSearch(context, suggestion)

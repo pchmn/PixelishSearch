@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -77,7 +75,7 @@ fun SearchField(
             if (value.isNotEmpty()) {
                 IconButton(onClick = { onValueChange("") }) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
+                        painter = painterResource(R.drawable.ic_close),
                         contentDescription = stringResource(R.string.search_clear),
                         tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(22.dp),

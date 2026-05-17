@@ -35,7 +35,7 @@
     <application
         android:name=".PixelishSearchApp"
         android:label="@string/app_name"
-        android:icon="@android:drawable/ic_menu_search"
+        android:icon="@drawable/ic_manage_search"
         android:theme="@style/Theme.PixelishSearch"
         android:allowBackup="true"
         android:supportsRtl="true"

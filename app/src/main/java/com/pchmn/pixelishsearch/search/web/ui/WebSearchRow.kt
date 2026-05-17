@@ -1,13 +1,12 @@
 package com.pchmn.pixelishsearch.search.web.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.NorthWest
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,17 +14,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.core.ui.components.EntryRow
 
 @Composable
 fun WebSearchRow(
     text: String,
-    leadingIcon: ImageVector,
+    @DrawableRes leadingIcon: Int,
     isFirst: Boolean,
     isLast: Boolean,
     onClick: () -> Unit,
@@ -45,7 +45,7 @@ fun WebSearchRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = leadingIcon,
+                    painter = painterResource(leadingIcon),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(18.dp),
@@ -64,7 +64,7 @@ fun WebSearchRow(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
-            imageVector = Icons.Outlined.NorthWest,
+            painter = painterResource(R.drawable.ic_arrow_insert),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             modifier = Modifier.size(20.dp),

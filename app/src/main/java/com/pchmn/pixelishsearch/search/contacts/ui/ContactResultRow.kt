@@ -1,5 +1,6 @@
 package com.pchmn.pixelishsearch.search.contacts.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Message
-import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,14 +65,14 @@ fun ContactResultRow(
             Spacer(modifier = Modifier.width(8.dp))
             ActionIconButton(
                 bitmap = smsIcon,
-                fallbackIcon = Icons.AutoMirrored.Outlined.Message,
+                fallbackIcon = R.drawable.ic_sms,
                 contentDescription = stringResource(R.string.contact_action_message),
                 onClick = onMessageClick,
             )
             Spacer(modifier = Modifier.width(16.dp))
             ActionIconButton(
                 bitmap = callIcon,
-                fallbackIcon = Icons.Outlined.Phone,
+                fallbackIcon = R.drawable.ic_phone,
                 contentDescription = stringResource(R.string.contact_action_call),
                 onClick = onCallClick,
             )
@@ -85,7 +83,7 @@ fun ContactResultRow(
 @Composable
 private fun ActionIconButton(
     bitmap: ImageBitmap?,
-    fallbackIcon: ImageVector,
+    @DrawableRes fallbackIcon: Int,
     contentDescription: String,
     onClick: () -> Unit,
 ) {
@@ -107,7 +105,7 @@ private fun ActionIconButton(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = fallbackIcon,
+                painter = painterResource(fallbackIcon),
                 contentDescription = contentDescription,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),

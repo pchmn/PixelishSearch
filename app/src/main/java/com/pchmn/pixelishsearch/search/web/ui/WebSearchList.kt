@@ -1,13 +1,13 @@
 package com.pchmn.pixelishsearch.search.web.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.pchmn.pixelishsearch.core.ui.components.EntryList
 
 @Composable
 fun WebSearchList(
     suggestions: List<String>,
-    leadingIcon: ImageVector,
+    @DrawableRes leadingIcon: Int,
     onClick: (String) -> Unit,
     onDelete: ((String) -> Unit)? = null,
 ) {
