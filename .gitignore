@@ -77,3 +77,4 @@ lint/reports/
 
 # Perfetto
 trace.perfetto-trace
+record_android_trace

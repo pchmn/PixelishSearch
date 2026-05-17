@@ -87,8 +87,9 @@ Cold start of the search activity is the main goal. The path is optimized at eve
 - **`PackageReceiver`** listens for installs / uninstalls / updates and refreshes the cache so changes appear at the next tap without restarting the process.
 - **`BootReceiver`** retriggers the preload on `BOOT_COMPLETED` to warm DataStore page caches.
 - **Activity** launches with a transparent theme and `FLAG_BLUR_BEHIND` to render the search sheet directly over the launcher, no app transition.
+- **First-frame tuned** — `windowSoftInputMode=adjustPan`, `ModalBottomSheet` starts at `SheetValue.Expanded`, baseline profile packaged into release builds.
 
-Net result on a Pixel 9: cold start (process killed) is visually instant; post-boot is near-instant; warm restart is instant.
+Net result on a Pixel 9 release build: ~120-135ms `TotalTime` (`adb shell am start -W`), ~150-170ms to a fully stable screen. See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the cold-start path, baseline profile / macrobenchmark workflow, and Perfetto profiling.
 
 ## Build
 
@@ -96,8 +97,11 @@ Net result on a Pixel 9: cold start (process killed) is visually instant; post-b
 ./gradlew assembleDebug         # debug APK
 ./gradlew installDebug          # build + install on a connected device
 ./gradlew assembleRelease       # signed release APK (needs keystore.properties)
+./gradlew installRelease        # build + install release on a connected device
 ./gradlew lint                  # Android lint
 ```
+
+For the baseline profile and startup-benchmark workflow, see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
 
 Note: debug-build cold start performance is not representative due to missing R8 / AOT optimizations. Always measure on release.
 
