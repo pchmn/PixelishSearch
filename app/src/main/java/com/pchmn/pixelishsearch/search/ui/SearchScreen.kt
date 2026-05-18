@@ -49,6 +49,8 @@ import com.pchmn.pixelishsearch.search.contacts.data.launchSms
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactRecentList
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
 import com.pchmn.pixelishsearch.search.contacts.utils.replayContactAction
+import com.pchmn.pixelishsearch.search.settings.data.launchSettingsTile
+import com.pchmn.pixelishsearch.search.settings.ui.SettingsTileGrid
 import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
 import com.pchmn.pixelishsearch.settings.SettingsActivity
@@ -185,6 +187,17 @@ fun SearchScreen(
                         }
                     }
                 } else {
+                    if (uiState.tileResults.isNotEmpty()) {
+                        SettingsTileGrid(
+                            tiles = uiState.tileResults,
+                            onClick = { tile ->
+                                launchSettingsTile(context, tile.id)
+                                onClose()
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     if (uiState.webResults.isNotEmpty()) {
                         SectionHeader(title = stringResource(R.string.search_section_web))
                         WebSearchList(

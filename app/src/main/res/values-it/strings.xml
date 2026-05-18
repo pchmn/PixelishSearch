@@ -10,6 +10,16 @@
     <string name="search_section_web">Ricerca Web</string>
     <string name="search_section_contacts">Contatti</string>
 
+    <string name="tile_wifi">Wi-Fi</string>
+    <string name="tile_bluetooth">Bluetooth</string>
+    <string name="tile_airplane_mode">Modalità aereo</string>
+    <string name="tile_night_light">Luce notturna</string>
+    <string name="tile_dark_theme">Tema scuro</string>
+    <string name="tile_auto_rotate">Rotazione automatica</string>
+    <string name="tile_hotspot">Hotspot</string>
+    <string name="tile_flashlight">Torcia</string>
+    <string name="tile_cast">Trasmetti</string>
+
     <string name="app_action_info">Informazioni app</string>
     <string name="app_action_pin">Aggiungi alla schermata Home</string>
     <string name="app_action_hide">Non suggerire questa app</string>

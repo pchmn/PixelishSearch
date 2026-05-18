@@ -14,6 +14,17 @@
     <string name="search_section_web">Web Search</string>
     <string name="search_section_contacts">Contacts</string>
 
+    <!-- Quick-toggle tiles -->
+    <string name="tile_wifi">Wi-Fi</string>
+    <string name="tile_bluetooth">Bluetooth</string>
+    <string name="tile_airplane_mode">Airplane mode</string>
+    <string name="tile_night_light">Night Light</string>
+    <string name="tile_dark_theme">Dark theme</string>
+    <string name="tile_auto_rotate">Auto-rotate</string>
+    <string name="tile_hotspot">Hotspot</string>
+    <string name="tile_flashlight">Flashlight</string>
+    <string name="tile_cast">Cast</string>
+
     <!-- App item dropdown -->
     <string name="app_action_info">App info</string>
     <string name="app_action_pin">Add to home screen</string>

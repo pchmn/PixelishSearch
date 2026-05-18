@@ -11,6 +11,8 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import kotlinx.coroutines.FlowPreview
@@ -31,6 +33,7 @@ data class SearchUiState(
     val contactResults: List<ContactEntry> = emptyList(),
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
+    val tileResults: List<SettingsTile> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -159,7 +162,8 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 query = query,
                 appResults = emptyList(),
                 contactResults = emptyList(),
-                webResults = emptyList()
+                webResults = emptyList(),
+                tileResults = emptyList(),
             )
             return
         }
@@ -173,11 +177,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 contactHistoryById[id]?.score(now) ?: 0f
             }
         } else emptyList()
+        val tiles = SettingsTileRepository.search(getApplication(), query, limit = 4)
 
         _uiState.value = _uiState.value.copy(
             query = query,
             appResults = apps,
-            contactResults = contacts
+            contactResults = contacts,
+            tileResults = tiles,
         )
     }
 
