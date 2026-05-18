@@ -23,6 +23,15 @@ data class SettingsTile(
     val keywords: List<String>,
 )
 
+/**
+ * A tile + a snapshot of its current on/off state, as returned by
+ * [SettingsTileRepository.search]. The snapshot is read once at query time.
+ */
+data class SettingsTileResult(
+    val tile: SettingsTile,
+    val isActive: Boolean,
+)
+
 val SettingsTiles: List<SettingsTile> = listOf(
     SettingsTile(
         SettingsTileId.WIFI, R.string.tile_wifi, R.drawable.ic_wifi,

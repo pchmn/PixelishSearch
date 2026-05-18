@@ -11,8 +11,8 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
-import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import kotlinx.coroutines.FlowPreview
@@ -33,7 +33,7 @@ data class SearchUiState(
     val contactResults: List<ContactEntry> = emptyList(),
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
-    val tileResults: List<SettingsTile> = emptyList(),
+    val tileResults: List<SettingsTileResult> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)

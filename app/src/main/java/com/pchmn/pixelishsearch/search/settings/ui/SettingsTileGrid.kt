@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
 
 /**
  * Two-column grid of quick-toggle chips. Each chip is exactly half the
@@ -31,7 +32,7 @@ import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
  */
 @Composable
 fun SettingsTileGrid(
-    tiles: List<SettingsTile>,
+    tiles: List<SettingsTileResult>,
     onClick: (SettingsTile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -44,14 +45,16 @@ fun SettingsTileGrid(
         tiles.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SettingsTileChip(
-                    tile = pair[0],
-                    onClick = { onClick(pair[0]) },
+                    tile = pair[0].tile,
+                    isActive = pair[0].isActive,
+                    onClick = { onClick(pair[0].tile) },
                     modifier = Modifier.weight(1f),
                 )
                 if (pair.size > 1) {
                     SettingsTileChip(
-                        tile = pair[1],
-                        onClick = { onClick(pair[1]) },
+                        tile = pair[1].tile,
+                        isActive = pair[1].isActive,
+                        onClick = { onClick(pair[1].tile) },
                         modifier = Modifier.weight(1f),
                     )
                 } else {

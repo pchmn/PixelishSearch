@@ -6,8 +6,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.provider.Settings
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 
@@ -121,41 +119,4 @@ private fun toggleAutoRotate(context: Context): Boolean {
  * Hidden but stable since Android 7 (Nougat). Documented in AOSP under
  * `Settings.Secure.NIGHT_DISPLAY_ACTIVATED` (no public constant).
  */
-private const val NIGHT_DISPLAY_ACTIVATED = "night_display_activated"
-
-/**
- * Tracks the torch state via [CameraManager.TorchCallback] so the toggle
- * stays in sync with external changes (Quick Settings tile, hardware buttons).
- */
-private object FlashlightController {
-    private var isOn: Boolean = false
-    private var registered: Boolean = false
-    private val callback = object : CameraManager.TorchCallback() {
-        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
-            isOn = enabled
-        }
-    }
-
-    fun toggle(context: Context): Boolean {
-        val cm = context.getSystemService(CameraManager::class.java) ?: return false
-        ensureRegistered(cm)
-        val cameraId = runCatching {
-            cm.cameraIdList.firstOrNull { id ->
-                cm.getCameraCharacteristics(id)
-                    .get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
-            }
-        }.getOrNull() ?: return false
-        return try {
-            cm.setTorchMode(cameraId, !isOn)
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun ensureRegistered(cm: CameraManager) {
-        if (registered) return
-        runCatching { cm.registerTorchCallback(callback, null) }
-        registered = true
-    }
-}
+internal const val NIGHT_DISPLAY_ACTIVATED = "night_display_activated"

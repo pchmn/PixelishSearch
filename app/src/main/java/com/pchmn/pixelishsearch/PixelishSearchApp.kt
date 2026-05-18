@@ -13,6 +13,7 @@ import com.pchmn.pixelishsearch.search.apps.data.AppIndex
 import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
@@ -73,6 +74,13 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // doesn't pay the binder + provider startup cost.
         trace("ContactRepository.warmUp.dispatch") {
             ContactRepository.warmUp(this, appScope)
+        }
+
+        // Register the torch callback now so the flashlight tile shows the
+        // correct on/off state the first time it appears (Android delivers
+        // one onTorchModeChanged per camera right after registration).
+        trace("FlashlightController.warmUp.dispatch") {
+            FlashlightController.warmUp(this, appScope)
         }
     }
 

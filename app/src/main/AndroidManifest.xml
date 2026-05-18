@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Quick-toggle tiles: read-only check of the current Wi-Fi state to
+         render the chip as active/inactive. Normal permission, auto-granted. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Self-update: download an APK from GitHub Releases and hand it to the
          system installer. The runtime grant is requested via the system
          "Install unknown apps" page. -->

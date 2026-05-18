@@ -14,7 +14,7 @@ object SettingsTileRepository {
 
     private const val MIN_QUERY_LENGTH = 2
 
-    fun search(context: Context, query: String, limit: Int = 4): List<SettingsTile> {
+    fun search(context: Context, query: String, limit: Int = 4): List<SettingsTileResult> {
         val needle = query.trim().normalize()
         if (needle.length < MIN_QUERY_LENGTH) return emptyList()
         return SettingsTiles
@@ -24,6 +24,7 @@ object SettingsTileRepository {
                     tile.keywords.any { it.normalize().startsWith(needle) }
             }
             .take(limit)
+            .map { tile -> SettingsTileResult(tile, tile.id.isActive(context)) }
     }
 
     private fun String.normalize(): String =
