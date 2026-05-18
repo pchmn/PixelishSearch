@@ -38,7 +38,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "PixelishDebug")
+        }
         release {
+            resValue("string", "app_name", "PixelishSearch")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
