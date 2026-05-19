@@ -3,6 +3,8 @@ package com.pchmn.pixelishsearch.search.settings.data
 import android.content.Context
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.os.Handler
+import android.os.Looper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,6 +24,11 @@ internal object FlashlightController {
         private set
 
     private var registered: Boolean = false
+
+    // Callbacks must be dispatched on a thread with a Looper — we register from
+    // `Dispatchers.IO` which has none, so we pin the dispatch to the main Looper.
+    // Body just sets a volatile boolean, so main-thread cost is negligible.
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val callback = object : CameraManager.TorchCallback() {
         override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
             isOn = enabled
@@ -55,7 +62,7 @@ internal object FlashlightController {
     @Synchronized
     private fun ensureRegistered(cm: CameraManager) {
         if (registered) return
-        runCatching { cm.registerTorchCallback(callback, null) }
-        registered = true
+        val ok = runCatching { cm.registerTorchCallback(callback, mainHandler) }.isSuccess
+        if (ok) registered = true
     }
 }
