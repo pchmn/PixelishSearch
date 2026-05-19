@@ -16,15 +16,32 @@ import android.provider.Settings
 internal fun SettingsTileId.isActive(context: Context): Boolean {
     val app = context.applicationContext
     return when (this) {
-        SettingsTileId.WIFI -> globalSettingsActive(app, Settings.Global.WIFI_ON)
-        SettingsTileId.BLUETOOTH -> globalSettingsActive(app, Settings.Global.BLUETOOTH_ON)
-        SettingsTileId.AIRPLANE_MODE -> globalSettingsActive(app, Settings.Global.AIRPLANE_MODE_ON)
-        SettingsTileId.NIGHT_LIGHT -> secureSettingsActive(app, NIGHT_DISPLAY_ACTIVATED)
-        SettingsTileId.DARK_THEME -> darkThemeActive(app)
-        SettingsTileId.AUTO_ROTATE -> systemSettingsActive(
+        SettingsTileId.WIFI -> isSettingActive(app, SettingsScope.GLOBAL, Settings.Global.WIFI_ON)
+        SettingsTileId.BLUETOOTH -> isSettingActive(
             app,
+            SettingsScope.GLOBAL,
+            Settings.Global.BLUETOOTH_ON
+        )
+
+        SettingsTileId.AIRPLANE_MODE -> isSettingActive(
+            app,
+            SettingsScope.GLOBAL,
+            Settings.Global.AIRPLANE_MODE_ON
+        )
+
+        SettingsTileId.NIGHT_LIGHT -> isSettingActive(
+            app,
+            SettingsScope.SECURE,
+            NIGHT_DISPLAY_ACTIVATED
+        )
+
+        SettingsTileId.AUTO_ROTATE -> isSettingActive(
+            app,
+            SettingsScope.SYSTEM,
             Settings.System.ACCELEROMETER_ROTATION
         )
+
+        SettingsTileId.DARK_THEME -> darkThemeActive(app)
 
         SettingsTileId.FLASHLIGHT -> FlashlightController.isOn.value
         SettingsTileId.HOTSPOT -> false
@@ -32,21 +49,17 @@ internal fun SettingsTileId.isActive(context: Context): Boolean {
     }
 }
 
-private fun globalSettingsActive(context: Context, name: String): Boolean =
-    Settings.Global.getInt(context.contentResolver, name, 0) == 1
+enum class SettingsScope { GLOBAL, SYSTEM, SECURE }
 
-private fun systemSettingsActive(context: Context, name: String): Boolean =
-    Settings.System.getInt(context.contentResolver, name, 0) == 1
-
-private fun secureSettingsActive(context: Context, name: String): Boolean =
-    Settings.Secure.getInt(context.contentResolver, name, 0) == 1
-
-//interface AndroidSettings {
-//    fun getInt(cr: ContentResolver?, name: String?, def: Int): Int
-//}
-//
-//private fun <AndroidSettings> isSettingsActive(context: Context, name: String): Boolean =
-//    AndroidSettings.getInt(context.contentResolver, name, 0) == 1
+private fun isSettingActive(context: Context, scope: SettingsScope, name: String): Boolean {
+    val resolver = context.contentResolver
+    val value = when (scope) {
+        SettingsScope.GLOBAL -> Settings.Global.getInt(resolver, name, 0)
+        SettingsScope.SYSTEM -> Settings.System.getInt(resolver, name, 0)
+        SettingsScope.SECURE -> Settings.Secure.getInt(resolver, name, 0)
+    }
+    return value == 1
+}
 
 private fun darkThemeActive(context: Context): Boolean {
     val uiMode = context.getSystemService(UiModeManager::class.java)
