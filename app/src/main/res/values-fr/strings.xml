@@ -19,6 +19,7 @@
     <string name="tile_hotspot">Point d\'accès</string>
     <string name="tile_flashlight">Lampe torche</string>
     <string name="tile_cast">Caster</string>
+    <string name="tile_location">Localisation</string>
 
     <string name="app_action_info">Infos sur l\'appli</string>
     <string name="app_action_pin">Ajouter à l\'écran d\'accueil</string>

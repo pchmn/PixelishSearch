@@ -27,6 +27,7 @@ fun launchSettingsTile(context: Context, tile: SettingsTileId) {
         SettingsTileId.NIGHT_LIGHT -> toggleNightLight(context)
         SettingsTileId.DARK_THEME -> toggleDarkTheme(context)
         SettingsTileId.AUTO_ROTATE -> toggleAutoRotate(context)
+        SettingsTileId.LOCATION -> toggleLocation(context)
         SettingsTileId.FLASHLIGHT -> FlashlightController.toggle(context)
         else -> false
     }
@@ -63,6 +64,7 @@ private fun SettingsTileId.buildSettingsIntent(context: Context): Intent? {
         SettingsTileId.HOTSPOT -> Settings.ACTION_WIRELESS_SETTINGS
         SettingsTileId.FLASHLIGHT -> return null
         SettingsTileId.CAST -> Settings.ACTION_CAST_SETTINGS
+        SettingsTileId.LOCATION -> Settings.ACTION_LOCATION_SOURCE_SETTINGS
     }
     return Intent(action)
 }
@@ -76,6 +78,7 @@ private fun SettingsTileId.directSettingsActivity(): String? = when (this) {
     SettingsTileId.AUTO_ROTATE -> "com.android.settings.Settings\$SmartAutoRotateSettingsActivity"
     SettingsTileId.HOTSPOT -> "com.android.settings.Settings\$WifiTetherSettingsActivity"
     SettingsTileId.CAST -> "com.android.settings.Settings\$WifiDisplaySettingsActivity"
+    SettingsTileId.LOCATION -> "com.android.settings.Settings\$LocationSettingsActivity"
     SettingsTileId.WIFI, SettingsTileId.AIRPLANE_MODE, SettingsTileId.FLASHLIGHT -> null
 }
 
@@ -145,6 +148,23 @@ private fun toggleDarkTheme(context: Context): Boolean {
         false
     }
 }
+
+@Suppress("DEPRECATION")
+private fun toggleLocation(context: Context): Boolean {
+    if (!hasWriteSecureSettings(context)) return false
+    return try {
+        val cr = context.contentResolver
+        val current = Settings.Secure.getInt(cr, Settings.Secure.LOCATION_MODE, LOCATION_MODE_OFF)
+        val next = if (current == LOCATION_MODE_OFF) LOCATION_MODE_HIGH_ACCURACY else LOCATION_MODE_OFF
+        Settings.Secure.putInt(cr, Settings.Secure.LOCATION_MODE, next)
+        true
+    } catch (_: SecurityException) {
+        false
+    }
+}
+
+private const val LOCATION_MODE_OFF = 0
+private const val LOCATION_MODE_HIGH_ACCURACY = 3
 
 private fun toggleAutoRotate(context: Context): Boolean {
     if (!Settings.System.canWrite(context)) return false

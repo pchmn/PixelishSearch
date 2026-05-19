@@ -14,6 +14,7 @@ enum class SettingsTileId {
     HOTSPOT,
     FLASHLIGHT,
     CAST,
+    LOCATION,
 }
 
 data class SettingsTile(
@@ -21,6 +22,7 @@ data class SettingsTile(
     @param:StringRes val labelRes: Int,
     @param:DrawableRes val iconRes: Int,
     val keywords: List<String>,
+    @param:DrawableRes val inactiveIconRes: Int? = null,
 )
 
 /**
@@ -32,7 +34,7 @@ data class SettingsTileResult(
     val isActive: Boolean,
 )
 
-val SettingsTiles: List<SettingsTile> = listOf(
+val settingsTiles: List<SettingsTile> = listOf(
     SettingsTile(
         SettingsTileId.WIFI, R.string.tile_wifi, R.drawable.ic_wifi,
         listOf("wifi", "wlan", "internet"),
@@ -70,5 +72,10 @@ val SettingsTiles: List<SettingsTile> = listOf(
     SettingsTile(
         SettingsTileId.CAST, R.string.tile_cast, R.drawable.ic_cast,
         emptyList(),
+    ),
+    SettingsTile(
+        SettingsTileId.LOCATION, R.string.tile_location, R.drawable.ic_location_on,
+        listOf("gps"),
+        inactiveIconRes = R.drawable.ic_location_off,
     ),
 )

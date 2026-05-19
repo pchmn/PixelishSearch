@@ -86,7 +86,9 @@ private fun SettingsTileChip(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Icon(
-            painter = painterResource(tile.iconRes),
+            painter = painterResource(
+                if (!isActive && tile.inactiveIconRes != null) tile.inactiveIconRes else tile.iconRes
+            ),
             contentDescription = null,
             tint = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(28.dp),

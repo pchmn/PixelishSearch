@@ -19,6 +19,7 @@
     <string name="tile_hotspot">Punto de acceso</string>
     <string name="tile_flashlight">Linterna</string>
     <string name="tile_cast">Enviar</string>
+    <string name="tile_location">Ubicación</string>
 
     <string name="app_action_info">Información de la app</string>
     <string name="app_action_pin">Añadir a la pantalla de inicio</string>

@@ -19,6 +19,7 @@
     <string name="tile_hotspot">Hotspot</string>
     <string name="tile_flashlight">Taschenlampe</string>
     <string name="tile_cast">Streamen</string>
+    <string name="tile_location">Standort</string>
 
     <string name="app_action_info">App-Info</string>
     <string name="app_action_pin">Zum Startbildschirm hinzufügen</string>

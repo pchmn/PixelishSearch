@@ -24,6 +24,7 @@
     <string name="tile_hotspot">Hotspot</string>
     <string name="tile_flashlight">Flashlight</string>
     <string name="tile_cast">Cast</string>
+    <string name="tile_location">Location</string>
 
     <!-- App item dropdown -->
     <string name="app_action_info">App info</string>

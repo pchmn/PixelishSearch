@@ -19,6 +19,7 @@
     <string name="tile_hotspot">Hotspot</string>
     <string name="tile_flashlight">Torcia</string>
     <string name="tile_cast">Trasmetti</string>
+    <string name="tile_location">Posizione</string>
 
     <string name="app_action_info">Informazioni app</string>
     <string name="app_action_pin">Aggiungi alla schermata Home</string>

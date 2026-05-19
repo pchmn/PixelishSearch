@@ -3,6 +3,7 @@ package com.pchmn.pixelishsearch.search.settings.data
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
+import android.location.LocationManager
 import android.provider.Settings
 
 /**
@@ -44,9 +45,15 @@ internal fun SettingsTileId.isActive(context: Context): Boolean {
         SettingsTileId.DARK_THEME -> darkThemeActive(app)
 
         SettingsTileId.FLASHLIGHT -> FlashlightController.isOn.value
+        SettingsTileId.LOCATION -> isLocationEnabled(app)
         SettingsTileId.HOTSPOT -> false
         SettingsTileId.CAST -> false
     }
+}
+
+private fun isLocationEnabled(context: Context): Boolean {
+    val lm = context.getSystemService(LocationManager::class.java) ?: return false
+    return lm.isLocationEnabled
 }
 
 enum class SettingsScope { GLOBAL, SYSTEM, SECURE }

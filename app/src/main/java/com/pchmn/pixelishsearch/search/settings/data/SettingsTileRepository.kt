@@ -17,11 +17,11 @@ object SettingsTileRepository {
     fun search(context: Context, query: String, limit: Int = 4): List<SettingsTileResult> {
         val needle = query.trim().normalize()
         if (needle.length < MIN_QUERY_LENGTH) return emptyList()
-        return SettingsTiles
+        return settingsTiles
             .filter { tile ->
                 val label = context.getString(tile.labelRes).normalize()
                 label.contains(needle) ||
-                    tile.keywords.any { it.normalize().startsWith(needle) }
+                        tile.keywords.any { it.normalize().startsWith(needle) }
             }
             .take(limit)
             .map { tile -> SettingsTileResult(tile, tile.id.isActive(context)) }
