@@ -23,6 +23,24 @@ adb shell settings put secure selected_search_engine com.pchmn.pixelishsearch
 adb shell am force-stop com.google.android.apps.nexuslauncher
 ```
 
+### Advanced
+
+A few quick-toggle tiles depend on protected settings. By default, tapping them opens the matching
+Settings panel. You can enable in-place toggling by granting two permissions via `adb`:
+
+```bash
+adb shell pm grant com.pchmn.pixelishsearch android.permission.WRITE_SECURE_SETTINGS
+adb shell pm grant com.pchmn.pixelishsearch android.permission.WRITE_SETTINGS
+```
+
+- `WRITE_SECURE_SETTINGS` enables in-place toggle for **Airplane mode**, **Night Light**,
+  **Dark theme** and **Location**.
+- `WRITE_SETTINGS` enables in-place toggle for **Auto-rotate**.
+
+Grants persist across reboots and are revoked on uninstall. **Wi-Fi**, **Bluetooth**, **Hotspot**
+and **Cast** always open the matching Settings panel — no public API lets a third-party app
+toggle them in process.
+
 ## Development
 
 ### Stack
