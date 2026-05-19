@@ -7,6 +7,9 @@ import android.os.Handler
 import android.os.Looper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -14,24 +17,27 @@ import kotlinx.coroutines.launch
  * so the state stays in sync with external changes (Quick Settings tile,
  * hardware buttons).
  *
+ * Exposes [isOn] as a [StateFlow] so the search UI can react to in-process
+ * toggles — the flashlight is the only tile that doesn't dismiss the activity,
+ * so the snapshot taken at query time would otherwise stay stale.
+ *
  * [warmUp] registers the callback eagerly at app startup so the first chip
  * render after process start has the right state. Android delivers a
  * `onTorchModeChanged` for each camera right after registration.
  */
 internal object FlashlightController {
-    @Volatile
-    var isOn: Boolean = false
-        private set
+    private val _isOn = MutableStateFlow(false)
+    val isOn: StateFlow<Boolean> = _isOn.asStateFlow()
 
     private var registered: Boolean = false
 
     // Callbacks must be dispatched on a thread with a Looper — we register from
     // `Dispatchers.IO` which has none, so we pin the dispatch to the main Looper.
-    // Body just sets a volatile boolean, so main-thread cost is negligible.
+    // Body just sets a StateFlow value, so main-thread cost is negligible.
     private val mainHandler = Handler(Looper.getMainLooper())
     private val callback = object : CameraManager.TorchCallback() {
         override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
-            isOn = enabled
+            _isOn.value = enabled
         }
     }
 
@@ -52,7 +58,7 @@ internal object FlashlightController {
             }
         }.getOrNull() ?: return false
         return try {
-            cm.setTorchMode(cameraId, !isOn)
+            cm.setTorchMode(cameraId, !_isOn.value)
             true
         } catch (_: Exception) {
             false

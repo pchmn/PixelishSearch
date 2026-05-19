@@ -4,20 +4,16 @@ import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
 import android.provider.Settings
-import android.util.Log
 
 /**
  * Snapshot of whether a tile is currently "on". Read synchronously when the
  * search builds its result list — the search Activity is short-lived, so a
- * snapshot is enough.
+ * snapshot is enough for tiles that dismiss it (all but flashlight). The
+ * flashlight tile is patched live by the VM via [FlashlightController.isOn].
  *
  * Tiles with no public read API (hotspot, cast) return false.
  */
 internal fun SettingsTileId.isActive(context: Context): Boolean {
-    Log.i(
-        "BLUETOOTH",
-        Settings.Global.getInt(context.contentResolver, Settings.Global.BLUETOOTH_ON, 0).toString()
-    )
     val app = context.applicationContext
     return when (this) {
         SettingsTileId.WIFI -> globalSettingsActive(app, Settings.Global.WIFI_ON)
@@ -30,7 +26,7 @@ internal fun SettingsTileId.isActive(context: Context): Boolean {
             Settings.System.ACCELEROMETER_ROTATION
         )
 
-        SettingsTileId.FLASHLIGHT -> FlashlightController.isOn
+        SettingsTileId.FLASHLIGHT -> FlashlightController.isOn.value
         SettingsTileId.HOTSPOT -> false
         SettingsTileId.CAST -> false
     }

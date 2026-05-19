@@ -192,7 +192,13 @@ fun SearchScreen(
                             tiles = uiState.tileResults,
                             onClick = { tile ->
                                 launchSettingsTile(context, tile.id)
-//                                onClose()
+                                // In-process toggles (flashlight + permission-
+                                // granted Settings.* writes) don't pause us, so
+                                // onResume won't fire. Refresh right away — the
+                                // Settings.* writes are synchronous, and the
+                                // flashlight flow will still patch itself when
+                                // its async callback fires.
+                                viewModel.refreshTileStates()
                             },
                         )
                         Spacer(modifier = Modifier.height(16.dp))

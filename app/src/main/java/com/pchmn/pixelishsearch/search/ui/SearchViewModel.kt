@@ -11,8 +11,11 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTileId
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
+import com.pchmn.pixelishsearch.search.settings.data.isActive
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import kotlinx.coroutines.FlowPreview
@@ -110,6 +113,24 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 .debounce(90) // debounce network calls only
                 .collect { runWebSearch(it) }
         }
+
+        // Flashlight is the only tile that toggles in-process (the others
+        // dismiss the activity), so its `isActive` snapshot would stay stale
+        // after a tap. Patch the FLASHLIGHT tile in `tileResults` whenever the
+        // torch state changes.
+        viewModelScope.launch {
+            FlashlightController.isOn.collect { on ->
+                val current = _uiState.value
+                val patched = current.tileResults.map { result ->
+                    if (result.tile.id == SettingsTileId.FLASHLIGHT && result.isActive != on) {
+                        result.copy(isActive = on)
+                    } else result
+                }
+                if (patched !== current.tileResults) {
+                    _uiState.value = current.copy(tileResults = patched)
+                }
+            }
+        }
     }
 
     fun onQueryChange(newQuery: String) {
@@ -154,6 +175,27 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removeRecentContact(entry: ContactHistoryEntry) {
         viewModelScope.launch { contactHistory.remove(entry) }
+    }
+
+    /**
+     * Re-snapshot every tile's `isActive`. Activity stays alive when a tile is
+     * tapped (we don't call `finish()` on click), so when the user comes back
+     * from the Settings screen the previous snapshot is stale. Cheap — all
+     * reads are in-memory or quick Settings.* lookups.
+     */
+    fun refreshTileStates() {
+        val current = _uiState.value
+        if (current.tileResults.isEmpty()) return
+        val context = getApplication<Application>()
+        var changed = false
+        val updated = current.tileResults.map { result ->
+            val active = result.tile.id.isActive(context)
+            if (active != result.isActive) {
+                changed = true
+                result.copy(isActive = active)
+            } else result
+        }
+        if (changed) _uiState.value = current.copy(tileResults = updated)
     }
 
     private fun runLocalSearch(query: String) {

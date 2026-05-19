@@ -1,7 +1,12 @@
 package com.pchmn.pixelishsearch.search
 
+import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -10,6 +15,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.tracing.trace
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.search.ui.SearchScreen
@@ -20,6 +26,17 @@ import com.pchmn.pixelishsearch.update.data.UpdateChecker
 class MainActivity : ComponentActivity() {
 
     private val vm: SearchViewModel by viewModels()
+
+    /**
+     * Catches state changes for tiles whose underlying Settings UI doesn't
+     * pause us (notably the Wi-Fi Internet Panel, which overlays without
+     * dispatching `onPause`/`onResume`). Active only while we're started.
+     */
+    private val tileStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            vm.refreshTileStates()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) = trace("MainActivity.onCreate") {
         super.onCreate(savedInstanceState)
@@ -71,6 +88,36 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         vm.reset()
         triggerUpdateCheck()
+    }
+
+    /**
+     * Tapping a quick-toggle tile typically opens the matching Settings
+     * screen, which pauses us. When the user comes back we re-snapshot every
+     * tile's on/off state so the chips reflect what they just changed.
+     */
+    override fun onResume() {
+        super.onResume()
+        vm.refreshTileStates()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter().apply {
+            addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+            addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+        }
+        ContextCompat.registerReceiver(
+            this,
+            tileStateReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(tileStateReceiver)
     }
 
     /**
