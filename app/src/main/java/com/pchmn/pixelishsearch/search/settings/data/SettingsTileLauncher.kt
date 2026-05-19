@@ -1,11 +1,11 @@
 package com.pchmn.pixelishsearch.search.settings.data
 
 import android.Manifest
-import android.app.UiModeManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Bundle
 import android.provider.Settings
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 
@@ -34,7 +34,26 @@ fun launchSettingsTile(context: Context, tile: SettingsTileId) {
 }
 
 private fun openSettingsFor(context: Context, tile: SettingsTileId) {
-    val action = when (tile) {
+    val intent = tile.buildSettingsIntent(context) ?: return
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    tile.highlightKey()?.let(intent::withSettingsHighlight)
+    try {
+        context.launchAndDismiss(intent)
+    } catch (_: ActivityNotFoundException) {
+    }
+}
+
+/**
+ * Prefer a direct sub-screen activity alias when the Settings app exposes
+ * one (Pixel / AOSP do — `Settings$DarkThemeSettingsActivity`, etc.); fall
+ * back to the canonical [Settings] action otherwise.
+ */
+private fun SettingsTileId.buildSettingsIntent(context: Context): Intent? {
+    directSettingsActivity()?.let { className ->
+        val direct = Intent().setClassName(SETTINGS_PKG, className)
+        if (context.packageManager.resolveActivity(direct, 0) != null) return direct
+    }
+    val action = when (this) {
         SettingsTileId.WIFI -> Settings.Panel.ACTION_INTERNET_CONNECTIVITY
         SettingsTileId.BLUETOOTH -> Settings.ACTION_BLUETOOTH_SETTINGS
         SettingsTileId.AIRPLANE_MODE -> Settings.ACTION_AIRPLANE_MODE_SETTINGS
@@ -42,19 +61,49 @@ private fun openSettingsFor(context: Context, tile: SettingsTileId) {
         SettingsTileId.DARK_THEME -> Settings.ACTION_DISPLAY_SETTINGS
         SettingsTileId.AUTO_ROTATE -> Settings.ACTION_DISPLAY_SETTINGS
         SettingsTileId.HOTSPOT -> Settings.ACTION_WIRELESS_SETTINGS
-        SettingsTileId.FLASHLIGHT -> return
+        SettingsTileId.FLASHLIGHT -> return null
         SettingsTileId.CAST -> Settings.ACTION_CAST_SETTINGS
     }
-    val intent = Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    try {
-        context.launchAndDismiss(intent)
-    } catch (_: ActivityNotFoundException) {
-    }
+    return Intent(action)
+}
+
+private const val SETTINGS_PKG = "com.android.settings"
+
+private fun SettingsTileId.directSettingsActivity(): String? = when (this) {
+    SettingsTileId.BLUETOOTH -> "com.android.settings.Settings\$BluetoothSettingsActivity"
+    SettingsTileId.NIGHT_LIGHT -> "com.android.settings.Settings\$NightDisplaySettingsActivity"
+    SettingsTileId.DARK_THEME -> "com.android.settings.Settings\$DarkThemeSettingsActivity"
+    SettingsTileId.AUTO_ROTATE -> "com.android.settings.Settings\$SmartAutoRotateSettingsActivity"
+    SettingsTileId.HOTSPOT -> "com.android.settings.Settings\$WifiTetherSettingsActivity"
+    SettingsTileId.CAST -> "com.android.settings.Settings\$WifiDisplaySettingsActivity"
+    SettingsTileId.WIFI, SettingsTileId.AIRPLANE_MODE, SettingsTileId.FLASHLIGHT -> null
+}
+
+/**
+ * Pixel Launcher trick: when present, the target Settings screen scrolls to
+ * the preference whose key matches and flashes it briefly. The extras are
+ * stable across AOSP / Pixel since Android 6 but are NOT public API — keys
+ * vary by vendor / version. Unknown keys are silently ignored, so the screen
+ * just opens normally as a fallback.
+ */
+private const val EXTRA_FRAGMENT_ARG_KEY = ":settings:fragment_args_key"
+private const val EXTRA_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
+
+private fun SettingsTileId.highlightKey(): String? = when (this) {
+    SettingsTileId.AIRPLANE_MODE -> "airplane_mode_on"
+    else -> null
+}
+
+private fun Intent.withSettingsHighlight(key: String) {
+    putExtra(EXTRA_FRAGMENT_ARG_KEY, key)
+    putExtra(EXTRA_SHOW_FRAGMENT_ARGS, Bundle().apply {
+        putString(EXTRA_FRAGMENT_ARG_KEY, key)
+    })
 }
 
 private fun hasWriteSecureSettings(context: Context): Boolean =
     context.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) ==
-        PackageManager.PERMISSION_GRANTED
+            PackageManager.PERMISSION_GRANTED
 
 private fun toggleAirplaneMode(context: Context): Boolean {
     if (!hasWriteSecureSettings(context)) return false
@@ -85,14 +134,12 @@ private fun toggleNightLight(context: Context): Boolean {
 }
 
 private fun toggleDarkTheme(context: Context): Boolean {
-    val uiMode = context.getSystemService(UiModeManager::class.java) ?: return false
+    if (!hasWriteSecureSettings(context)) return false
     return try {
-        val next = if (uiMode.nightMode == UiModeManager.MODE_NIGHT_YES) {
-            UiModeManager.MODE_NIGHT_NO
-        } else {
-            UiModeManager.MODE_NIGHT_YES
-        }
-        uiMode.setNightMode(next)
+        val cr = context.contentResolver
+        val current = Settings.Secure.getInt(cr, UI_NIGHT_MODE, UI_NIGHT_MODE_NO)
+        val next = if (current == UI_NIGHT_MODE_YES) UI_NIGHT_MODE_NO else UI_NIGHT_MODE_YES
+        Settings.Secure.putInt(cr, UI_NIGHT_MODE, next)
         true
     } catch (_: SecurityException) {
         false
@@ -120,3 +167,8 @@ private fun toggleAutoRotate(context: Context): Boolean {
  * `Settings.Secure.NIGHT_DISPLAY_ACTIVATED` (no public constant).
  */
 internal const val NIGHT_DISPLAY_ACTIVATED = "night_display_activated"
+
+/** Hidden but stable. AOSP `Settings.Secure.UI_NIGHT_MODE`. */
+internal const val UI_NIGHT_MODE = "ui_night_mode"
+private const val UI_NIGHT_MODE_NO = 1
+private const val UI_NIGHT_MODE_YES = 2

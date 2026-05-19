@@ -1,11 +1,10 @@
 package com.pchmn.pixelishsearch.search.settings.data
 
 import android.app.UiModeManager
-import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.res.Configuration
-import android.net.wifi.WifiManager
 import android.provider.Settings
+import android.util.Log
 
 /**
  * Snapshot of whether a tile is currently "on". Read synchronously when the
@@ -15,35 +14,43 @@ import android.provider.Settings
  * Tiles with no public read API (hotspot, cast) return false.
  */
 internal fun SettingsTileId.isActive(context: Context): Boolean {
+    Log.i(
+        "BLUETOOTH",
+        Settings.Global.getInt(context.contentResolver, Settings.Global.BLUETOOTH_ON, 0).toString()
+    )
     val app = context.applicationContext
     return when (this) {
-        SettingsTileId.WIFI -> wifiActive(app)
-        SettingsTileId.BLUETOOTH -> bluetoothActive(app)
-        SettingsTileId.AIRPLANE_MODE -> airplaneActive(app)
-        SettingsTileId.NIGHT_LIGHT -> nightLightActive(app)
+        SettingsTileId.WIFI -> globalSettingsActive(app, Settings.Global.WIFI_ON)
+        SettingsTileId.BLUETOOTH -> globalSettingsActive(app, Settings.Global.BLUETOOTH_ON)
+        SettingsTileId.AIRPLANE_MODE -> globalSettingsActive(app, Settings.Global.AIRPLANE_MODE_ON)
+        SettingsTileId.NIGHT_LIGHT -> secureSettingsActive(app, NIGHT_DISPLAY_ACTIVATED)
         SettingsTileId.DARK_THEME -> darkThemeActive(app)
-        SettingsTileId.AUTO_ROTATE -> autoRotateActive(app)
+        SettingsTileId.AUTO_ROTATE -> systemSettingsActive(
+            app,
+            Settings.System.ACCELEROMETER_ROTATION
+        )
+
         SettingsTileId.FLASHLIGHT -> FlashlightController.isOn
         SettingsTileId.HOTSPOT -> false
         SettingsTileId.CAST -> false
     }
 }
 
-private fun wifiActive(context: Context): Boolean =
-    runCatching {
-        context.getSystemService(WifiManager::class.java)?.isWifiEnabled == true
-    }.getOrDefault(false)
+private fun globalSettingsActive(context: Context, name: String): Boolean =
+    Settings.Global.getInt(context.contentResolver, name, 0) == 1
 
-private fun bluetoothActive(context: Context): Boolean =
-    runCatching {
-        context.getSystemService(BluetoothManager::class.java)?.adapter?.isEnabled == true
-    }.getOrDefault(false)
+private fun systemSettingsActive(context: Context, name: String): Boolean =
+    Settings.System.getInt(context.contentResolver, name, 0) == 1
 
-private fun airplaneActive(context: Context): Boolean =
-    Settings.Global.getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1
+private fun secureSettingsActive(context: Context, name: String): Boolean =
+    Settings.Secure.getInt(context.contentResolver, name, 0) == 1
 
-private fun nightLightActive(context: Context): Boolean =
-    Settings.Secure.getInt(context.contentResolver, NIGHT_DISPLAY_ACTIVATED, 0) == 1
+//interface AndroidSettings {
+//    fun getInt(cr: ContentResolver?, name: String?, def: Int): Int
+//}
+//
+//private fun <AndroidSettings> isSettingsActive(context: Context, name: String): Boolean =
+//    AndroidSettings.getInt(context.contentResolver, name, 0) == 1
 
 private fun darkThemeActive(context: Context): Boolean {
     val uiMode = context.getSystemService(UiModeManager::class.java)
@@ -53,10 +60,3 @@ private fun darkThemeActive(context: Context): Boolean {
     val mask = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
     return mask == Configuration.UI_MODE_NIGHT_YES
 }
-
-private fun autoRotateActive(context: Context): Boolean =
-    Settings.System.getInt(
-        context.contentResolver,
-        Settings.System.ACCELEROMETER_ROTATION,
-        0,
-    ) == 1

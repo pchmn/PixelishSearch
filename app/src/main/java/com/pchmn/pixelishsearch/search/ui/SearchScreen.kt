@@ -192,7 +192,7 @@ fun SearchScreen(
                             tiles = uiState.tileResults,
                             onClick = { tile ->
                                 launchSettingsTile(context, tile.id)
-                                onClose()
+//                                onClose()
                             },
                         )
                         Spacer(modifier = Modifier.height(16.dp))

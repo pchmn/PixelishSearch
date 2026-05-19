@@ -42,7 +42,9 @@ val SettingsTiles: List<SettingsTile> = listOf(
         listOf("bluetooth", "bt"),
     ),
     SettingsTile(
-        SettingsTileId.AIRPLANE_MODE, R.string.tile_airplane_mode, R.drawable.ic_airplanemode_active,
+        SettingsTileId.AIRPLANE_MODE,
+        R.string.tile_airplane_mode,
+        R.drawable.ic_airplanemode_active,
         listOf("airplane", "flight", "plane", "avion", "flugmodus", "aereo"),
     ),
     SettingsTile(
@@ -50,7 +52,7 @@ val SettingsTiles: List<SettingsTile> = listOf(
         listOf("night", "light", "warm", "nuit", "nocturne", "notturna"),
     ),
     SettingsTile(
-        SettingsTileId.DARK_THEME, R.string.tile_dark_theme, R.drawable.ic_dark_mode,
+        SettingsTileId.DARK_THEME, R.string.tile_dark_theme, R.drawable.ic_contrast,
         listOf("dark", "theme", "sombre", "oscuro", "dunkles", "scuro"),
     ),
     SettingsTile(
