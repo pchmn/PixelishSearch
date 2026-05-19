@@ -223,7 +223,7 @@ fun SearchScreen(
                         SectionHeader(title = stringResource(R.string.search_section_settings))
                         SettingsPageList(
                             pages = uiState.settingsPageResults,
-                            onClick = { entry -> launchSettingsPage(context, entry.action) },
+                            onClick = { entry -> launchSettingsPage(context, entry.component) },
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }

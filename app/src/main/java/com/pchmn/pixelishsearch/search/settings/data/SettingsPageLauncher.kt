@@ -1,17 +1,20 @@
 package com.pchmn.pixelishsearch.search.settings.data
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 
 /**
- * Open a system Settings page by intent action. The action is one of the
- * `Settings.ACTION_*` constants kept in [settingsPages]; resolvability was
- * already checked at preload time by [SettingsPageIndex].
+ * Open a Settings sub-page directly by [ComponentName]. The component was
+ * already resolved at preload by [SettingsPageIndex], so no extra existence
+ * check is needed beyond catching `ActivityNotFoundException` defensively.
  */
-fun launchSettingsPage(context: Context, action: String) {
-    val intent = Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+fun launchSettingsPage(context: Context, component: ComponentName) {
+    val intent = Intent()
+        .setComponent(component)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         context.launchAndDismiss(intent)
     } catch (_: ActivityNotFoundException) {
