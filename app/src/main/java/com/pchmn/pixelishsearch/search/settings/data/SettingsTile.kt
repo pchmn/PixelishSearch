@@ -35,40 +35,40 @@ data class SettingsTileResult(
 val SettingsTiles: List<SettingsTile> = listOf(
     SettingsTile(
         SettingsTileId.WIFI, R.string.tile_wifi, R.drawable.ic_wifi,
-        listOf("wifi", "wi-fi", "internet", "network", "wlan", "reseau"),
+        listOf("wifi", "wlan", "internet"),
     ),
     SettingsTile(
         SettingsTileId.BLUETOOTH, R.string.tile_bluetooth, R.drawable.ic_bluetooth,
-        listOf("bluetooth", "bt"),
+        listOf("bt"),
     ),
     SettingsTile(
         SettingsTileId.AIRPLANE_MODE,
         R.string.tile_airplane_mode,
         R.drawable.ic_airplanemode_active,
-        listOf("airplane", "flight", "plane", "avion", "flugmodus", "aereo"),
+        listOf("flight"),
     ),
     SettingsTile(
         SettingsTileId.NIGHT_LIGHT, R.string.tile_night_light, R.drawable.ic_nightlight,
-        listOf("night", "light", "warm", "nuit", "nocturne", "notturna"),
+        emptyList(),
     ),
     SettingsTile(
         SettingsTileId.DARK_THEME, R.string.tile_dark_theme, R.drawable.ic_contrast,
-        listOf("dark", "theme", "sombre", "oscuro", "dunkles", "scuro"),
+        emptyList(),
     ),
     SettingsTile(
         SettingsTileId.AUTO_ROTATE, R.string.tile_auto_rotate, R.drawable.ic_screen_rotation,
-        listOf("rotate", "rotation", "auto", "screen", "drehung"),
+        emptyList(),
     ),
     SettingsTile(
         SettingsTileId.HOTSPOT, R.string.tile_hotspot, R.drawable.ic_wifi_tethering,
-        listOf("hotspot", "wifi", "tethering", "partage", "punto", "acceso"),
+        listOf("tethering"),
     ),
     SettingsTile(
         SettingsTileId.FLASHLIGHT, R.string.tile_flashlight, R.drawable.ic_flashlight_on,
-        listOf("flashlight", "torch", "lampe", "torcia", "linterna", "taschenlampe"),
+        listOf("torch"),
     ),
     SettingsTile(
         SettingsTileId.CAST, R.string.tile_cast, R.drawable.ic_cast,
-        listOf("cast", "screen", "caster", "trasmetti", "streamen", "enviar"),
+        emptyList(),
     ),
 )
