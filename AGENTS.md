@@ -66,7 +66,7 @@ pixelishsearch/
 │   ├── ui/                           # SearchScreen, SearchField, SearchViewModel
 │   ├── apps/{data,ui}/               # AppIndex & cache, history, hidden, icon fetcher, launchers, receivers
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
-│   ├── settings/{data,ui}/           # Quick-toggle system tiles (wifi, flashlight, …) — static list + launcher
+│   ├── settings/{data,ui}/           # Quick-toggle tiles + curated Settings pages (resolved via PM) — static lists + launchers
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
 ├── settings/                         # SettingsActivity + data/SettingsRepository + ui/SettingsScreen
 ├── update/                           # Self-update from GitHub Releases (UpdateActivity + data/ + ui/UpdateScreen)

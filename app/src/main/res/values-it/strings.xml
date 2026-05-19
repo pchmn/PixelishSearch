@@ -9,6 +9,7 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Ricerca Web</string>
     <string name="search_section_contacts">Contatti</string>
+    <string name="search_section_settings">Impostazioni</string>
 
     <string name="tile_wifi">Wi-Fi</string>
     <string name="tile_bluetooth">Bluetooth</string>

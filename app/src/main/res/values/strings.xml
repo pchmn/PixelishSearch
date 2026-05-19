@@ -13,6 +13,7 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Web Search</string>
     <string name="search_section_contacts">Contacts</string>
+    <string name="search_section_settings">Settings</string>
 
     <!-- Quick-toggle tiles -->
     <string name="tile_wifi">Wi-Fi</string>

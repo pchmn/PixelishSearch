@@ -14,6 +14,7 @@ import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
@@ -81,6 +82,13 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // one onTorchModeChanged per camera right after registration).
         trace("FlashlightController.warmUp.dispatch") {
             FlashlightController.warmUp(this, appScope)
+        }
+
+        // Resolve the curated list of Settings.ACTION_* against PackageManager
+        // once, so search queries can match against localized labels without
+        // paying PM cost on the typing path.
+        trace("SettingsPageIndex.preload.dispatch") {
+            SettingsPageIndex.preload(appScope, this@PixelishSearchApp)
         }
     }
 

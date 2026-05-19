@@ -12,6 +12,8 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileId
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
@@ -37,6 +39,7 @@ data class SearchUiState(
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
     val tileResults: List<SettingsTileResult> = emptyList(),
+    val settingsPageResults: List<SettingsPageEntry> = emptyList(),
 )
 
 @OptIn(FlowPreview::class)
@@ -206,6 +209,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 contactResults = emptyList(),
                 webResults = emptyList(),
                 tileResults = emptyList(),
+                settingsPageResults = emptyList(),
             )
             return
         }
@@ -220,12 +224,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         } else emptyList()
         val tiles = SettingsTileRepository.search(getApplication(), query, limit = 4)
+        val pages = SettingsPageIndex.search(query, limit = 4)
 
         _uiState.value = _uiState.value.copy(
             query = query,
             appResults = apps,
             contactResults = contacts,
             tileResults = tiles,
+            settingsPageResults = pages,
         )
     }
 
