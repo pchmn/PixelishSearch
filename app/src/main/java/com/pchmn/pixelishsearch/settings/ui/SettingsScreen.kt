@@ -10,8 +10,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,7 +35,6 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -168,13 +165,13 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            SectionHeader(stringResource(R.string.settings_section_search))
-
-            SettingsGroup {
+            SettingsGroup(title = stringResource(R.string.settings_section_search)) {
                 SwitchPreference(
                     icon = R.drawable.ic_contacts,
                     title = stringResource(R.string.settings_contact_search_title),
                     subtitle = stringResource(R.string.settings_contact_search_subtitle),
+                    isFirst = true,
+                    isLast = false,
                     checked = effectiveContactToggle,
                     onCheckedChange = { newValue ->
                         if (newValue) {
@@ -189,6 +186,8 @@ fun SettingsScreen(
                     },
                 )
                 NavigationPreference(
+                    isFirst = false,
+                    isLast = true,
                     icon = R.drawable.ic_tune,
                     title = stringResource(R.string.settings_tiles_title),
                     subtitle = stringResource(
@@ -200,14 +199,12 @@ fun SettingsScreen(
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                SectionHeader(stringResource(R.string.settings_section_appearance))
-                SettingsGroup {
+                SettingsGroup(title = stringResource(R.string.settings_section_appearance)) {
                     LanguagePreference()
                 }
             }
 
-            SectionHeader(stringResource(R.string.settings_section_about))
-            SettingsGroup {
+            SettingsGroup(title = stringResource(R.string.settings_section_about)) {
                 UpdateCheckPreference()
             }
 
@@ -257,12 +254,23 @@ private fun UpdateCheckPreference() {
 
     val isChecking = state is CheckUiState.Checking
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(enabled = !isChecking) {
+    PreferenceRow(
+        isFirst = true,
+        isLast = true,
+        leadingIcon = R.drawable.ic_deployed_code_update,
+        title = stringResource(R.string.update_settings_title),
+        subtitle = subtitle,
+        ending = {
+            if (isChecking) {
+                Spacer(Modifier.width(16.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                )
+            }
+        },
+        onClick = {
+            if (!isChecking) {
                 state = CheckUiState.Checking
                 scope.launch {
                     state = when (UpdateChecker.checkNow(app.updates, currentVersion)) {
@@ -276,38 +284,8 @@ private fun UpdateCheckPreference() {
                     }
                 }
             }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_deployed_code_update),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.update_settings_title),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
-        if (isChecking) {
-            Spacer(Modifier.width(16.dp))
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-            )
-        }
-    }
+    )
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -332,37 +310,14 @@ private fun LanguagePreference() {
     )
     val currentLabel = options.firstOrNull { it.first == currentTag }?.second ?: options[0].second
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable { showDialog = true }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_language),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.settings_language_title),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = currentLabel,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    PreferenceRow(
+        isFirst = true,
+        isLast = true,
+        leadingIcon = R.drawable.ic_language,
+        title = stringResource(R.string.settings_language_title),
+        subtitle = currentLabel,
+        onClick = { showDialog = true }
+    )
 
     if (showDialog) {
         AlertDialog(
@@ -413,7 +368,7 @@ private fun LanguagePreference() {
 private fun SectionHeader(title: String) {
     Text(
         text = title,
-        modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = 10.dp, top = 16.dp, bottom = 4.dp),
         color = MaterialTheme.colorScheme.primary,
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
@@ -421,13 +376,16 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun SettingsGroup(content: @Composable () -> Unit) {
+private fun SettingsGroup(title: String? = null, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        if (title != null) {
+            SectionHeader(title)
+        }
         content()
     }
 }
@@ -436,88 +394,17 @@ private fun SettingsGroup(content: @Composable () -> Unit) {
 private fun NavigationPreference(
     @DrawableRes icon: Int,
     title: String,
-    subtitle: String?,
+    subtitle: String? = null,
+    isFirst: Boolean,
+    isLast: Boolean,
     onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            if (subtitle != null) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SwitchPreference(
-    @DrawableRes icon: Int,
-    title: String,
-    subtitle: String?,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(20.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            if (subtitle != null) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        Spacer(Modifier.width(32.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-        )
-    }
+    PreferenceRow(
+        isFirst = isFirst,
+        isLast = isLast,
+        leadingIcon = icon,
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick
+    )
 }

@@ -1,8 +1,6 @@
 package com.pchmn.pixelishsearch.settings.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -24,7 +21,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -32,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -105,7 +100,7 @@ fun TilesScreen(onBack: () -> Unit) {
         ) {
             Text(
                 text = stringResource(R.string.settings_tiles_subtitle),
-                modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 8.dp, bottom = 16.dp),
+                modifier = Modifier.padding(start = 26.dp, end = 32.dp, top = 8.dp, bottom = 16.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
             )
@@ -116,8 +111,10 @@ fun TilesScreen(onBack: () -> Unit) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                settingsTiles.forEach { tile ->
+                settingsTiles.forEachIndexed { index, tile ->
                     TileToggleRow(
+                        isFirst = index == 0,
+                        isLast = index == settingsTiles.lastIndex,
                         tile = tile,
                         checked = tile.id.name !in disabledIds,
                         onCheckedChange = { enabled ->
@@ -127,7 +124,7 @@ fun TilesScreen(onBack: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -136,35 +133,46 @@ fun TilesScreen(onBack: () -> Unit) {
 private fun TileToggleRow(
     tile: SettingsTile,
     checked: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(tile.iconRes),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(Modifier.width(20.dp))
-        Text(
-            text = stringResource(tile.labelRes),
-            modifier = Modifier.weight(1f),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Spacer(Modifier.width(32.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-        )
-    }
+    SwitchPreference(
+        isFirst = isFirst,
+        isLast = isLast,
+        icon = tile.iconRes,
+        title = stringResource(tile.labelRes),
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+    )
+//
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clip(RoundedCornerShape(28.dp))
+//            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+//            .clickable { onCheckedChange(!checked) }
+//            .padding(horizontal = 20.dp, vertical = 16.dp),
+//        verticalAlignment = Alignment.CenterVertically,
+//    ) {
+//        Icon(
+//            painter = painterResource(tile.iconRes),
+//            contentDescription = null,
+//            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//            modifier = Modifier.size(24.dp),
+//        )
+//        Spacer(Modifier.width(20.dp))
+//        Text(
+//            text = stringResource(tile.labelRes),
+//            modifier = Modifier.weight(1f),
+//            fontSize = 17.sp,
+//            fontWeight = FontWeight.Medium,
+//            color = MaterialTheme.colorScheme.onSurface,
+//        )
+//        Spacer(Modifier.width(32.dp))
+//        Switch(
+//            checked = checked,
+//            onCheckedChange = onCheckedChange,
+//        )
+//    }
 }
