@@ -224,7 +224,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         } else emptyList()
         val tiles = SettingsTileRepository.search(getApplication(), query, limit = 4)
-        val pages = SettingsPageIndex.search(query, limit = 4)
+        val pages = SettingsPageIndex.search(query, limit = 3)
 
         _uiState.value = _uiState.value.copy(
             query = query,
