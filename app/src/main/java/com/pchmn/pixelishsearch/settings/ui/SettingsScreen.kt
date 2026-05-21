@@ -188,7 +188,7 @@ fun SettingsScreen(
                 NavigationPreference(
                     isFirst = false,
                     isLast = true,
-                    icon = R.drawable.ic_tune,
+                    icon = R.drawable.ic_location_chip,
                     title = stringResource(R.string.settings_tiles_title),
                     subtitle = stringResource(
                         R.string.settings_tiles_count,
