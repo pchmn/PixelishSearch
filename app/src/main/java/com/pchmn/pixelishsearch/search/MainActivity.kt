@@ -7,20 +7,23 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.net.wifi.WifiManager
-import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.core.content.ContextCompat
 import androidx.tracing.trace
 import com.pchmn.pixelishsearch.PixelishSearchApp
+import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
 import com.pchmn.pixelishsearch.search.ui.SearchScreen
 import com.pchmn.pixelishsearch.search.ui.SearchViewModel
-import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
 import com.pchmn.pixelishsearch.update.data.UpdateChecker
 
 class MainActivity : ComponentActivity() {
@@ -46,30 +49,44 @@ class MainActivity : ComponentActivity() {
         // based on the system theme.
         trace("MainActivity.enableEdgeToEdge") {
             enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-                navigationBarStyle = SystemBarStyle.Companion.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+                statusBarStyle = SystemBarStyle.Companion.auto(
+                    Color.TRANSPARENT,
+                    Color.TRANSPARENT
+                ),
+                navigationBarStyle = SystemBarStyle.Companion.auto(
+                    Color.TRANSPARENT,
+                    Color.TRANSPARENT
+                )
             )
         }
 
-        // "Pixel Search" effect: blur + slight dim of the wallpaper / content behind.
+        // "Pixel Search" effect: blur the wallpaper behind via the system
+        // `backgroundBlurRadius` API instead of `FLAG_BLUR_BEHIND`. The latter
+        // is a *system* effect on surfaces below us — it visibly drops off
+        // the moment another window is composed on top during a launch
+        // transition (Google search, an app, …) and the user perceives a
+        // freeze where the wallpaper snaps sharp behind our still-drawn UI.
+        // `setBackgroundBlurRadius` attaches the blurred surface to our own
+        // window, so it stays composed until the target activity actually
+        // takes over. The dim is rendered as a Compose layer below for the
+        // same reason — `FLAG_DIM_BEHIND` has the same fade-off problem.
         trace("MainActivity.windowFlags") {
-            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            window.setDimAmount(0.35f)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                window.attributes = window.attributes.apply {
-                    blurBehindRadius = 80
-                }
-            }
+            window.setBackgroundBlurRadius(80)
         }
 
         trace("MainActivity.setContent") {
             setContent {
                 PixelishTheme {
-                    SearchScreen(
-                        viewModel = vm,
-                        onClose = { finish() }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(ComposeColor.Black.copy(alpha = 0.35f)),
+                    ) {
+                        SearchScreen(
+                            viewModel = vm,
+                            onClose = { finish() }
+                        )
+                    }
                 }
             }
         }
