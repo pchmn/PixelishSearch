@@ -6,10 +6,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntOffset
 import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
 import com.pchmn.pixelishsearch.settings.ui.SettingsScreen
 import com.pchmn.pixelishsearch.settings.ui.TilesScreen
@@ -27,13 +36,27 @@ class SettingsActivity : ComponentActivity() {
         setContent {
             PixelishTheme {
                 var route by rememberSaveable { mutableStateOf(Route.Root) }
-                when (route) {
-                    Route.Root -> SettingsScreen(
-                        onBack = { finish() },
-                        onOpenTiles = { route = Route.Tiles },
-                    )
+                AnimatedContent(
+                    targetState = route,
+                    transitionSpec = {
+                        val forward = targetState.ordinal > initialState.ordinal
+                        val spatial = tween<IntOffset>(durationMillis = 350, easing = FastOutSlowInEasing)
+                        val effects = tween<Float>(durationMillis = 250, easing = FastOutSlowInEasing)
+                        val enterOffset: (Int) -> Int = { if (forward) it / 3 else -it / 3 }
+                        val exitOffset: (Int) -> Int = { if (forward) -it / 3 else it / 3 }
+                        (slideInHorizontally(spatial, enterOffset) + fadeIn(effects)) togetherWith
+                            (slideOutHorizontally(spatial, exitOffset) + fadeOut(effects))
+                    },
+                    label = "settingsRoute",
+                ) { current ->
+                    when (current) {
+                        Route.Root -> SettingsScreen(
+                            onBack = { finish() },
+                            onOpenTiles = { route = Route.Tiles },
+                        )
 
-                    Route.Tiles -> TilesScreen(onBack = { route = Route.Root })
+                        Route.Tiles -> TilesScreen(onBack = { route = Route.Root })
+                    }
                 }
             }
         }
