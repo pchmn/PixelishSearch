@@ -36,9 +36,12 @@
     <string name="action_back">Atrás</string>
 
     <string name="settings_title">Ajustes</string>
-    <string name="settings_section_general">General</string>
+    <string name="settings_section_search">Búsqueda</string>
     <string name="settings_contact_search_title">Contactos</string>
     <string name="settings_contact_search_subtitle">Incluir en la búsqueda</string>
+    <string name="settings_tiles_title">Mosaicos</string>
+    <string name="settings_tiles_subtitle">Elige qué mosaicos aparecen en los resultados</string>
+    <string name="settings_tiles_count">%1$d de 10</string>
     <string name="settings_section_appearance">Apariencia</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_system">Idioma del sistema</string>

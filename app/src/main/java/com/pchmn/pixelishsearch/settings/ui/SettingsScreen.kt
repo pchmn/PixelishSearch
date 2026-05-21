@@ -66,6 +66,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
+import com.pchmn.pixelishsearch.search.settings.data.settingsTiles
 import com.pchmn.pixelishsearch.update.UpdateActivity
 import com.pchmn.pixelishsearch.update.data.CheckOutcome
 import com.pchmn.pixelishsearch.update.data.UpdateChecker
@@ -75,12 +76,16 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onOpenTiles: () -> Unit,
+) {
     val context = LocalContext.current
     val app = context.applicationContext as PixelishSearchApp
     val scope = rememberCoroutineScope()
 
     val contactSearchEnabled by app.settings.contactSearchEnabled.collectAsStateWithLifecycle()
+    val disabledTileIds by app.settings.disabledTileIds.collectAsStateWithLifecycle()
     var hasContactsPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -163,7 +168,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            SectionHeader(stringResource(R.string.settings_section_general))
+            SectionHeader(stringResource(R.string.settings_section_search))
 
             SettingsGroup {
                 SwitchPreference(
@@ -182,6 +187,15 @@ fun SettingsScreen(onBack: () -> Unit) {
                             scope.launch { app.settings.setContactSearchEnabled(false) }
                         }
                     },
+                )
+                NavigationPreference(
+                    icon = R.drawable.ic_tune,
+                    title = stringResource(R.string.settings_tiles_title),
+                    subtitle = stringResource(
+                        R.string.settings_tiles_count,
+                        settingsTiles.size - disabledTileIds.size,
+                    ),
+                    onClick = onOpenTiles,
                 )
             }
 
@@ -415,6 +429,48 @@ private fun SettingsGroup(content: @Composable () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         content()
+    }
+}
+
+@Composable
+private fun NavigationPreference(
+    @DrawableRes icon: Int,
+    title: String,
+    subtitle: String?,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.width(20.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (subtitle != null) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

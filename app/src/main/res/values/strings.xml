@@ -45,9 +45,12 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_general">General</string>
+    <string name="settings_section_search">Search</string>
     <string name="settings_contact_search_title">Contacts</string>
     <string name="settings_contact_search_subtitle">Include in search results</string>
+    <string name="settings_tiles_title">Tiles</string>
+    <string name="settings_tiles_subtitle">Choose which tiles appear in search results</string>
+    <string name="settings_tiles_count">%1$d of 10</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_language_system">System default</string>

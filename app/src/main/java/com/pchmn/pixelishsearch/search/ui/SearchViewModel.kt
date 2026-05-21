@@ -109,6 +109,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
+        // Same reactivity for tile visibility — the user can hide/show tiles
+        // in Settings while the search activity is still alive.
+        viewModelScope.launch {
+            settings.disabledTileIds.collect {
+                runLocalSearch(_query.value)
+            }
+        }
+
         // Instant local search on every keystroke (apps + contacts are fast)
         viewModelScope.launch {
             _query
@@ -223,7 +231,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 contactHistoryById[id]?.score(now) ?: 0f
             }
         } else emptyList()
-        val tiles = SettingsTileRepository.search(getApplication(), query, limit = 4)
+        val tiles = SettingsTileRepository.search(
+            getApplication(),
+            query,
+            settings.disabledTileIds.value,
+            limit = 4,
+        )
         val pages = SettingsPageIndex.search(query, limit = 3)
 
         _uiState.value = _uiState.value.copy(

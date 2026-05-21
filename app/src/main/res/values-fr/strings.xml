@@ -36,9 +36,12 @@
     <string name="action_back">Retour</string>
 
     <string name="settings_title">Paramètres</string>
-    <string name="settings_section_general">Général</string>
+    <string name="settings_section_search">Recherche</string>
     <string name="settings_contact_search_title">Contacts</string>
     <string name="settings_contact_search_subtitle">Inclure dans la recherche</string>
+    <string name="settings_tiles_title">Tuiles</string>
+    <string name="settings_tiles_subtitle">Choisis les tuiles à afficher dans la recherche</string>
+    <string name="settings_tiles_count">%1$d sur 10</string>
     <string name="settings_section_appearance">Apparence</string>
     <string name="settings_language_title">Langue</string>
     <string name="settings_language_system">Langue du système</string>

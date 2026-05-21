@@ -14,10 +14,17 @@ object SettingsTileRepository {
 
     private const val MIN_QUERY_LENGTH = 2
 
-    fun search(context: Context, query: String, limit: Int = 4): List<SettingsTileResult> {
+    fun search(
+        context: Context,
+        query: String,
+        disabledIds: Set<String>,
+        limit: Int = 4,
+    ): List<SettingsTileResult> {
         val needle = query.trim().normalize()
         if (needle.length < MIN_QUERY_LENGTH) return emptyList()
         return settingsTiles
+            .asSequence()
+            .filter { tile -> tile.id.name !in disabledIds }
             .filter { tile ->
                 val label = context.getString(tile.labelRes).normalize()
                 label.contains(needle) ||
@@ -25,6 +32,7 @@ object SettingsTileRepository {
             }
             .take(limit)
             .map { tile -> SettingsTileResult(tile, tile.id.isActive(context)) }
+            .toList()
     }
 
     private fun String.normalize(): String =

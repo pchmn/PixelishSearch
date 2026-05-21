@@ -36,9 +36,12 @@
     <string name="action_back">Zurück</string>
 
     <string name="settings_title">Einstellungen</string>
-    <string name="settings_section_general">Allgemein</string>
+    <string name="settings_section_search">Suche</string>
     <string name="settings_contact_search_title">Kontakte</string>
     <string name="settings_contact_search_subtitle">In Suche einbeziehen</string>
+    <string name="settings_tiles_title">Kacheln</string>
+    <string name="settings_tiles_subtitle">Lege fest, welche Kacheln in den Suchergebnissen erscheinen</string>
+    <string name="settings_tiles_count">%1$d von 10</string>
     <string name="settings_section_appearance">Darstellung</string>
     <string name="settings_language_title">Sprache</string>
     <string name="settings_language_system">Systemsprache</string>

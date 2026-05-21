@@ -36,9 +36,12 @@
     <string name="action_back">Indietro</string>
 
     <string name="settings_title">Impostazioni</string>
-    <string name="settings_section_general">Generali</string>
+    <string name="settings_section_search">Ricerca</string>
     <string name="settings_contact_search_title">Contatti</string>
     <string name="settings_contact_search_subtitle">Includi nella ricerca</string>
+    <string name="settings_tiles_title">Riquadri</string>
+    <string name="settings_tiles_subtitle">Scegli quali riquadri appaiono nei risultati</string>
+    <string name="settings_tiles_count">%1$d su 10</string>
     <string name="settings_section_appearance">Aspetto</string>
     <string name="settings_language_title">Lingua</string>
     <string name="settings_language_system">Lingua di sistema</string>
