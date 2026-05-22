@@ -56,6 +56,20 @@ PixelishSearch.
 A Tile can be visible-but-off, visible-and-on, or hidden (in which case its
 runtime state is irrelevant).
 
+### Recents strip
+
+**Recents strip**:
+The blank-state suggestion list shown when the query is empty. Mixes recent
+App entries, fused Contact + Settings page entries, etc.
+_Avoid_: Suggestions strip, recents list
+
+**Recents-hidden app**:
+An App entry the user has excluded from the Recents strip. Remains fully
+searchable when typed — exclusion is scoped to the blank-state strip only.
+Distinct from a disabled Tile, which disappears from search entirely.
+_Avoid_: Hidden app (ambiguous between recents-exclusion and full
+invisibility), disabled app
+
 ## Example dialogue
 
 > **Dev**: Should "Display" show up when I type "dis"?
@@ -68,3 +82,10 @@ runtime state is irrelevant).
 > **Domain**: No — disabling a Tile changes its **visibility**, not its
 > **runtime state**. WiFi keeps doing whatever it was doing; we just stop
 > rendering the tile in search results.
+>
+> **Dev**: And if I long-press Slack and "hide" it, does it disappear from
+> search too?
+> **Domain**: No — that makes it a **Recents-hidden app**: Slack drops out
+> of the Recents strip (blank query) but still matches normally when you
+> type "sla". Different from a disabled Tile, which would vanish from
+> search entirely.
