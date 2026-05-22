@@ -19,7 +19,10 @@ _Avoid_: Shortcut, quick setting, switch
 A sub-page of the Android Settings app (e.g. Display, Sound, Modes),
 discovered dynamically at preload by querying `ACTION_MAIN` in the Settings
 package. Launched by `ComponentName`. Read-only entry point — no binary state,
-no in-app action.
+no in-app action. Distinct from `SettingsPageHistoryEntry`, which is the
+locally-stored recent-use record (not a source of truth — an entry whose
+`ComponentName` is no longer in `SettingsPageIndex.entries` is hidden from
+display until the page reappears).
 _Avoid_: Settings shortcut, settings entry
 
 **App entry**:

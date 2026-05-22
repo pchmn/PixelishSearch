@@ -7,6 +7,9 @@ import android.content.pm.PackageManager
 import com.pchmn.pixelishsearch.search.apps.data.AppIconRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.Normalizer
 
@@ -22,15 +25,16 @@ import java.text.Normalizer
  * so binding by component is the only way to reach them.
  *
  * Search is purely in-memory: `contains` match on the (localized) label,
- * accent-insensitive. Hits whose label *starts* with the query rank first.
+ * accent-insensitive. Hits whose label *starts* with the query rank first,
+ * and within each tier `scoreOf` re-sorts by usage frequency.
  */
 object SettingsPageIndex {
 
     private const val MIN_QUERY_LENGTH = 2
     private const val SETTINGS_PKG = "com.android.settings"
 
-    @Volatile
-    private var entries: List<SettingsPageEntry> = emptyList()
+    private val _entries = MutableStateFlow<List<SettingsPageEntry>>(emptyList())
+    val entries: StateFlow<List<SettingsPageEntry>> = _entries.asStateFlow()
 
     /**
      * Cache key for the Settings app launcher icon — shared by every row in
@@ -42,30 +46,33 @@ object SettingsPageIndex {
 
     fun preload(scope: CoroutineScope, context: Context) {
         scope.launch(Dispatchers.IO) {
-            entries = discover(context)
+            _entries.value = discover(context)
             iconRequest = resolveIcon(context)
         }
     }
 
-    fun search(query: String, limit: Int = 4): List<SettingsPageEntry> {
+    fun search(
+        query: String,
+        limit: Int = 4,
+        scoreOf: (ComponentName) -> Float = { 0f },
+    ): List<SettingsPageEntry> {
         val needle = query.trim().normalize()
         if (needle.length < MIN_QUERY_LENGTH) return emptyList()
-        val all = entries
+        val all = _entries.value
         if (all.isEmpty()) return emptyList()
-        return all
-            .asSequence()
-            .mapNotNull { entry ->
-                val norm = entry.label.normalize()
-                when {
-                    norm.startsWith(needle) -> 0 to entry
-                    norm.contains(needle) -> 1 to entry
-                    else -> null
-                }
+
+        val startsWith = mutableListOf<SettingsPageEntry>()
+        val contains = mutableListOf<SettingsPageEntry>()
+        for (entry in all) {
+            val norm = entry.label.normalize()
+            when {
+                norm.startsWith(needle) -> startsWith += entry
+                norm.contains(needle) -> contains += entry
             }
-            .sortedBy { it.first }
-            .map { it.second }
+        }
+        val byScoreDesc = compareByDescending<SettingsPageEntry> { scoreOf(it.component) }
+        return (startsWith.sortedWith(byScoreDesc) + contains.sortedWith(byScoreDesc))
             .take(limit)
-            .toList()
     }
 
     /**

@@ -1,9 +1,11 @@
 package com.pchmn.pixelishsearch.search.ui
 
 import android.app.Application
+import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.pchmn.pixelishsearch.PixelishSearchApp
+import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppHistoryEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppIndex
@@ -13,6 +15,7 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryEntry
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileId
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
@@ -30,11 +33,23 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+/**
+ * Item rendered in the fused blank-state recents block. Storage stays
+ * per-feature (`ContactHistoryRepository`, `SettingsPageHistoryRepository`) —
+ * this wrapper only exists to drive a single ranked list at the UI layer.
+ * See `docs/adr/0002-merge-contacts-and-settings-recents-in-display.md`.
+ */
+sealed interface RecentEntity {
+    val entry: HistoryEntry
+    data class Contact(override val entry: ContactHistoryEntry) : RecentEntity
+    data class SettingsPage(override val entry: SettingsPageHistoryEntry) : RecentEntity
+}
+
 data class SearchUiState(
     val query: String = "",
     val appRecents: List<AppEntry> = emptyList(),
     val appResults: List<AppEntry> = emptyList(),
-    val contactRecents: List<ContactHistoryEntry> = emptyList(),
+    val fusedRecents: List<RecentEntity> = emptyList(),
     val contactResults: List<ContactEntry> = emptyList(),
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
@@ -49,6 +64,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val appHistory get() = app.appHistory
     private val searchHistory get() = app.searchHistory
     private val contactHistory get() = app.contactHistory
+    private val settingsPageHistory get() = app.settingsPageHistory
     private val hiddenApps get() = app.hiddenApps
     private val settings get() = app.settings
 
@@ -56,10 +72,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-    // Local snapshot of the app-launch history, kept in sync with the repository's
-    // Flow. Read synchronously on every keystroke by runLocalSearch().
+    // Local snapshots of history, kept in sync with the repositories' flows.
+    // Read synchronously on every keystroke by runLocalSearch() to rank results
+    // within their respective categories.
     private var historyByPkg: Map<String, AppHistoryEntry> = emptyMap()
     private var contactHistoryById: Map<Long, ContactHistoryEntry> = emptyMap()
+    private var settingsPageHistoryByComponent: Map<ComponentName, SettingsPageHistoryEntry> = emptyMap()
 
     private var webJob: Job? = null
 
@@ -88,15 +106,46 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
 
+        // Snapshot history maps for in-query ranking (independent of the
+        // contact-search toggle — that only gates the search call itself).
+        viewModelScope.launch {
+            contactHistory.recents.collect { recents ->
+                contactHistoryById = recents.associateBy { it.id }
+            }
+        }
+        viewModelScope.launch {
+            settingsPageHistory.recents.collect { recents ->
+                settingsPageHistoryByComponent = recents.associateBy { it.component }
+            }
+        }
+
+        // Fused blank-state recents: contacts + settings pages merged into a
+        // single block, ranked by HistoryEntry.score(), capped at 2. Stale
+        // settings entries (component no longer in SettingsPageIndex) are
+        // filtered at display time, not deleted.
         viewModelScope.launch {
             combine(
                 contactHistory.recents,
+                settingsPageHistory.recents,
+                SettingsPageIndex.entries,
                 settings.contactSearchEnabled,
-            ) { recents, enabled ->
-                contactHistoryById = recents.associateBy { it.id }
-                if (enabled) recents else emptyList()
-            }.collect { displayed ->
-                _uiState.value = _uiState.value.copy(contactRecents = displayed)
+            ) { contactRecents, pageRecents, pageEntries, contactsEnabled ->
+                val known = pageEntries.mapTo(HashSet(pageEntries.size)) { it.component }
+                val now = System.currentTimeMillis()
+                val contacts = if (contactsEnabled) {
+                    contactRecents.map { RecentEntity.Contact(it) }
+                } else emptyList()
+                val pages = pageRecents
+                    .filter { it.component in known }
+                    .map { RecentEntity.SettingsPage(it) }
+                (contacts + pages)
+                    .sortedWith(
+                        compareByDescending<RecentEntity> { it.entry.score(now) }
+                            .thenByDescending { it.entry.lastUsedEpochMillis }
+                    )
+                    .take(2)
+            }.collect { fused ->
+                _uiState.value = _uiState.value.copy(fusedRecents = fused)
             }
         }
 
@@ -176,6 +225,12 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun onSettingsPageOpened(entry: SettingsPageEntry) {
+        viewModelScope.launch {
+            settingsPageHistory.record(component = entry.component, label = entry.label)
+        }
+    }
+
     fun removeSearchHistory(query: String) {
         viewModelScope.launch { searchHistory.remove(WebSearchHistoryEntry(query)) }
     }
@@ -186,6 +241,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
 
     fun removeRecentContact(entry: ContactHistoryEntry) {
         viewModelScope.launch { contactHistory.remove(entry) }
+    }
+
+    fun removeRecentSettingsPage(entry: SettingsPageHistoryEntry) {
+        viewModelScope.launch { settingsPageHistory.remove(entry) }
     }
 
     /**
@@ -237,7 +296,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             settings.disabledTileIds.value,
             limit = 4,
         )
-        val pages = SettingsPageIndex.search(query, limit = 3)
+        val pages = SettingsPageIndex.search(query, limit = 3) { component ->
+            settingsPageHistoryByComponent[component]?.score(now) ?: 0f
+        }
 
         _uiState.value = _uiState.value.copy(
             query = query,

@@ -43,9 +43,10 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.launchContactDetails
 import com.pchmn.pixelishsearch.search.contacts.data.launchDialer
 import com.pchmn.pixelishsearch.search.contacts.data.launchSms
-import com.pchmn.pixelishsearch.search.contacts.ui.ContactRecentList
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
 import com.pchmn.pixelishsearch.search.contacts.utils.replayContactAction
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.settings.data.launchSettingsPage
 import com.pchmn.pixelishsearch.search.settings.data.launchSettingsTile
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageList
@@ -130,13 +131,22 @@ fun SearchScreen(
             }
 
             if (uiState.query.isBlank()) {
-                if (uiState.contactRecents.isNotEmpty()) {
-                    ContactRecentList(
-                        contacts = uiState.contactRecents.take(2),
-                        onClick = { entry ->
-                            replayContactAction(context, entry)
+                if (uiState.fusedRecents.isNotEmpty()) {
+                    FusedRecentsList(
+                        entries = uiState.fusedRecents,
+                        iconRequest = SettingsPageIndex.iconRequest,
+                        onContactClick = { entry -> replayContactAction(context, entry) },
+                        onContactDelete = viewModel::removeRecentContact,
+                        onPageClick = { entry ->
+                            viewModel.onSettingsPageOpened(
+                                SettingsPageEntry(
+                                    label = entry.label,
+                                    component = entry.component,
+                                )
+                            )
+                            launchSettingsPage(context, entry.component)
                         },
-                        onDelete = viewModel::removeRecentContact,
+                        onPageDelete = viewModel::removeRecentSettingsPage,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -209,7 +219,10 @@ fun SearchScreen(
                     SectionHeader(title = stringResource(R.string.search_section_settings))
                     SettingsPageList(
                         pages = uiState.settingsPageResults,
-                        onClick = { entry -> launchSettingsPage(context, entry.component) },
+                        onClick = { entry ->
+                            viewModel.onSettingsPageOpened(entry)
+                            launchSettingsPage(context, entry.component)
+                        },
                     )
                 }
             }

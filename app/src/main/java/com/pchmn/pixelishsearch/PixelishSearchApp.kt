@@ -14,6 +14,7 @@ import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
@@ -37,6 +38,8 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var contactHistory: ContactHistoryRepository
         private set
+    lateinit var settingsPageHistory: SettingsPageHistoryRepository
+        private set
     lateinit var hiddenApps: HiddenAppsRepository
         private set
     lateinit var settings: SettingsRepository
@@ -55,6 +58,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             appHistory = AppHistoryRepository(this, appScope)
             searchHistory = WebSearchHistoryRepository(this, appScope)
             contactHistory = ContactHistoryRepository(this, appScope)
+            settingsPageHistory = SettingsPageHistoryRepository(this, appScope)
             hiddenApps = HiddenAppsRepository(this, appScope)
             settings = SettingsRepository(this, appScope)
             updates = UpdateRepository(this, appScope)
