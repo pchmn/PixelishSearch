@@ -100,8 +100,13 @@ pixelishsearch/
 - **`data/` vs `ui/` per feature.** Repos, DataStore delegates, receivers and launchers under
   `<feature>/data/`; Composables and their `ViewModel` under `<feature>/ui/`; pure
   Android-independent helpers under `<feature>/utils/`.
-- **DataStore delegates colocated.** `Context.xxxDataStore` extensions go in
-  `<feature>/data/<Feature>DataStore.kt`, never a global file.
+- **DataStore delegates colocated.** `Context.xxxDataStore` extensions live with
+  the feature that owns them, never a global file. When a single repo owns the
+  delegate, declare it inline as `private val` in the repo file (the pattern
+  used by every `HistoryRepository` subclass). When multiple repos in the same
+  feature share delegates, group them in `<feature>/data/<Feature>DataStore.kt`
+  (e.g. `search/apps/data/AppDataStore.kt` for the index cache + hidden apps
+  delegates).
 - **Intent launchers.** Generic `launchAndDismiss` (start + close-without-animation) lives in
   `core/data/LaunchIntents.kt`; feature-specific intent builders go in
   `<feature>/data/<Feature>Launcher.kt` and always call through it.
