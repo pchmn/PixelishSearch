@@ -40,7 +40,7 @@ fun PreferenceRow(
             Icon(
                 painter = painterResource(leadingIcon),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                 modifier = Modifier.size(24.dp),
             )
             Spacer(Modifier.width(20.dp))
