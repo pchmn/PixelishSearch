@@ -70,11 +70,13 @@
             </intent-filter>
         </activity>
 
-        <!-- Settings screen, launched from the search Activity's gear icon -->
+        <!-- Preferences screen, launched from the search Activity's gear icon.
+             Labelled "Settings" in the UI by Android convention; internally
+             it's the Preferences domain — see ADR-0005. -->
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name=".preferences.PreferencesActivity"
             android:exported="false"
-            android:label="@string/settings_title"
+            android:label="@string/preferences_title"
             android:theme="@style/Theme.PixelishSearch" />
 
         <!-- Update screen, launched from the badge next to the gear icon when

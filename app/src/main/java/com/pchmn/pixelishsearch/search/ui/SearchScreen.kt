@@ -53,7 +53,7 @@ import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageList
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsTileGrid
 import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
-import com.pchmn.pixelishsearch.settings.SettingsActivity
+import com.pchmn.pixelishsearch.preferences.PreferencesActivity
 import com.pchmn.pixelishsearch.update.UpdateActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -251,13 +251,13 @@ fun SearchScreen(
                 IconButton(
                     onClick = {
                         context.startActivity(
-                            Intent(context, SettingsActivity::class.java)
+                            Intent(context, PreferencesActivity::class.java)
                         )
                     },
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_settings),
-                        contentDescription = stringResource(R.string.settings_title),
+                        contentDescription = stringResource(R.string.preferences_title),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }

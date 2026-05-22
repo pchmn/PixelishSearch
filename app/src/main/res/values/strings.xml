@@ -43,17 +43,17 @@
     <string name="action_delete">Delete</string>
     <string name="action_back">Back</string>
 
-    <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_section_search">Search</string>
-    <string name="settings_contact_search_title">Contacts</string>
-    <string name="settings_contact_search_subtitle">Include in search results</string>
-    <string name="settings_tiles_title">Tiles</string>
-    <string name="settings_tiles_subtitle">Choose which tiles appear in search results</string>
-    <string name="settings_tiles_count">%1$d of 10</string>
-    <string name="settings_section_appearance">Appearance</string>
-    <string name="settings_language_title">Language</string>
-    <string name="settings_language_system">System default</string>
+    <!-- Preferences -->
+    <string name="preferences_title">Settings</string>
+    <string name="preferences_section_search">Search</string>
+    <string name="preferences_contact_search_title">Contacts</string>
+    <string name="preferences_contact_search_subtitle">Include in search results</string>
+    <string name="preferences_tiles_title">Tiles</string>
+    <string name="preferences_tiles_subtitle">Choose which tiles appear in search results</string>
+    <string name="preferences_tiles_count">%1$d of 10</string>
+    <string name="preferences_section_appearance">Appearance</string>
+    <string name="preferences_language_title">Language</string>
+    <string name="preferences_language_system">System default</string>
 
     <!-- Languages (shown in the in-app picker) -->
     <string name="language_en">English</string>
@@ -63,7 +63,7 @@
     <string name="language_it">Italiano</string>
 
     <!-- Self-update -->
-    <string name="settings_section_about">About</string>
+    <string name="preferences_section_about">About</string>
     <string name="update_settings_title">Check for updates</string>
     <string name="update_settings_current_version">Current version: %1$s</string>
     <string name="update_settings_available">Version %1$s available</string>

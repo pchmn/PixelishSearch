@@ -86,10 +86,10 @@ app/src/main/
 │   │       ├── data/                    # WebSuggestionsRepository (Ktor + warmup),
 │   │       │                            #   WebSearchHistory, WebSearchLauncher
 │   │       └── ui/                      # WebSearchList, WebSearchRow
-│   ├── settings/
-│   │   ├── SettingsActivity.kt
-│   │   ├── data/SettingsRepository.kt   # contactSearchEnabled
-│   │   └── ui/SettingsScreen.kt         # Material 3, language picker (API 33+)
+│   ├── preferences/
+│   │   ├── PreferencesActivity.kt
+│   │   ├── data/PreferencesRepository.kt   # contactSearchEnabled
+│   │   └── ui/PreferencesScreen.kt         # Material 3, language picker (API 33+)
 │   ├── update/data/                     # GithubReleaseApi, UpdateRepository (scaffolded)
 │   └── widget/SearchWidget.kt           # AppWidgetProvider
 └── res/

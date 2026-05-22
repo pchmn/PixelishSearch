@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.settings
+package com.pchmn.pixelishsearch.preferences
 
 import android.graphics.Color
 import android.os.Bundle
@@ -20,10 +20,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntOffset
 import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
-import com.pchmn.pixelishsearch.settings.ui.SettingsScreen
-import com.pchmn.pixelishsearch.settings.ui.TilesScreen
+import com.pchmn.pixelishsearch.preferences.ui.PreferencesScreen
+import com.pchmn.pixelishsearch.preferences.ui.TilesScreen
 
-class SettingsActivity : ComponentActivity() {
+class PreferencesActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,10 +47,10 @@ class SettingsActivity : ComponentActivity() {
                         (slideInHorizontally(spatial, enterOffset) + fadeIn(effects)) togetherWith
                             (slideOutHorizontally(spatial, exitOffset) + fadeOut(effects))
                     },
-                    label = "settingsRoute",
+                    label = "preferencesRoute",
                 ) { current ->
                     when (current) {
-                        Route.Root -> SettingsScreen(
+                        Route.Root -> PreferencesScreen(
                             onBack = { finish() },
                             onOpenTiles = { route = Route.Tiles },
                         )

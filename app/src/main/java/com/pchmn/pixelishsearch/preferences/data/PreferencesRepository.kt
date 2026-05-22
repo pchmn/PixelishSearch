@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.settings.data
+package com.pchmn.pixelishsearch.preferences.data
 
 import android.content.Context
 import androidx.datastore.core.IOException
@@ -22,11 +22,11 @@ import kotlinx.coroutines.flow.stateIn
  * automatically visible to existing users (no data migration). See
  * `docs/adr/0001-store-disabled-tile-ids.md`.
  */
-class SettingsRepository(
+class PreferencesRepository(
     context: Context,
     scope: CoroutineScope,
 ) {
-    private val dataStore = context.applicationContext.settingsDataStore
+    private val dataStore = context.applicationContext.preferencesDataStore
     private val contactSearchKey = booleanPreferencesKey("contact_search_enabled")
     private val disabledTilesKey = stringSetPreferencesKey("disabled_tile_ids")
 

@@ -35,18 +35,18 @@
     <string name="action_delete">Elimina</string>
     <string name="action_back">Indietro</string>
 
-    <string name="settings_title">Impostazioni</string>
-    <string name="settings_section_search">Ricerca</string>
-    <string name="settings_contact_search_title">Contatti</string>
-    <string name="settings_contact_search_subtitle">Includi nella ricerca</string>
-    <string name="settings_tiles_title">Riquadri</string>
-    <string name="settings_tiles_subtitle">Scegli quali riquadri appaiono nei risultati</string>
-    <string name="settings_tiles_count">%1$d su 10</string>
-    <string name="settings_section_appearance">Aspetto</string>
-    <string name="settings_language_title">Lingua</string>
-    <string name="settings_language_system">Lingua di sistema</string>
+    <string name="preferences_title">Impostazioni</string>
+    <string name="preferences_section_search">Ricerca</string>
+    <string name="preferences_contact_search_title">Contatti</string>
+    <string name="preferences_contact_search_subtitle">Includi nella ricerca</string>
+    <string name="preferences_tiles_title">Riquadri</string>
+    <string name="preferences_tiles_subtitle">Scegli quali riquadri appaiono nei risultati</string>
+    <string name="preferences_tiles_count">%1$d su 10</string>
+    <string name="preferences_section_appearance">Aspetto</string>
+    <string name="preferences_language_title">Lingua</string>
+    <string name="preferences_language_system">Lingua di sistema</string>
 
-    <string name="settings_section_about">Informazioni</string>
+    <string name="preferences_section_about">Informazioni</string>
     <string name="update_settings_title">Cerca aggiornamenti</string>
     <string name="update_settings_current_version">Versione attuale: %1$s</string>
     <string name="update_settings_available">Versione %1$s disponibile</string>

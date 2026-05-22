@@ -11,4 +11,4 @@ users, with no data migration.
 - **Set of enabled IDs** — rejected: new tiles would default to hidden for
   existing users, requiring a migration each time `settingsTiles` grows.
 - **One `boolean` preference per tile** — rejected: 10+ keys in DataStore,
-  and every new tile would require touching `SettingsRepository`.
+  and every new tile would require touching `PreferencesRepository`.

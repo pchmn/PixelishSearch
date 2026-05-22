@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.settings.ui
+package com.pchmn.pixelishsearch.preferences.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Column

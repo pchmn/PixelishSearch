@@ -55,7 +55,7 @@ fun SettingsPageRow(
         )
         if (type == RowType.RECENT) {
             Text(
-                text = " · ${stringResource(R.string.settings_title)}",
+                text = " · ${stringResource(R.string.preferences_title)}",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),

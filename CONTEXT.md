@@ -39,14 +39,26 @@ _Avoid_: Contact (ambiguous between source and history record)
 A query string returned by Google Suggest for the current input.
 _Avoid_: Search suggestion, autocomplete
 
+### App configuration
+
+**Preference**:
+A configuration value of PixelishSearch controlled by the user and
+persisted in the app's DataStore (e.g. contact search enabled, the set of
+disabled Tile IDs, the chosen language). Distinct from a *Setting*, which
+in this codebase always refers to the Android system Settings app (and the
+Tiles and Settings pages it exposes to search). The Preferences screen is
+*labelled* "Settings" in the UI by Android convention, but its content is
+Preferences.
+_Avoid_: Setting, config, option (when meaning a user-controlled value of
+PixelishSearch)
+
 ### Visibility vs runtime state
 
 The word "state" is overloaded for Tiles. We distinguish:
 
 **Visibility**:
-Whether a Tile appears in search results at all. User-controlled in the app
-Settings. Persisted as the *disabled* set in DataStore — empty set = all
-visible.
+Whether a Tile appears in search results at all. Controlled by a Preference.
+Persisted as the *disabled* set in DataStore — empty set = all visible.
 
 **Runtime state**:
 A Tile's current on/off value (WiFi on, Bluetooth off, …). Read from the

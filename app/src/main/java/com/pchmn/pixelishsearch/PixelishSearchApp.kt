@@ -5,7 +5,7 @@ import androidx.tracing.trace
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import com.pchmn.pixelishsearch.settings.data.SettingsRepository
+import com.pchmn.pixelishsearch.preferences.data.PreferencesRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppHistoryRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
 import com.pchmn.pixelishsearch.search.apps.data.AppIconKeyer
@@ -42,7 +42,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var hiddenApps: HiddenAppsRepository
         private set
-    lateinit var settings: SettingsRepository
+    lateinit var preferences: PreferencesRepository
         private set
     lateinit var updates: UpdateRepository
         private set
@@ -60,7 +60,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             contactHistory = ContactHistoryRepository(this, appScope)
             settingsPageHistory = SettingsPageHistoryRepository(this, appScope)
             hiddenApps = HiddenAppsRepository(this, appScope)
-            settings = SettingsRepository(this, appScope)
+            preferences = PreferencesRepository(this, appScope)
             updates = UpdateRepository(this, appScope)
         }
 

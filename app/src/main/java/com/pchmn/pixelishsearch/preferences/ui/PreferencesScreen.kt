@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.settings.ui
+package com.pchmn.pixelishsearch.preferences.ui
 
 import android.Manifest
 import android.app.LocaleManager
@@ -73,7 +73,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
+fun PreferencesScreen(
     onBack: () -> Unit,
     onOpenTiles: () -> Unit,
 ) {
@@ -81,8 +81,8 @@ fun SettingsScreen(
     val app = context.applicationContext as PixelishSearchApp
     val scope = rememberCoroutineScope()
 
-    val contactSearchEnabled by app.settings.contactSearchEnabled.collectAsStateWithLifecycle()
-    val disabledTileIds by app.settings.disabledTileIds.collectAsStateWithLifecycle()
+    val contactSearchEnabled by app.preferences.contactSearchEnabled.collectAsStateWithLifecycle()
+    val disabledTileIds by app.preferences.disabledTileIds.collectAsStateWithLifecycle()
     var hasContactsPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -113,7 +113,7 @@ fun SettingsScreen(
     ) { granted ->
         hasContactsPermission = granted
         if (granted) {
-            scope.launch { app.settings.setContactSearchEnabled(true) }
+            scope.launch { app.preferences.setContactSearchEnabled(true) }
         }
     }
 
@@ -129,7 +129,7 @@ fun SettingsScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.settings_title),
+                        text = stringResource(R.string.preferences_title),
                         fontWeight = FontWeight.Medium,
                     )
                 },
@@ -165,23 +165,23 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            SettingsGroup(title = stringResource(R.string.settings_section_search)) {
+            PreferencesGroup(title = stringResource(R.string.preferences_section_search)) {
                 SwitchPreference(
                     icon = R.drawable.ic_contacts,
-                    title = stringResource(R.string.settings_contact_search_title),
-                    subtitle = stringResource(R.string.settings_contact_search_subtitle),
+                    title = stringResource(R.string.preferences_contact_search_title),
+                    subtitle = stringResource(R.string.preferences_contact_search_subtitle),
                     isFirst = true,
                     isLast = false,
                     checked = effectiveContactToggle,
                     onCheckedChange = { newValue ->
                         if (newValue) {
                             if (hasContactsPermission) {
-                                scope.launch { app.settings.setContactSearchEnabled(true) }
+                                scope.launch { app.preferences.setContactSearchEnabled(true) }
                             } else {
                                 permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                             }
                         } else {
-                            scope.launch { app.settings.setContactSearchEnabled(false) }
+                            scope.launch { app.preferences.setContactSearchEnabled(false) }
                         }
                     },
                 )
@@ -189,9 +189,9 @@ fun SettingsScreen(
                     isFirst = false,
                     isLast = true,
                     icon = R.drawable.ic_location_chip,
-                    title = stringResource(R.string.settings_tiles_title),
+                    title = stringResource(R.string.preferences_tiles_title),
                     subtitle = stringResource(
-                        R.string.settings_tiles_count,
+                        R.string.preferences_tiles_count,
                         settingsTiles.size - disabledTileIds.size,
                     ),
                     onClick = onOpenTiles,
@@ -199,12 +199,12 @@ fun SettingsScreen(
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                SettingsGroup(title = stringResource(R.string.settings_section_appearance)) {
+                PreferencesGroup(title = stringResource(R.string.preferences_section_appearance)) {
                     LanguagePreference()
                 }
             }
 
-            SettingsGroup(title = stringResource(R.string.settings_section_about)) {
+            PreferencesGroup(title = stringResource(R.string.preferences_section_about)) {
                 UpdateCheckPreference()
             }
 
@@ -301,7 +301,7 @@ private fun LanguagePreference() {
     var showDialog by remember { mutableStateOf(false) }
 
     val options: List<Pair<String?, String>> = listOf(
-        null to stringResource(R.string.settings_language_system),
+        null to stringResource(R.string.preferences_language_system),
         "en" to stringResource(R.string.language_en),
         "fr" to stringResource(R.string.language_fr),
         "es" to stringResource(R.string.language_es),
@@ -314,7 +314,7 @@ private fun LanguagePreference() {
         isFirst = true,
         isLast = true,
         leadingIcon = R.drawable.ic_language,
-        title = stringResource(R.string.settings_language_title),
+        title = stringResource(R.string.preferences_language_title),
         subtitle = currentLabel,
         onClick = { showDialog = true }
     )
@@ -322,7 +322,7 @@ private fun LanguagePreference() {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(stringResource(R.string.settings_language_title)) },
+            title = { Text(stringResource(R.string.preferences_language_title)) },
             text = {
                 Column {
                     options.forEach { (tag, label) ->
@@ -376,7 +376,7 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun SettingsGroup(title: String? = null, content: @Composable () -> Unit) {
+private fun PreferencesGroup(title: String? = null, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

@@ -66,7 +66,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val contactHistory get() = app.contactHistory
     private val settingsPageHistory get() = app.settingsPageHistory
     private val hiddenApps get() = app.hiddenApps
-    private val settings get() = app.settings
+    private val preferences get() = app.preferences
 
     private val _query = MutableStateFlow("")
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -128,7 +128,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 contactHistory.recents,
                 settingsPageHistory.recents,
                 SettingsPageIndex.entries,
-                settings.contactSearchEnabled,
+                preferences.contactSearchEnabled,
             ) { contactRecents, pageRecents, pageEntries, contactsEnabled ->
                 val known = pageEntries.mapTo(HashSet(pageEntries.size)) { it.component }
                 val now = System.currentTimeMillis()
@@ -153,7 +153,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // results / recents reflect the new state without waiting for the
         // next keystroke.
         viewModelScope.launch {
-            settings.contactSearchEnabled.collect {
+            preferences.contactSearchEnabled.collect {
                 runLocalSearch(_query.value)
             }
         }
@@ -161,7 +161,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // Same reactivity for tile visibility — the user can hide/show tiles
         // in Settings while the search activity is still alive.
         viewModelScope.launch {
-            settings.disabledTileIds.collect {
+            preferences.disabledTileIds.collect {
                 runLocalSearch(_query.value)
             }
         }
@@ -285,7 +285,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         val apps = AppIndex.search(query, limit = 6) { pkg ->
             historyByPkg[pkg]?.score(now) ?: 0f
         }
-        val contacts = if (settings.contactSearchEnabled.value) {
+        val contacts = if (preferences.contactSearchEnabled.value) {
             ContactRepository.search(getApplication(), query, limit = 3) { id ->
                 contactHistoryById[id]?.score(now) ?: 0f
             }
@@ -293,7 +293,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         val tiles = SettingsTileRepository.search(
             getApplication(),
             query,
-            settings.disabledTileIds.value,
+            preferences.disabledTileIds.value,
             limit = 4,
         )
         val pages = SettingsPageIndex.search(query, limit = 3) { component ->

@@ -1,4 +1,4 @@
-package com.pchmn.pixelishsearch.settings.ui
+package com.pchmn.pixelishsearch.preferences.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +50,7 @@ fun TilesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as PixelishSearchApp
     val scope = rememberCoroutineScope()
-    val disabledIds by app.settings.disabledTileIds.collectAsStateWithLifecycle()
+    val disabledIds by app.preferences.disabledTileIds.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -62,7 +62,7 @@ fun TilesScreen(onBack: () -> Unit) {
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.settings_tiles_title),
+                        text = stringResource(R.string.preferences_tiles_title),
                         fontWeight = FontWeight.Medium,
                     )
                 },
@@ -99,7 +99,7 @@ fun TilesScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
         ) {
             Text(
-                text = stringResource(R.string.settings_tiles_subtitle),
+                text = stringResource(R.string.preferences_tiles_subtitle),
                 modifier = Modifier.padding(start = 26.dp, end = 32.dp, top = 8.dp, bottom = 16.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
@@ -118,7 +118,7 @@ fun TilesScreen(onBack: () -> Unit) {
                         tile = tile,
                         checked = tile.id.name !in disabledIds,
                         onCheckedChange = { enabled ->
-                            scope.launch { app.settings.setTileEnabled(tile.id, enabled) }
+                            scope.launch { app.preferences.setTileEnabled(tile.id, enabled) }
                         },
                     )
                 }
