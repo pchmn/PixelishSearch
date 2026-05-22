@@ -55,10 +55,10 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
-        // The androidx.baselineprofile plugin auto-creates the additional
-        // `nonMinifiedRelease` (used to generate the profile) and
-        // `benchmarkRelease` (used to measure with the profile applied)
-        // variants — no need to declare them here.
+        // The androidx.baselineprofile plugin auto-creates `nonMinifiedRelease`
+        // (used to generate the profile) and `benchmarkRelease` (used to measure
+        // with the profile applied) via `initWith(release)` — see the
+        // `afterEvaluate` block below for our overrides.
     }
 
     compileOptions {
@@ -74,6 +74,32 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+// Override the baselineprofile plugin's auto-created variants. Runs in
+// `afterEvaluate` because the plugin uses `initWith(release)` to copy
+// signingConfig + resValues *after* the `buildTypes { … }` block evaluates,
+// so any in-block override would be silently clobbered.
+//
+// - `applicationIdSuffix = ".benchmark"`: gives the benchmark variants a
+//   distinct package (`com.pchmn.pixelishsearch.benchmark`) so they coexist
+//   with the production `release` install instead of overwriting it (which
+//   would wipe DataStore + permissions and trigger an Auto Backup restore).
+// - `signingConfig`: aligned with `release` so the benchmark APK is signed
+//   with our release key (instead of the AGP default debug key) for consistent
+//   profiling.
+// - `app_name`: distinct launcher label so the variant is visually
+//   distinguishable from `release` on the device.
+afterEvaluate {
+    listOf("benchmarkRelease", "nonMinifiedRelease").forEach { name ->
+        android.buildTypes.findByName(name)?.apply {
+            applicationIdSuffix = ".benchmark"
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = android.signingConfigs.getByName("release")
+            }
+            resValue("string", "app_name", "PixelishBenchmark")
+        }
     }
 }
 

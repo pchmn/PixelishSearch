@@ -131,6 +131,9 @@ baseline profile / macrobenchmark workflow, and Perfetto profiling.
 ./gradlew installDebug          # build + install on a connected device
 ./gradlew assembleRelease       # signed release APK (needs keystore.properties)
 ./gradlew installRelease        # build + install release on a connected device
+./gradlew installBenchmarkRelease  # release variant with `.benchmark` applicationIdSuffix —
+                                   # daily-driver build for measuring cold start (coexists
+                                   # with the production install on the device)
 ./gradlew lint                  # Android lint
 ```
 

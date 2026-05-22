@@ -27,6 +27,8 @@ and Google web suggestions.
 ./gradlew installDebug          # build + install on connected device
 ./gradlew assembleRelease       # signed release APK (requires keystore.properties)
 ./gradlew installRelease        # build + install release on connected device
+./gradlew installBenchmarkRelease  # release variant with `.benchmark` suffix — daily-driver
+                                   # for benchmarks (coexists with release on the device)
 ./gradlew compileDebugKotlin    # quick verification after edits
 ./gradlew lint                  # Android lint
 ```
@@ -34,7 +36,8 @@ and Google web suggestions.
 No unit/instrumentation tests in `:app`. The `:benchmark` module hosts macrobenchmark + baseline
 profile generation — see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the regeneration /
 measurement workflow. Debug-build cold start performance is **not** representative — always measure
-on release.
+on the `benchmarkRelease` variant (release + `.benchmark` applicationIdSuffix, so it doesn't
+overwrite the production install).
 
 ## Architecture
 

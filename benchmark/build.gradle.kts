@@ -4,7 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pchmn.pixelishsearch.benchmark"
+    // The test APK runs in its own process and targets the app under test.
+    // The app's `benchmarkRelease` variant uses `applicationIdSuffix = ".benchmark"`
+    // → app installs as `com.pchmn.pixelishsearch.benchmark`. So the test APK
+    // gets a further `.test` suffix to avoid colliding on the device.
+    namespace = "com.pchmn.pixelishsearch.benchmark.test"
     compileSdk = 37
 
     defaultConfig {

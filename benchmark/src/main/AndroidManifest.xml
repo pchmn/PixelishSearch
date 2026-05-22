@@ -7,7 +7,7 @@
         android:maxSdkVersion="29" />
 
     <queries>
-        <package android:name="com.pchmn.pixelishsearch" />
+        <package android:name="com.pchmn.pixelishsearch.benchmark" />
     </queries>
 
 </manifest>
