@@ -50,8 +50,9 @@ val settingsTiles: List<SettingsTile> = listOf(
         listOf("flight"),
     ),
     SettingsTile(
-        SettingsTileId.NIGHT_LIGHT, R.string.tile_night_light, R.drawable.ic_nightlight,
+        SettingsTileId.NIGHT_LIGHT, R.string.tile_night_light, R.drawable.ic_filled_nightlight,
         emptyList(),
+        inactiveIconRes = R.drawable.ic_nightlight
     ),
     SettingsTile(
         SettingsTileId.DARK_THEME, R.string.tile_dark_theme, R.drawable.ic_contrast,
@@ -60,6 +61,7 @@ val settingsTiles: List<SettingsTile> = listOf(
     SettingsTile(
         SettingsTileId.AUTO_ROTATE, R.string.tile_auto_rotate, R.drawable.ic_screen_rotation,
         emptyList(),
+        inactiveIconRes = R.drawable.ic_screen_rotation_up
     ),
     SettingsTile(
         SettingsTileId.HOTSPOT, R.string.tile_hotspot, R.drawable.ic_wifi_tethering,

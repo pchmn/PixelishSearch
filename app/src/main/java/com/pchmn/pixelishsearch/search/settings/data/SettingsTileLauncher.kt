@@ -1,12 +1,14 @@
 package com.pchmn.pixelishsearch.search.settings.data
 
 import android.Manifest
+import android.app.UiModeManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 
 /**
@@ -113,11 +115,7 @@ private fun toggleAirplaneMode(context: Context): Boolean {
     return try {
         val cr = context.contentResolver
         val current = Settings.Global.getInt(cr, Settings.Global.AIRPLANE_MODE_ON, 0)
-        val next = if (current == 0) 1 else 0
-        Settings.Global.putInt(cr, Settings.Global.AIRPLANE_MODE_ON, next)
-        context.sendBroadcast(
-            Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).putExtra("state", next == 1)
-        )
+        Settings.Global.putInt(cr, Settings.Global.AIRPLANE_MODE_ON, if (current == 0) 1 else 0)
         true
     } catch (_: SecurityException) {
         false
@@ -136,14 +134,23 @@ private fun toggleNightLight(context: Context): Boolean {
     }
 }
 
+/**
+ * `setNightMode` is gated by `MODIFY_DAY_NIGHT_MODE` (signature|privileged) on
+ * recent Pixel / AOSP and **no-ops silently** when the caller lacks it — no
+ * exception, just nothing happens. Re-read to detect that and fall back to
+ * opening the Dark theme settings page.
+ */
 private fun toggleDarkTheme(context: Context): Boolean {
-    if (!hasWriteSecureSettings(context)) return false
+    val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
+        ?: return false
+    val next = if (uiModeManager.nightMode == UiModeManager.MODE_NIGHT_YES) {
+        UiModeManager.MODE_NIGHT_NO
+    } else {
+        UiModeManager.MODE_NIGHT_YES
+    }
     return try {
-        val cr = context.contentResolver
-        val current = Settings.Secure.getInt(cr, UI_NIGHT_MODE, UI_NIGHT_MODE_NO)
-        val next = if (current == UI_NIGHT_MODE_YES) UI_NIGHT_MODE_NO else UI_NIGHT_MODE_YES
-        Settings.Secure.putInt(cr, UI_NIGHT_MODE, next)
-        true
+        uiModeManager.nightMode = next
+        uiModeManager.nightMode == next
     } catch (_: SecurityException) {
         false
     }
@@ -155,7 +162,8 @@ private fun toggleLocation(context: Context): Boolean {
     return try {
         val cr = context.contentResolver
         val current = Settings.Secure.getInt(cr, Settings.Secure.LOCATION_MODE, LOCATION_MODE_OFF)
-        val next = if (current == LOCATION_MODE_OFF) LOCATION_MODE_HIGH_ACCURACY else LOCATION_MODE_OFF
+        val next =
+            if (current == LOCATION_MODE_OFF) LOCATION_MODE_HIGH_ACCURACY else LOCATION_MODE_OFF
         Settings.Secure.putInt(cr, Settings.Secure.LOCATION_MODE, next)
         true
     } catch (_: SecurityException) {
@@ -167,6 +175,7 @@ private const val LOCATION_MODE_OFF = 0
 private const val LOCATION_MODE_HIGH_ACCURACY = 3
 
 private fun toggleAutoRotate(context: Context): Boolean {
+    Log.i("TOGGLE AUTO ROTATE", Settings.System.canWrite(context).toString())
     if (!Settings.System.canWrite(context)) return false
     return try {
         val cr = context.contentResolver
@@ -187,8 +196,3 @@ private fun toggleAutoRotate(context: Context): Boolean {
  * `Settings.Secure.NIGHT_DISPLAY_ACTIVATED` (no public constant).
  */
 internal const val NIGHT_DISPLAY_ACTIVATED = "night_display_activated"
-
-/** Hidden but stable. AOSP `Settings.Secure.UI_NIGHT_MODE`. */
-internal const val UI_NIGHT_MODE = "ui_night_mode"
-private const val UI_NIGHT_MODE_NO = 1
-private const val UI_NIGHT_MODE_YES = 2

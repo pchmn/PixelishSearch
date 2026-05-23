@@ -3,7 +3,6 @@ package com.pchmn.pixelishsearch.search.settings.data
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
-import android.location.LocationManager
 import android.provider.Settings
 
 /**
@@ -51,10 +50,17 @@ internal fun SettingsTileId.isActive(context: Context): Boolean {
     }
 }
 
-private fun isLocationEnabled(context: Context): Boolean {
-    val lm = context.getSystemService(LocationManager::class.java) ?: return false
-    return lm.isLocationEnabled
-}
+/**
+ * Read directly from `Settings.Secure.LOCATION_MODE` (deprecated but stable)
+ * rather than `LocationManager.isLocationEnabled()`: the latter goes through
+ * `LocationManagerService`, whose internal flag updates asynchronously via a
+ * `ContentObserver`. Right after `toggleLocation` writes the setting, the
+ * service cache is still stale — reading the setting back is the only
+ * synchronous path.
+ */
+@Suppress("DEPRECATION")
+private fun isLocationEnabled(context: Context): Boolean =
+    Settings.Secure.getInt(context.contentResolver, Settings.Secure.LOCATION_MODE, 0) != 0
 
 enum class SettingsScope { GLOBAL, SYSTEM, SECURE }
 
