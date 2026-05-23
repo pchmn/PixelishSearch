@@ -27,6 +27,8 @@ and Google web suggestions.
 ./gradlew installDebug          # build + install on connected device
 ./gradlew assembleRelease       # signed release APK (requires keystore.properties)
 ./gradlew installRelease        # build + install release on connected device
+./gradlew installBenchmarkRelease  # release variant with `.benchmark` suffix — daily-driver
+                                   # for benchmarks (coexists with release on the device)
 ./gradlew compileDebugKotlin    # quick verification after edits
 ./gradlew lint                  # Android lint
 ```
@@ -34,7 +36,8 @@ and Google web suggestions.
 No unit/instrumentation tests in `:app`. The `:benchmark` module hosts macrobenchmark + baseline
 profile generation — see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for the regeneration /
 measurement workflow. Debug-build cold start performance is **not** representative — always measure
-on release.
+on the `benchmarkRelease` variant (release + `.benchmark` applicationIdSuffix, so it doesn't
+overwrite the production install).
 
 ## Architecture
 
@@ -66,8 +69,9 @@ pixelishsearch/
 │   ├── ui/                           # SearchScreen, SearchField, SearchViewModel
 │   ├── apps/{data,ui}/               # AppIndex & cache, history, hidden, icon fetcher, launchers, receivers
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
+│   ├── settings/{data,ui}/           # Quick-toggle tiles + curated Settings pages (resolved via PM) — static lists + launchers
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
-├── settings/                         # SettingsActivity + data/SettingsRepository + ui/SettingsScreen
+├── preferences/                      # PreferencesActivity + data/PreferencesRepository + ui/{PreferencesScreen,TilesScreen} — see ADR-0005
 ├── update/                           # Self-update from GitHub Releases (UpdateActivity + data/ + ui/UpdateScreen)
 └── widget/                           # SearchWidget (AppWidgetProvider)
 ```
@@ -96,8 +100,13 @@ pixelishsearch/
 - **`data/` vs `ui/` per feature.** Repos, DataStore delegates, receivers and launchers under
   `<feature>/data/`; Composables and their `ViewModel` under `<feature>/ui/`; pure
   Android-independent helpers under `<feature>/utils/`.
-- **DataStore delegates colocated.** `Context.xxxDataStore` extensions go in
-  `<feature>/data/<Feature>DataStore.kt`, never a global file.
+- **DataStore delegates colocated.** `Context.xxxDataStore` extensions live with
+  the feature that owns them, never a global file. When a single repo owns the
+  delegate, declare it inline as `private val` in the repo file (the pattern
+  used by every `HistoryRepository` subclass). When multiple repos in the same
+  feature share delegates, group them in `<feature>/data/<Feature>DataStore.kt`
+  (e.g. `search/apps/data/AppDataStore.kt` for the index cache + hidden apps
+  delegates).
 - **Intent launchers.** Generic `launchAndDismiss` (start + close-without-animation) lives in
   `core/data/LaunchIntents.kt`; feature-specific intent builders go in
   `<feature>/data/<Feature>Launcher.kt` and always call through it.

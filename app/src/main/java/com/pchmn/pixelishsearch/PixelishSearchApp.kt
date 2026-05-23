@@ -5,7 +5,7 @@ import androidx.tracing.trace
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import com.pchmn.pixelishsearch.settings.data.SettingsRepository
+import com.pchmn.pixelishsearch.preferences.data.PreferencesRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppHistoryRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
 import com.pchmn.pixelishsearch.search.apps.data.AppIconKeyer
@@ -13,6 +13,9 @@ import com.pchmn.pixelishsearch.search.apps.data.AppIndex
 import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryRepository
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
@@ -35,9 +38,11 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var contactHistory: ContactHistoryRepository
         private set
+    lateinit var settingsPageHistory: SettingsPageHistoryRepository
+        private set
     lateinit var hiddenApps: HiddenAppsRepository
         private set
-    lateinit var settings: SettingsRepository
+    lateinit var preferences: PreferencesRepository
         private set
     lateinit var updates: UpdateRepository
         private set
@@ -53,8 +58,9 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             appHistory = AppHistoryRepository(this, appScope)
             searchHistory = WebSearchHistoryRepository(this, appScope)
             contactHistory = ContactHistoryRepository(this, appScope)
+            settingsPageHistory = SettingsPageHistoryRepository(this, appScope)
             hiddenApps = HiddenAppsRepository(this, appScope)
-            settings = SettingsRepository(this, appScope)
+            preferences = PreferencesRepository(this, appScope)
             updates = UpdateRepository(this, appScope)
         }
 
@@ -73,6 +79,20 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // doesn't pay the binder + provider startup cost.
         trace("ContactRepository.warmUp.dispatch") {
             ContactRepository.warmUp(this, appScope)
+        }
+
+        // Register the torch callback now so the flashlight tile shows the
+        // correct on/off state the first time it appears (Android delivers
+        // one onTorchModeChanged per camera right after registration).
+        trace("FlashlightController.warmUp.dispatch") {
+            FlashlightController.warmUp(this, appScope)
+        }
+
+        // Resolve the curated list of Settings.ACTION_* against PackageManager
+        // once, so search queries can match against localized labels without
+        // paying PM cost on the typing path.
+        trace("SettingsPageIndex.preload.dispatch") {
+            SettingsPageIndex.preload(appScope, this@PixelishSearchApp)
         }
     }
 

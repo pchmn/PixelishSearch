@@ -25,7 +25,7 @@ class BaselineProfileGenerator {
 
     @Test
     fun generate() = rule.collect(
-        packageName = "com.pchmn.pixelishsearch",
+        packageName = "com.pchmn.pixelishsearch.benchmark",
         includeInStartupProfile = true,
     ) {
         // Launch the search Activity from a stopped state (cold start).

@@ -23,6 +23,22 @@ adb shell settings put secure selected_search_engine com.pchmn.pixelishsearch
 adb shell am force-stop com.google.android.apps.nexuslauncher
 ```
 
+### Advanced
+
+A few quick-toggle tiles depend on protected settings. By default, tapping them opens the matching
+Settings panel. You can enable in-place toggling for some by granting the relevant permissions:
+
+```bash
+adb shell pm grant com.pchmn.pixelishsearch android.permission.WRITE_SECURE_SETTINGS
+```
+
+`WRITE_SECURE_SETTINGS` enables in-place toggle for **Airplane mode**, **Night Light**, and
+**Location**.
+
+For **Auto-rotate** (`WRITE_SETTINGS`), `pm grant` does not work — it's a "special app access"
+managed by a system role, not a runtime permission. Grant it manually via **Settings → Apps →
+Special app access → Modify system settings → PixelishSearch**.
+
 ## Development
 
 ### Stack
@@ -68,10 +84,10 @@ app/src/main/
 │   │       ├── data/                    # WebSuggestionsRepository (Ktor + warmup),
 │   │       │                            #   WebSearchHistory, WebSearchLauncher
 │   │       └── ui/                      # WebSearchList, WebSearchRow
-│   ├── settings/
-│   │   ├── SettingsActivity.kt
-│   │   ├── data/SettingsRepository.kt   # contactSearchEnabled
-│   │   └── ui/SettingsScreen.kt         # Material 3, language picker (API 33+)
+│   ├── preferences/
+│   │   ├── PreferencesActivity.kt
+│   │   ├── data/PreferencesRepository.kt   # contactSearchEnabled
+│   │   └── ui/PreferencesScreen.kt         # Material 3, language picker (API 33+)
 │   ├── update/data/                     # GithubReleaseApi, UpdateRepository (scaffolded)
 │   └── widget/SearchWidget.kt           # AppWidgetProvider
 └── res/
@@ -113,6 +129,9 @@ baseline profile / macrobenchmark workflow, and Perfetto profiling.
 ./gradlew installDebug          # build + install on a connected device
 ./gradlew assembleRelease       # signed release APK (needs keystore.properties)
 ./gradlew installRelease        # build + install release on a connected device
+./gradlew installBenchmarkRelease  # release variant with `.benchmark` applicationIdSuffix —
+                                   # daily-driver build for measuring cold start (coexists
+                                   # with the production install on the device)
 ./gradlew lint                  # Android lint
 ```
 

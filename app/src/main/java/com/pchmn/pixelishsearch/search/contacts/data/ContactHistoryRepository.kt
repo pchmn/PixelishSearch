@@ -2,6 +2,7 @@ package com.pchmn.pixelishsearch.search.contacts.data
 
 import android.content.Context
 import android.net.Uri
+import androidx.datastore.preferences.preferencesDataStore
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.core.data.HistoryRepository
 import kotlinx.coroutines.CoroutineScope
@@ -22,18 +23,18 @@ data class ContactHistoryEntry(
 
 enum class ContactAction { CARD, MESSAGE, CALL }
 
+private val Context.contactHistoryDataStore by preferencesDataStore(name = "contact_history")
+
 class ContactHistoryRepository(
     context: Context,
     scope: CoroutineScope,
 ) : HistoryRepository<ContactHistoryEntry, Long>(
     dataStore = context.applicationContext.contactHistoryDataStore,
     serializer = ContactHistoryEntry.serializer(),
+    keyOf = { it.id },
+    withUpdatedMetadata = { e, t, c -> e.copy(lastUsedEpochMillis = t, usageCount = c) },
     scope = scope,
 ) {
-    override fun keyOf(item: ContactHistoryEntry) = item.id
-    override fun withUpdatedMetadata(item: ContactHistoryEntry, timestamp: Long, count: Int) =
-        item.copy(lastUsedEpochMillis = timestamp, usageCount = count)
-
     val recents: StateFlow<List<ContactHistoryEntry>> = items
 
     suspend fun record(

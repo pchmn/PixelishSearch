@@ -38,7 +38,7 @@ class StartupBenchmark {
     fun startupFull() = startup(CompilationMode.Full())
 
     private fun startup(mode: CompilationMode) = rule.measureRepeated(
-        packageName = "com.pchmn.pixelishsearch",
+        packageName = "com.pchmn.pixelishsearch.benchmark",
         metrics = listOf(StartupTimingMetric()),
         iterations = 10,
         startupMode = StartupMode.COLD,

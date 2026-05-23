@@ -78,3 +78,6 @@ lint/reports/
 # Perfetto
 trace.perfetto-trace
 record_android_trace
+
+# .agents
+.agents/settings.local.json

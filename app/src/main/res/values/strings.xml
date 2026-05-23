@@ -13,6 +13,19 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Web Search</string>
     <string name="search_section_contacts">Contacts</string>
+    <string name="search_section_settings">Settings</string>
+
+    <!-- Quick-toggle tiles -->
+    <string name="tile_wifi">Wi-Fi</string>
+    <string name="tile_bluetooth">Bluetooth</string>
+    <string name="tile_airplane_mode">Airplane mode</string>
+    <string name="tile_night_light">Night Light</string>
+    <string name="tile_dark_theme">Dark theme</string>
+    <string name="tile_auto_rotate">Auto-rotate</string>
+    <string name="tile_hotspot">Hotspot</string>
+    <string name="tile_flashlight">Flashlight</string>
+    <string name="tile_cast">Cast</string>
+    <string name="tile_location">Location</string>
 
     <!-- App item dropdown -->
     <string name="app_action_info">App info</string>
@@ -30,14 +43,17 @@
     <string name="action_delete">Delete</string>
     <string name="action_back">Back</string>
 
-    <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_section_general">General</string>
-    <string name="settings_contact_search_title">Contacts</string>
-    <string name="settings_contact_search_subtitle">Include in search results</string>
-    <string name="settings_section_appearance">Appearance</string>
-    <string name="settings_language_title">Language</string>
-    <string name="settings_language_system">System default</string>
+    <!-- Preferences -->
+    <string name="preferences_title">Settings</string>
+    <string name="preferences_section_search">Search</string>
+    <string name="preferences_contact_search_title">Contacts</string>
+    <string name="preferences_contact_search_subtitle">Include in search results</string>
+    <string name="preferences_tiles_title">Tiles</string>
+    <string name="preferences_tiles_subtitle">Choose which tiles appear in search results</string>
+    <string name="preferences_tiles_count">%1$d of 10</string>
+    <string name="preferences_section_appearance">Appearance</string>
+    <string name="preferences_language_title">Language</string>
+    <string name="preferences_language_system">System default</string>
 
     <!-- Languages (shown in the in-app picker) -->
     <string name="language_en">English</string>
@@ -47,7 +63,7 @@
     <string name="language_it">Italiano</string>
 
     <!-- Self-update -->
-    <string name="settings_section_about">About</string>
+    <string name="preferences_section_about">About</string>
     <string name="update_settings_title">Check for updates</string>
     <string name="update_settings_current_version">Current version: %1$s</string>
     <string name="update_settings_available">Version %1$s available</string>

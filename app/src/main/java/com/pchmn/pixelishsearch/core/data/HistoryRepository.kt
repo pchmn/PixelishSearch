@@ -38,14 +38,13 @@ interface HistoryEntry {
 abstract class HistoryRepository<T : HistoryEntry, K>(
     private val dataStore: DataStore<Preferences>,
     private val serializer: KSerializer<T>,
+    private val keyOf: (T) -> K,
+    private val withUpdatedMetadata: (T, Long, Int) -> T,
     scope: CoroutineScope,
     private val maxEntries: Int = 20,
 ) {
     private val key = stringPreferencesKey("entries")
     private val json = Json { ignoreUnknownKeys = true }
-
-    protected abstract fun keyOf(item: T): K
-    protected abstract fun withUpdatedMetadata(item: T, timestamp: Long, count: Int): T
 
     // Hot StateFlow: starts collecting from DataStore as soon as the repo is
     // constructed (in Application.onCreate), so the decoded list is already in

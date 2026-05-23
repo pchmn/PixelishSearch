@@ -1,6 +1,7 @@
 package com.pchmn.pixelishsearch.search.web.data
 
 import android.content.Context
+import androidx.datastore.preferences.preferencesDataStore
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.core.data.HistoryRepository
 import kotlinx.coroutines.CoroutineScope
@@ -14,19 +15,19 @@ data class WebSearchHistoryEntry(
     override val usageCount: Int = 0,
 ) : HistoryEntry
 
+private val Context.searchHistoryDataStore by preferencesDataStore(name = "search_history")
+
 class WebSearchHistoryRepository(
     context: Context,
     scope: CoroutineScope,
 ) : HistoryRepository<WebSearchHistoryEntry, String>(
     dataStore = context.applicationContext.searchHistoryDataStore,
     serializer = WebSearchHistoryEntry.serializer(),
+    keyOf = { it.query.lowercase() },
+    withUpdatedMetadata = { e, t, c -> e.copy(lastUsedEpochMillis = t, usageCount = c) },
     scope = scope,
     maxEntries = 50,
 ) {
-    override fun keyOf(item: WebSearchHistoryEntry) = item.query.lowercase()
-    override fun withUpdatedMetadata(item: WebSearchHistoryEntry, timestamp: Long, count: Int) =
-        item.copy(lastUsedEpochMillis = timestamp, usageCount = count)
-
     val history: StateFlow<List<WebSearchHistoryEntry>> = items
 
     suspend fun record(query: String) {

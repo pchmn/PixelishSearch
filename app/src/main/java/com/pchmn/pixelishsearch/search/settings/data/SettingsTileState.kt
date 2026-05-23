@@ -1,0 +1,84 @@
+package com.pchmn.pixelishsearch.search.settings.data
+
+import android.app.UiModeManager
+import android.content.Context
+import android.content.res.Configuration
+import android.provider.Settings
+
+/**
+ * Snapshot of whether a tile is currently "on". Read synchronously when the
+ * search builds its result list — the search Activity is short-lived, so a
+ * snapshot is enough for tiles that dismiss it (all but flashlight). The
+ * flashlight tile is patched live by the VM via [FlashlightController.isOn].
+ *
+ * Tiles with no public read API (hotspot, cast) return false.
+ */
+internal fun SettingsTileId.isActive(context: Context): Boolean {
+    val app = context.applicationContext
+    return when (this) {
+        SettingsTileId.WIFI -> isSettingActive(app, SettingsScope.GLOBAL, Settings.Global.WIFI_ON)
+        SettingsTileId.BLUETOOTH -> isSettingActive(
+            app,
+            SettingsScope.GLOBAL,
+            Settings.Global.BLUETOOTH_ON
+        )
+
+        SettingsTileId.AIRPLANE_MODE -> isSettingActive(
+            app,
+            SettingsScope.GLOBAL,
+            Settings.Global.AIRPLANE_MODE_ON
+        )
+
+        SettingsTileId.NIGHT_LIGHT -> isSettingActive(
+            app,
+            SettingsScope.SECURE,
+            NIGHT_DISPLAY_ACTIVATED
+        )
+
+        SettingsTileId.AUTO_ROTATE -> isSettingActive(
+            app,
+            SettingsScope.SYSTEM,
+            Settings.System.ACCELEROMETER_ROTATION
+        )
+
+        SettingsTileId.DARK_THEME -> darkThemeActive(app)
+
+        SettingsTileId.FLASHLIGHT -> FlashlightController.isOn.value
+        SettingsTileId.LOCATION -> isLocationEnabled(app)
+        SettingsTileId.HOTSPOT -> false
+        SettingsTileId.CAST -> false
+    }
+}
+
+/**
+ * Read directly from `Settings.Secure.LOCATION_MODE` (deprecated but stable)
+ * rather than `LocationManager.isLocationEnabled()`: the latter goes through
+ * `LocationManagerService`, whose internal flag updates asynchronously via a
+ * `ContentObserver`. Right after `toggleLocation` writes the setting, the
+ * service cache is still stale — reading the setting back is the only
+ * synchronous path.
+ */
+@Suppress("DEPRECATION")
+private fun isLocationEnabled(context: Context): Boolean =
+    Settings.Secure.getInt(context.contentResolver, Settings.Secure.LOCATION_MODE, 0) != 0
+
+enum class SettingsScope { GLOBAL, SYSTEM, SECURE }
+
+private fun isSettingActive(context: Context, scope: SettingsScope, name: String): Boolean {
+    val resolver = context.contentResolver
+    val value = when (scope) {
+        SettingsScope.GLOBAL -> Settings.Global.getInt(resolver, name, 0)
+        SettingsScope.SYSTEM -> Settings.System.getInt(resolver, name, 0)
+        SettingsScope.SECURE -> Settings.Secure.getInt(resolver, name, 0)
+    }
+    return value == 1
+}
+
+private fun darkThemeActive(context: Context): Boolean {
+    val uiMode = context.getSystemService(UiModeManager::class.java)
+    if (uiMode != null && uiMode.nightMode != UiModeManager.MODE_NIGHT_AUTO) {
+        return uiMode.nightMode == UiModeManager.MODE_NIGHT_YES
+    }
+    val mask = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+    return mask == Configuration.UI_MODE_NIGHT_YES
+}

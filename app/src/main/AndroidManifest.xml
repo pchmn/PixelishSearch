@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permission to query installed apps (Android 11+) -->
     <queries>
@@ -27,10 +28,24 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Quick-toggle tiles: read-only check of the current Wi-Fi state to
+         render the chip as active/inactive. Normal permission, auto-granted. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Self-update: download an APK from GitHub Releases and hand it to the
          system installer. The runtime grant is requested via the system
          "Install unknown apps" page. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Quick-toggle tiles. Auto-rotate only needs WRITE_SETTINGS (user
+         grants it via ACTION_MANAGE_WRITE_SETTINGS). The others
+         (airplane mode, night light) need WRITE_SECURE_SETTINGS, which is
+         signature|privileged — the only way for a sideloaded app to obtain
+         it is via `adb shell pm grant`. Without these grants, the tile
+         falls back to opening the matching Settings panel. -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".PixelishSearchApp"
@@ -55,11 +70,13 @@
             </intent-filter>
         </activity>
 
-        <!-- Settings screen, launched from the search Activity's gear icon -->
+        <!-- Preferences screen, launched from the search Activity's gear icon.
+             Labelled "Settings" in the UI by Android convention; internally
+             it's the Preferences domain — see ADR-0005. -->
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name=".preferences.PreferencesActivity"
             android:exported="false"
-            android:label="@string/settings_title"
+            android:label="@string/preferences_title"
             android:theme="@style/Theme.PixelishSearch" />
 
         <!-- Update screen, launched from the badge next to the gear icon when

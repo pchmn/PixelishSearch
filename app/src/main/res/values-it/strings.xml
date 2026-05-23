@@ -9,6 +9,18 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Ricerca Web</string>
     <string name="search_section_contacts">Contatti</string>
+    <string name="search_section_settings">Impostazioni</string>
+
+    <string name="tile_wifi">Wi-Fi</string>
+    <string name="tile_bluetooth">Bluetooth</string>
+    <string name="tile_airplane_mode">Modalità aereo</string>
+    <string name="tile_night_light">Luce notturna</string>
+    <string name="tile_dark_theme">Tema scuro</string>
+    <string name="tile_auto_rotate">Rotazione automatica</string>
+    <string name="tile_hotspot">Hotspot</string>
+    <string name="tile_flashlight">Torcia</string>
+    <string name="tile_cast">Trasmetti</string>
+    <string name="tile_location">Posizione</string>
 
     <string name="app_action_info">Informazioni app</string>
     <string name="app_action_pin">Aggiungi alla schermata Home</string>
@@ -23,15 +35,18 @@
     <string name="action_delete">Elimina</string>
     <string name="action_back">Indietro</string>
 
-    <string name="settings_title">Impostazioni</string>
-    <string name="settings_section_general">Generali</string>
-    <string name="settings_contact_search_title">Contatti</string>
-    <string name="settings_contact_search_subtitle">Includi nella ricerca</string>
-    <string name="settings_section_appearance">Aspetto</string>
-    <string name="settings_language_title">Lingua</string>
-    <string name="settings_language_system">Lingua di sistema</string>
+    <string name="preferences_title">Impostazioni</string>
+    <string name="preferences_section_search">Ricerca</string>
+    <string name="preferences_contact_search_title">Contatti</string>
+    <string name="preferences_contact_search_subtitle">Includi nella ricerca</string>
+    <string name="preferences_tiles_title">Riquadri</string>
+    <string name="preferences_tiles_subtitle">Scegli quali riquadri appaiono nei risultati</string>
+    <string name="preferences_tiles_count">%1$d su 10</string>
+    <string name="preferences_section_appearance">Aspetto</string>
+    <string name="preferences_language_title">Lingua</string>
+    <string name="preferences_language_system">Lingua di sistema</string>
 
-    <string name="settings_section_about">Informazioni</string>
+    <string name="preferences_section_about">Informazioni</string>
     <string name="update_settings_title">Cerca aggiornamenti</string>
     <string name="update_settings_current_version">Versione attuale: %1$s</string>
     <string name="update_settings_available">Versione %1$s disponibile</string>
