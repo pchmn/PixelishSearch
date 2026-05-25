@@ -1,6 +1,5 @@
 package com.pchmn.pixelishsearch.search.ui
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,30 +30,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
-import com.pchmn.pixelishsearch.core.data.launchAndDismiss
 import com.pchmn.pixelishsearch.core.ui.components.BottomSheet
 import com.pchmn.pixelishsearch.core.ui.components.rememberSheetState
-import com.pchmn.pixelishsearch.search.apps.data.geminiIntent
-import com.pchmn.pixelishsearch.search.apps.data.launchAppInfo
-import com.pchmn.pixelishsearch.search.apps.data.lensIntent
-import com.pchmn.pixelishsearch.search.apps.data.pinAppShortcut
 import com.pchmn.pixelishsearch.search.apps.ui.AppList
-import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
-import com.pchmn.pixelishsearch.search.contacts.data.launchContactDetails
-import com.pchmn.pixelishsearch.search.contacts.data.launchDialer
-import com.pchmn.pixelishsearch.search.contacts.data.launchSms
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
-import com.pchmn.pixelishsearch.search.contacts.utils.replayContactAction
-import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
-import com.pchmn.pixelishsearch.search.settings.data.launchSettingsPage
-import com.pchmn.pixelishsearch.search.settings.data.launchSettingsTile
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageList
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsTileGrid
-import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
-import com.pchmn.pixelishsearch.preferences.PreferencesActivity
-import com.pchmn.pixelishsearch.update.UpdateActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,25 +73,11 @@ fun SearchScreen(
             SearchField(
                 value = uiState.query,
                 onValueChange = viewModel::onQueryChange,
-                onGeminiClick = {
-                    geminiIntent(context)?.let {
-                        context.launchAndDismiss(it)
-                    }
-                },
-                onLensClick = {
-                    lensIntent(context)?.let {
-                        context.launchAndDismiss(it)
-                    }
-                },
+                onGeminiClick = viewModel::onGeminiClick,
+                onLensClick = viewModel::onLensClick,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
-                    onSearch = {
-                        val query = uiState.query.trim()
-                        if (query.isNotEmpty()) {
-                            viewModel.onSearchLaunched(query)
-                            launchGoogleSearch(context, query)
-                        }
-                    }
+                    onSearch = { viewModel.onSearchSubmit(uiState.query) }
                 )
             )
 
@@ -117,12 +86,9 @@ fun SearchScreen(
             AppList(
                 apps = displayedApps,
                 highlightFirst = uiState.query.isNotBlank(),
-                onAppClick = { entry ->
-                    viewModel.onAppLaunched(entry.packageName)
-                    context.launchAndDismiss(entry.launchIntent)
-                },
-                onAppInfo = { entry -> launchAppInfo(context, entry.packageName) },
-                onAddToHomeScreen = { entry -> pinAppShortcut(context, entry) },
+                onAppClick = viewModel::onAppClick,
+                onAppInfo = viewModel::onAppInfo,
+                onAddToHomeScreen = viewModel::onPinAppShortcut,
                 onHideFromRecents = { entry -> viewModel.hideAppFromRecents(entry.packageName) },
             )
 
@@ -135,17 +101,9 @@ fun SearchScreen(
                     FusedRecentsList(
                         entries = uiState.fusedRecents,
                         iconRequest = SettingsPageIndex.iconRequest,
-                        onContactClick = { entry -> replayContactAction(context, entry) },
+                        onContactClick = viewModel::onRecentContactClick,
                         onContactDelete = viewModel::removeRecentContact,
-                        onPageClick = { entry ->
-                            viewModel.onSettingsPageOpened(
-                                SettingsPageEntry(
-                                    label = entry.label,
-                                    component = entry.component,
-                                )
-                            )
-                            launchSettingsPage(context, entry.component)
-                        },
+                        onPageClick = viewModel::onRecentSettingsPageClick,
                         onPageDelete = viewModel::removeRecentSettingsPage,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -153,10 +111,7 @@ fun SearchScreen(
                 WebSearchList(
                     suggestions = uiState.webRecents.take(3),
                     leadingIcon = R.drawable.ic_schedule,
-                    onClick = { suggestion ->
-                        viewModel.onSearchLaunched(suggestion)
-                        launchGoogleSearch(context, suggestion)
-                    },
+                    onClick = viewModel::onWebSuggestionClick,
                     onDelete = viewModel::removeSearchHistory,
                 )
             } else {
@@ -164,16 +119,7 @@ fun SearchScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     SettingsTileGrid(
                         tiles = uiState.tileResults,
-                        onClick = { tile ->
-                            launchSettingsTile(context, tile.id)
-                            // In-process toggles (flashlight + permission-
-                            // granted Settings.* writes) don't pause us, so
-                            // onResume won't fire. Refresh right away — the
-                            // Settings.* writes are synchronous, and the
-                            // flashlight flow will still patch itself when
-                            // its async callback fires.
-                            viewModel.refreshTileStates()
-                        },
+                        onClick = viewModel::onTileTap,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -183,10 +129,7 @@ fun SearchScreen(
                     WebSearchList(
                         suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
                         leadingIcon = R.drawable.ic_search,
-                        onClick = { suggestion ->
-                            viewModel.onSearchLaunched(suggestion)
-                            launchGoogleSearch(context, suggestion)
-                        },
+                        onClick = viewModel::onWebSuggestionClick,
                     )
                 }
 
@@ -195,22 +138,9 @@ fun SearchScreen(
                     SectionHeader(title = stringResource(R.string.search_section_contacts))
                     ContactResultList(
                         contacts = uiState.contactResults,
-                        onContactClick = { contact ->
-                            viewModel.onContactUsed(contact, ContactAction.CARD)
-                            launchContactDetails(context, contact.id)
-                        },
-                        onMessageClick = { contact ->
-                            contact.phoneNumber?.let {
-                                viewModel.onContactUsed(contact, ContactAction.MESSAGE)
-                                launchSms(context, it)
-                            }
-                        },
-                        onCallClick = { contact ->
-                            contact.phoneNumber?.let {
-                                viewModel.onContactUsed(contact, ContactAction.CALL)
-                                launchDialer(context, it)
-                            }
-                        },
+                        onContactClick = viewModel::onContactClick,
+                        onMessageClick = viewModel::onContactMessage,
+                        onCallClick = viewModel::onContactCall,
                     )
                 }
 
@@ -219,10 +149,7 @@ fun SearchScreen(
                     SectionHeader(title = stringResource(R.string.search_section_settings))
                     SettingsPageList(
                         pages = uiState.settingsPageResults,
-                        onClick = { entry ->
-                            viewModel.onSettingsPageOpened(entry)
-                            launchSettingsPage(context, entry.component)
-                        },
+                        onClick = viewModel::onSettingsPageClick,
                     )
                 }
             }
@@ -234,13 +161,7 @@ fun SearchScreen(
                 horizontalArrangement = Arrangement.End,
             ) {
                 if (updateInfo != null) {
-                    IconButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent(context, UpdateActivity::class.java)
-                            )
-                        },
-                    ) {
+                    IconButton(onClick = viewModel::onOpenUpdate) {
                         Icon(
                             painter = painterResource(R.drawable.ic_deployed_code_update),
                             contentDescription = stringResource(R.string.update_available_badge),
@@ -248,13 +169,7 @@ fun SearchScreen(
                         )
                     }
                 }
-                IconButton(
-                    onClick = {
-                        context.startActivity(
-                            Intent(context, PreferencesActivity::class.java)
-                        )
-                    },
-                ) {
+                IconButton(onClick = viewModel::onOpenPreferences) {
                     Icon(
                         painter = painterResource(R.drawable.ic_settings),
                         contentDescription = stringResource(R.string.preferences_title),

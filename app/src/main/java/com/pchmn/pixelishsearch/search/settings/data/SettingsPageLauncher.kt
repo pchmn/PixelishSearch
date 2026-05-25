@@ -4,7 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import com.pchmn.pixelishsearch.core.data.launchAndDismiss
+import com.pchmn.pixelishsearch.core.data.launch
 
 /**
  * Open a Settings sub-page directly by [ComponentName]. The component was
@@ -16,7 +16,7 @@ fun launchSettingsPage(context: Context, component: ComponentName) {
         .setComponent(component)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        context.launchAndDismiss(intent)
+        context.launch(intent)
     } catch (_: ActivityNotFoundException) {
     }
 }

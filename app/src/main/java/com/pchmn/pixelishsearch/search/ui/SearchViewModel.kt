@@ -1,26 +1,41 @@
 package com.pchmn.pixelishsearch.search.ui
 
 import android.app.Application
+import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
+import com.pchmn.pixelishsearch.core.data.launch
+import com.pchmn.pixelishsearch.preferences.PreferencesActivity
 import com.pchmn.pixelishsearch.search.apps.data.AppEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppIndex
+import com.pchmn.pixelishsearch.search.apps.data.geminiIntent
+import com.pchmn.pixelishsearch.search.apps.data.launchAppInfo
+import com.pchmn.pixelishsearch.search.apps.data.lensIntent
+import com.pchmn.pixelishsearch.search.apps.data.pinAppShortcut
 import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
+import com.pchmn.pixelishsearch.search.contacts.data.launchContactDetails
+import com.pchmn.pixelishsearch.search.contacts.data.launchDialer
+import com.pchmn.pixelishsearch.search.contacts.data.launchSms
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryEntry
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
+import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileId
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
 import com.pchmn.pixelishsearch.search.settings.data.isActive
+import com.pchmn.pixelishsearch.search.settings.data.launchSettingsPage
+import com.pchmn.pixelishsearch.search.settings.data.launchSettingsTile
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
+import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
+import com.pchmn.pixelishsearch.update.UpdateActivity
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +54,7 @@ import kotlinx.coroutines.launch
  */
 sealed interface RecentEntity {
     val entry: HistoryEntry
+
     data class Contact(override val entry: ContactHistoryEntry) : RecentEntity
     data class SettingsPage(override val entry: SettingsPageHistoryEntry) : RecentEntity
 }
@@ -182,32 +198,6 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         _query.value = ""
     }
 
-    fun onAppLaunched(packageName: String) {
-        viewModelScope.launch { appHistory.record(packageName) }
-    }
-
-    fun onSearchLaunched(query: String) {
-        viewModelScope.launch { searchHistory.record(query) }
-    }
-
-    fun onContactUsed(contact: ContactEntry, action: ContactAction) {
-        viewModelScope.launch {
-            contactHistory.record(
-                id = contact.id,
-                name = contact.name,
-                photoUri = contact.photoUri,
-                phoneNumber = contact.phoneNumber,
-                action = action,
-            )
-        }
-    }
-
-    fun onSettingsPageOpened(entry: SettingsPageEntry) {
-        viewModelScope.launch {
-            settingsPageHistory.record(component = entry.component, label = entry.label)
-        }
-    }
-
     fun removeSearchHistory(query: String) {
         viewModelScope.launch { searchHistory.remove(WebSearchHistoryEntry(query)) }
     }
@@ -244,6 +234,135 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
         if (changed) _uiState.value = current.copy(tileResults = updated)
     }
+
+    // region User gestures
+    // Each gesture fires the Intent synchronously (so perceived launch latency
+    // matches the Pixel Launcher) and records to history fire-and-forget on
+    // `viewModelScope`. `app` is a `Context` and every launcher tags its Intent
+    // with FLAG_ACTIVITY_NEW_TASK, so the Activity reference is never needed.
+
+    fun onAppClick(entry: AppEntry) {
+        app.launch(entry.launchIntent)
+        viewModelScope.launch { appHistory.record(entry.packageName) }
+    }
+
+    fun onAppInfo(entry: AppEntry) {
+        launchAppInfo(app, entry.packageName)
+    }
+
+    fun onPinAppShortcut(entry: AppEntry) {
+        pinAppShortcut(app, entry)
+    }
+
+    fun onGeminiClick() {
+        geminiIntent(app)?.let { app.launch(it) }
+    }
+
+    fun onLensClick() {
+        lensIntent(app)?.let { app.launch(it) }
+    }
+
+    fun onContactClick(contact: ContactEntry) {
+        launchContactDetails(app, contact.id)
+        recordContact(contact, ContactAction.CARD)
+    }
+
+    fun onContactMessage(contact: ContactEntry) {
+        val phone = contact.phoneNumber
+        if (phone != null) launchSms(app, phone) else launchContactDetails(app, contact.id)
+        recordContact(contact, ContactAction.MESSAGE)
+    }
+
+    fun onContactCall(contact: ContactEntry) {
+        val phone = contact.phoneNumber
+        if (phone != null) launchDialer(app, phone) else launchContactDetails(app, contact.id)
+        recordContact(contact, ContactAction.CALL)
+    }
+
+    /**
+     * Replay a recent contact action. No new history record — the original
+     * entry's score/timestamp stay intact.
+     */
+    fun onRecentContactClick(entry: ContactHistoryEntry) {
+        val phone = entry.phoneNumber
+        when (entry.action) {
+            ContactAction.MESSAGE ->
+                if (phone != null) launchSms(app, phone) else launchContactDetails(app, entry.id)
+
+            ContactAction.CALL ->
+                if (phone != null) launchDialer(app, phone) else launchContactDetails(app, entry.id)
+
+            ContactAction.CARD ->
+                launchContactDetails(app, entry.id)
+        }
+    }
+
+    fun onWebSuggestionClick(query: String) {
+        launchGoogleSearch(app, query)
+        viewModelScope.launch { searchHistory.record(query) }
+    }
+
+    /**
+     * IME "search" action. Trims the query and no-ops if it's empty so the
+     * SearchField doesn't have to guard.
+     */
+    fun onSearchSubmit(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return
+        launchGoogleSearch(app, trimmed)
+        viewModelScope.launch { searchHistory.record(trimmed) }
+    }
+
+    /**
+     * In-process toggles (flashlight, permission-granted Settings.* writes)
+     * don't pause the activity, so onResume won't fire. Refresh runtime states
+     * right after the tap.
+     */
+    fun onTileTap(tile: SettingsTile) {
+        launchSettingsTile(app, tile.id)
+        refreshTileStates()
+    }
+
+    fun onSettingsPageClick(entry: SettingsPageEntry) {
+        launchSettingsPage(app, entry.component)
+        viewModelScope.launch {
+            settingsPageHistory.record(component = entry.component, label = entry.label)
+        }
+    }
+
+    fun onRecentSettingsPageClick(entry: SettingsPageHistoryEntry) {
+        launchSettingsPage(app, entry.component)
+        viewModelScope.launch {
+            settingsPageHistory.record(component = entry.component, label = entry.label)
+        }
+    }
+
+    fun onOpenPreferences() {
+        app.startActivity(
+            Intent(app, PreferencesActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    fun onOpenUpdate() {
+        app.startActivity(
+            Intent(app, UpdateActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    private fun recordContact(contact: ContactEntry, action: ContactAction) {
+        viewModelScope.launch {
+            contactHistory.record(
+                id = contact.id,
+                name = contact.name,
+                photoUri = contact.photoUri,
+                phoneNumber = contact.phoneNumber,
+                action = action,
+            )
+        }
+    }
+    // endregion
 
     private fun runLocalSearch(query: String) {
         if (query.isBlank()) {

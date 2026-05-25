@@ -12,7 +12,7 @@ import android.os.Build
  * Launcher delivers (no bottom-sheet slide-down, no transparent-activity
  * close animation stacking on top of the target's open animation).
  */
-fun Context.launchAndDismiss(intent: Intent, dismiss: Boolean = false) {
+fun Context.launch(intent: Intent, dismiss: Boolean = false) {
     startActivity(intent)
     if (dismiss) {
         val activity = findActivity() ?: return
