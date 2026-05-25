@@ -33,4 +33,17 @@ class AppHistoryRepository(
         if (packageName.isBlank()) return
         upsert(AppHistoryEntry(packageName))
     }
+
+    /**
+     * Rank [apps] by usage score DESC, then alpha. Drives the blank-state
+     * recents strip.
+     */
+    fun ranked(apps: List<AppEntry>): List<AppEntry> {
+        val history = byKey.value
+        val now = System.currentTimeMillis()
+        return apps.sortedWith(
+            compareByDescending<AppEntry> { history[it.packageName]?.score(now) ?: 0f }
+                .thenBy { it.label.lowercase() }
+        )
+    }
 }

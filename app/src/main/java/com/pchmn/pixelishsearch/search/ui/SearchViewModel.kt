@@ -1,13 +1,11 @@
 package com.pchmn.pixelishsearch.search.ui
 
 import android.app.Application
-import android.content.ComponentName
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.core.data.HistoryEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppEntry
-import com.pchmn.pixelishsearch.search.apps.data.AppHistoryEntry
 import com.pchmn.pixelishsearch.search.apps.data.AppIndex
 import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
@@ -72,27 +70,19 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-    // Local snapshots of history, kept in sync with the repositories' flows.
-    // Read synchronously on every keystroke by runLocalSearch() to rank results
-    // within their respective categories.
-    private var historyByPkg: Map<String, AppHistoryEntry> = emptyMap()
-    private var contactHistoryById: Map<Long, ContactHistoryEntry> = emptyMap()
-    private var settingsPageHistoryByComponent: Map<ComponentName, SettingsPageHistoryEntry> = emptyMap()
-
     private var webJob: Job? = null
 
     init {
         // Default suggestions: top 4 apps by usage score (time decay),
-        // tiebreaker = alphabetical order. Also refreshes the local cache used
-        // by runLocalSearch.
+        // tiebreaker = alphabetical order. Combining on appHistory.byKey makes
+        // the lambda re-fire whenever usage data refreshes.
         viewModelScope.launch {
             combine(
                 AppIndex.apps,
-                appHistory.recents,
+                appHistory.byKey,
                 hiddenApps.hidden,
-            ) { apps, history, hidden ->
-                historyByPkg = history.associateBy { it.packageName }
-                rankByUsage(apps.filterNot { it.packageName in hidden }, historyByPkg).take(4)
+            ) { apps, _, hidden ->
+                appHistory.ranked(apps.filterNot { it.packageName in hidden }).take(4)
             }.collect { suggested ->
                 _uiState.value = _uiState.value.copy(appRecents = suggested)
             }
@@ -103,19 +93,6 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.value = _uiState.value.copy(
                     webRecents = entries.map { it.query }
                 )
-            }
-        }
-
-        // Snapshot history maps for in-query ranking (independent of the
-        // contact-search toggle — that only gates the search call itself).
-        viewModelScope.launch {
-            contactHistory.recents.collect { recents ->
-                contactHistoryById = recents.associateBy { it.id }
-            }
-        }
-        viewModelScope.launch {
-            settingsPageHistory.recents.collect { recents ->
-                settingsPageHistoryByComponent = recents.associateBy { it.component }
             }
         }
 
@@ -282,12 +259,16 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val now = System.currentTimeMillis()
+        val appScores = appHistory.byKey.value
+        val contactScores = contactHistory.byKey.value
+        val pageScores = settingsPageHistory.byKey.value
+
         val apps = AppIndex.search(query, limit = 6) { pkg ->
-            historyByPkg[pkg]?.score(now) ?: 0f
+            appScores[pkg]?.score(now) ?: 0f
         }
         val contacts = if (preferences.contactSearchEnabled.value) {
             ContactRepository.search(getApplication(), query, limit = 3) { id ->
-                contactHistoryById[id]?.score(now) ?: 0f
+                contactScores[id]?.score(now) ?: 0f
             }
         } else emptyList()
         val tiles = SettingsTileRepository.search(
@@ -297,7 +278,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             limit = 4,
         )
         val pages = SettingsPageIndex.search(query, limit = 3) { component ->
-            settingsPageHistoryByComponent[component]?.score(now) ?: 0f
+            pageScores[component]?.score(now) ?: 0f
         }
 
         _uiState.value = _uiState.value.copy(
@@ -321,15 +302,4 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    private fun rankByUsage(
-        apps: List<AppEntry>,
-        history: Map<String, AppHistoryEntry>,
-    ): List<AppEntry> {
-        val now = System.currentTimeMillis()
-        return apps.sortedWith(
-            compareByDescending<AppEntry> {
-                history[it.packageName]?.score(now) ?: 0f
-            }.thenBy { it.label.lowercase() }
-        )
-    }
 }
