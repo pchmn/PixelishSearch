@@ -35,6 +35,10 @@ import com.pchmn.pixelishsearch.search.settings.data.SettingsTileResult
 import com.pchmn.pixelishsearch.search.settings.data.isActive
 import com.pchmn.pixelishsearch.search.settings.data.launchSettingsPage
 import com.pchmn.pixelishsearch.search.settings.data.launchSettingsTile
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutEntry
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutHistoryEntry
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIndex
+import com.pchmn.pixelishsearch.search.shortcuts.data.launchShortcut
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryEntry
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.search.web.data.launchGoogleSearch
@@ -60,6 +64,7 @@ sealed interface RecentEntity {
 
     data class Contact(override val entry: ContactHistoryEntry) : RecentEntity
     data class SettingsPage(override val entry: SettingsPageHistoryEntry) : RecentEntity
+    data class Shortcut(override val entry: ShortcutHistoryEntry) : RecentEntity
 }
 
 data class SearchUiState(
@@ -69,6 +74,7 @@ data class SearchUiState(
     val fusedRecents: List<RecentEntity> = emptyList(),
     val contactResults: List<ContactEntry> = emptyList(),
     val calendarResults: List<CalendarEventEntry> = emptyList(),
+    val shortcutResults: List<ShortcutEntry> = emptyList(),
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
     val tileResults: List<SettingsTileResult> = emptyList(),
@@ -83,6 +89,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val searchHistory get() = app.searchHistory
     private val contactHistory get() = app.contactHistory
     private val settingsPageHistory get() = app.settingsPageHistory
+    private val shortcutHistory get() = app.shortcutHistory
     private val hiddenApps get() = app.hiddenApps
     private val preferences get() = app.preferences
 
@@ -124,18 +131,28 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             combine(
                 contactHistory.recents,
                 settingsPageHistory.recents,
-                SettingsPageIndex.entries,
-                preferences.contactSearchEnabled,
-            ) { contactRecents, pageRecents, pageEntries, contactsEnabled ->
-                val known = pageEntries.mapTo(HashSet(pageEntries.size)) { it.component }
+                shortcutHistory.recents,
+                combine(SettingsPageIndex.entries, ShortcutIndex.entries) { p, s -> p to s },
+                combine(
+                    preferences.contactSearchEnabled,
+                    preferences.shortcutSearchEnabled,
+                ) { c, s -> c to s },
+            ) { contactRecents, pageRecents, shortcutRecents, (pageEntries, shortcutEntries), (contactsEnabled, shortcutsEnabled) ->
+                val knownPages = pageEntries.mapTo(HashSet(pageEntries.size)) { it.component }
+                val knownShortcuts = shortcutEntries.mapTo(HashSet(shortcutEntries.size)) { it.key }
                 val now = System.currentTimeMillis()
                 val contacts = if (contactsEnabled) {
                     contactRecents.map { RecentEntity.Contact(it) }
                 } else emptyList()
                 val pages = pageRecents
-                    .filter { it.component in known }
+                    .filter { it.component in knownPages }
                     .map { RecentEntity.SettingsPage(it) }
-                (contacts + pages)
+                val shortcuts = if (shortcutsEnabled) {
+                    shortcutRecents
+                        .filter { it.key in knownShortcuts }
+                        .map { RecentEntity.Shortcut(it) }
+                } else emptyList()
+                (contacts + pages + shortcuts)
                     .sortedWith(
                         compareByDescending<RecentEntity> { it.entry.score(now) }
                             .thenByDescending { it.entry.lastUsedEpochMillis }
@@ -158,6 +175,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // Same reactivity for the calendar-search toggle.
         viewModelScope.launch {
             preferences.calendarSearchEnabled.collect {
+                runLocalSearch(_query.value)
+            }
+        }
+
+        // Same reactivity for the shortcut-search toggle.
+        viewModelScope.launch {
+            preferences.shortcutSearchEnabled.collect {
                 runLocalSearch(_query.value)
             }
         }
@@ -312,6 +336,27 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         launchCalendarEvent(app, event.id, event.begin, event.end)
     }
 
+    fun onShortcutClick(entry: ShortcutEntry) {
+        launchShortcut(app, entry.launchIntent)
+        viewModelScope.launch { shortcutHistory.record(entry) }
+    }
+
+    /**
+     * Replay a recent shortcut. The history entry only carries display data, so
+     * the launch Intent is re-resolved from the live [ShortcutIndex] (the recent
+     * is stale-filtered from display, so it's present); re-record to refresh its
+     * score, mirroring [onRecentSettingsPageClick].
+     */
+    fun onRecentShortcutClick(entry: ShortcutHistoryEntry) {
+        val live = ShortcutIndex.find(entry.key) ?: return
+        launchShortcut(app, live.launchIntent)
+        viewModelScope.launch { shortcutHistory.record(live) }
+    }
+
+    fun removeRecentShortcut(entry: ShortcutHistoryEntry) {
+        viewModelScope.launch { shortcutHistory.remove(entry) }
+    }
+
     fun onWebSuggestionClick(query: String) {
         launchGoogleSearch(app, query)
         viewModelScope.launch { searchHistory.record(query) }
@@ -386,6 +431,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 appResults = emptyList(),
                 contactResults = emptyList(),
                 calendarResults = emptyList(),
+                shortcutResults = emptyList(),
                 webResults = emptyList(),
                 tileResults = emptyList(),
                 settingsPageResults = emptyList(),
@@ -397,6 +443,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         val appScores = appHistory.byKey.value
         val contactScores = contactHistory.byKey.value
         val pageScores = settingsPageHistory.byKey.value
+        val shortcutScores = shortcutHistory.byKey.value
 
         val apps = AppIndex.search(query, limit = 6) { pkg ->
             appScores[pkg]?.score(now) ?: 0f
@@ -408,6 +455,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         } else emptyList()
         val calendarEvents = if (preferences.calendarSearchEnabled.value) {
             CalendarRepository.search(getApplication(), query, limit = 3)
+        } else emptyList()
+        val shortcuts = if (preferences.shortcutSearchEnabled.value) {
+            ShortcutIndex.search(query, limit = 3) { key ->
+                shortcutScores[key]?.score(now) ?: 0f
+            }
         } else emptyList()
         val tiles = SettingsTileRepository.search(
             getApplication(),
@@ -424,6 +476,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             appResults = apps,
             contactResults = contacts,
             calendarResults = calendarEvents,
+            shortcutResults = shortcuts,
             tileResults = tiles,
             settingsPageResults = pages,
         )

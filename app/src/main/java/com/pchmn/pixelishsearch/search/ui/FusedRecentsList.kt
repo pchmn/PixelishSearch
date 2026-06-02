@@ -9,10 +9,13 @@ import com.pchmn.pixelishsearch.search.settings.data.SettingsPageEntry
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryEntry
 import com.pchmn.pixelishsearch.search.settings.ui.RowType
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageRow
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutHistoryEntry
+import com.pchmn.pixelishsearch.search.shortcuts.ui.ShortcutRow
 
 /**
- * Blank-state recents block fusing contacts + settings pages into a single
- * ranked list. Dispatch on [RecentEntity] subtype to render the right row.
+ * Blank-state recents block fusing contacts + settings pages + app shortcuts
+ * into a single ranked list. Dispatch on [RecentEntity] subtype to render the
+ * right row.
  */
 @Composable
 fun FusedRecentsList(
@@ -22,6 +25,8 @@ fun FusedRecentsList(
     onContactDelete: (ContactHistoryEntry) -> Unit,
     onPageClick: (SettingsPageHistoryEntry) -> Unit,
     onPageDelete: (SettingsPageHistoryEntry) -> Unit,
+    onShortcutClick: (ShortcutHistoryEntry) -> Unit,
+    onShortcutDelete: (ShortcutHistoryEntry) -> Unit,
 ) {
     EntryList(entries = entries) {
         entries.forEachIndexed { index, entity ->
@@ -47,6 +52,18 @@ fun FusedRecentsList(
                     isLast = isLast,
                     onClick = { onPageClick(entity.entry) },
                     onDelete = { onPageDelete(entity.entry) },
+                )
+
+                is RecentEntity.Shortcut -> ShortcutRow(
+                    shortLabel = entity.entry.shortLabel,
+                    appLabel = entity.entry.appLabel,
+                    packageName = entity.entry.packageName,
+                    iconResId = entity.entry.iconResId,
+                    lastUpdateTime = entity.entry.lastUpdateTime,
+                    isFirst = isFirst,
+                    isLast = isLast,
+                    onClick = { onShortcutClick(entity.entry) },
+                    onDelete = { onShortcutDelete(entity.entry) },
                 )
             }
         }

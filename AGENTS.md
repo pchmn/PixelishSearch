@@ -18,7 +18,10 @@ and Google web suggestions.
 - **App icons go through Coil 3** with a custom `AppIconFetcher` (
   `search/apps/data/AppIconFetcher.kt`). UI code never holds a `Drawable` directly — it passes an
   `AppIconRequest(packageName, lastUpdateTime)` to `AsyncImage`. The `lastUpdateTime` is part of
-  Coil's cache key so updates invalidate automatically.
+  Coil's cache key so updates invalidate automatically. App-shortcut icons follow the same pattern
+  via `ShortcutIconFetcher` / `ShortcutIconRequest` (`search/shortcuts/data/`), which resolves a
+  `@drawable` from the declaring app's resources, falling back to its `AppIconRequest` when the
+  shortcut declares no icon.
 
 ## Build
 
@@ -70,6 +73,7 @@ pixelishsearch/
 │   ├── apps/{data,ui}/               # AppIndex & cache, history, hidden, icon fetcher, launchers, receivers
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
 │   ├── calendar/{data,ui,utils}/     # CalendarRepository (upcoming events, no history — see ADR-0007), launcher, date formatter, list/row
+│   ├── shortcuts/{data,ui}/          # ShortcutIndex (static manifest shortcuts parsed from each app, no launcher role — see ADR-0008), history + fused recents, icon fetcher, launcher, row/list
 │   ├── settings/{data,ui}/           # Quick-toggle tiles + curated Settings pages (resolved via PM) — static lists + launchers
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
 ├── preferences/                      # PreferencesActivity + data/PreferencesRepository + ui/{PreferencesScreen,TilesScreen,PreferencesViewModel} — see ADR-0005

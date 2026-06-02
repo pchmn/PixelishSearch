@@ -10,6 +10,7 @@
     <string name="search_section_web">Ricerca Web</string>
     <string name="search_section_contacts">Contatti</string>
     <string name="search_section_calendar">Eventi</string>
+    <string name="search_section_shortcuts">Scorciatoie</string>
     <string name="search_section_settings">Impostazioni</string>
 
     <string name="calendar_date_today">Oggi</string>
@@ -42,9 +43,11 @@
     <string name="preferences_title">Impostazioni</string>
     <string name="preferences_section_search">Ricerca</string>
     <string name="preferences_contact_search_title">Contatti</string>
-    <string name="preferences_contact_search_subtitle">Includi nella ricerca</string>
+    <string name="preferences_contact_search_subtitle">Cerca contatti</string>
     <string name="preferences_calendar_search_title">Calendario</string>
-    <string name="preferences_calendar_search_subtitle">Includi eventi nella ricerca</string>
+    <string name="preferences_calendar_search_subtitle">Cerca eventi</string>
+    <string name="preferences_shortcut_search_title">Scorciatoie app</string>
+    <string name="preferences_shortcut_search_subtitle">Cerca scorciatoie</string>
     <string name="preferences_tiles_title">Riquadri</string>
     <string name="preferences_tiles_subtitle">Scegli quali riquadri appaiono nei risultati</string>
     <string name="preferences_tiles_count">%1$d su 10</string>

@@ -10,6 +10,7 @@
     <string name="search_section_web">Websuche</string>
     <string name="search_section_contacts">Kontakte</string>
     <string name="search_section_calendar">Termine</string>
+    <string name="search_section_shortcuts">Verknüpfungen</string>
     <string name="search_section_settings">Einstellungen</string>
 
     <string name="calendar_date_today">Heute</string>
@@ -42,9 +43,11 @@
     <string name="preferences_title">Einstellungen</string>
     <string name="preferences_section_search">Suche</string>
     <string name="preferences_contact_search_title">Kontakte</string>
-    <string name="preferences_contact_search_subtitle">In Suche einbeziehen</string>
+    <string name="preferences_contact_search_subtitle">Kontakte durchsuchen</string>
     <string name="preferences_calendar_search_title">Kalender</string>
-    <string name="preferences_calendar_search_subtitle">Termine in Suchergebnisse einbeziehen</string>
+    <string name="preferences_calendar_search_subtitle">Termine durchsuchen</string>
+    <string name="preferences_shortcut_search_title">App-Verknüpfungen</string>
+    <string name="preferences_shortcut_search_subtitle">Verknüpfungen durchsuchen</string>
     <string name="preferences_tiles_title">Kacheln</string>
     <string name="preferences_tiles_subtitle">Lege fest, welche Kacheln in den Suchergebnissen erscheinen</string>
     <string name="preferences_tiles_count">%1$d von 10</string>

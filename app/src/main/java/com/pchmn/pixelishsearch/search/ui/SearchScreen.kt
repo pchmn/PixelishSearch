@@ -38,6 +38,7 @@ import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageList
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsTileGrid
+import com.pchmn.pixelishsearch.search.shortcuts.ui.ShortcutResultList
 import com.pchmn.pixelishsearch.search.web.ui.WebSearchList
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +95,7 @@ fun SearchScreen(
             )
 
             if (displayedApps.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             if (uiState.query.isBlank()) {
@@ -106,8 +107,10 @@ fun SearchScreen(
                         onContactDelete = viewModel::removeRecentContact,
                         onPageClick = viewModel::onRecentSettingsPageClick,
                         onPageDelete = viewModel::removeRecentSettingsPage,
+                        onShortcutClick = viewModel::onRecentShortcutClick,
+                        onShortcutDelete = viewModel::removeRecentShortcut,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
                 WebSearchList(
                     suggestions = uiState.webRecents.take(3),
@@ -122,15 +125,24 @@ fun SearchScreen(
                         tiles = uiState.tileResults,
                         onClick = viewModel::onTileTap,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 if (uiState.webResults.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader(title = stringResource(R.string.search_section_web))
                     WebSearchList(
-                        suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty() || uiState.calendarResults.isNotEmpty()) 3 else 5),
+                        suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty() || uiState.calendarResults.isNotEmpty() || uiState.shortcutResults.isNotEmpty()) 3 else 5),
                         leadingIcon = R.drawable.ic_search,
                         onClick = viewModel::onWebSuggestionClick,
+                    )
+                }
+
+                if (uiState.shortcutResults.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SectionHeader(title = stringResource(R.string.search_section_shortcuts))
+                    ShortcutResultList(
+                        shortcuts = uiState.shortcutResults,
+                        onClick = viewModel::onShortcutClick,
                     )
                 }
 

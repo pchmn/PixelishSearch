@@ -40,6 +40,7 @@ data class PreferencesUiState(
     val hasContactsPermission: Boolean = false,
     val calendarSearchEnabled: Boolean = false,
     val hasCalendarPermission: Boolean = false,
+    val shortcutSearchEnabled: Boolean = true,
     val disabledTileIds: Set<String> = emptySet(),
     val updateAvailable: UpdateInfo? = null,
     val currentVersion: String = "",
@@ -97,6 +98,11 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
         viewModelScope.launch {
+            preferences.shortcutSearchEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(shortcutSearchEnabled = enabled)
+            }
+        }
+        viewModelScope.launch {
             preferences.disabledTileIds.collect { ids ->
                 _uiState.value = _uiState.value.copy(disabledTileIds = ids)
             }
@@ -150,6 +156,12 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
         if (granted != _uiState.value.hasCalendarPermission) {
             _uiState.value = _uiState.value.copy(hasCalendarPermission = granted)
         }
+    }
+    // endregion
+
+    // region Shortcut search (no permission — default on)
+    fun setShortcutSearch(enabled: Boolean) {
+        viewModelScope.launch { preferences.setShortcutSearchEnabled(enabled) }
     }
     // endregion
 

@@ -135,7 +135,7 @@ fun PreferencesScreen(
                     },
                 )
                 PreferenceToggleRow(
-                    icon = R.drawable.ic_calendar,
+                    icon = R.drawable.ic_event,
                     title = stringResource(R.string.preferences_calendar_search_title),
                     subtitle = stringResource(R.string.preferences_calendar_search_subtitle),
                     isFirst = false,
@@ -148,6 +148,15 @@ fun PreferencesScreen(
                             viewModel.setCalendarSearch(newValue)
                         }
                     },
+                )
+                PreferenceToggleRow(
+                    icon = R.drawable.ic_shortcut,
+                    title = stringResource(R.string.preferences_shortcut_search_title),
+                    subtitle = stringResource(R.string.preferences_shortcut_search_subtitle),
+                    isFirst = false,
+                    isLast = false,
+                    checked = uiState.shortcutSearchEnabled,
+                    onCheckedChange = viewModel::setShortcutSearch,
                 )
                 PreferenceNavigationRow(
                     isFirst = false,

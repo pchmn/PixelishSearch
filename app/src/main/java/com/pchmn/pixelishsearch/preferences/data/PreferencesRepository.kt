@@ -29,6 +29,7 @@ class PreferencesRepository(
     private val dataStore = context.applicationContext.preferencesDataStore
     private val contactSearchKey = booleanPreferencesKey("contact_search_enabled")
     private val calendarSearchKey = booleanPreferencesKey("calendar_search_enabled")
+    private val shortcutSearchKey = booleanPreferencesKey("shortcut_search_enabled")
     private val disabledTilesKey = stringSetPreferencesKey("disabled_tile_ids")
 
     val contactSearchEnabled: StateFlow<Boolean> = dataStore.data
@@ -41,6 +42,13 @@ class PreferencesRepository(
         .map { prefs -> prefs[calendarSearchKey] ?: false }
         .stateIn(scope, SharingStarted.Companion.Eagerly, false)
 
+    // No runtime permission gates static-shortcut search, so it defaults ON —
+    // unlike contact/calendar search, which default OFF behind a permission.
+    val shortcutSearchEnabled: StateFlow<Boolean> = dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { prefs -> prefs[shortcutSearchKey] ?: true }
+        .stateIn(scope, SharingStarted.Companion.Eagerly, true)
+
     val disabledTileIds: StateFlow<Set<String>> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { prefs -> prefs[disabledTilesKey] ?: emptySet() }
@@ -52,6 +60,10 @@ class PreferencesRepository(
 
     suspend fun setCalendarSearchEnabled(enabled: Boolean) {
         dataStore.edit { prefs -> prefs[calendarSearchKey] = enabled }
+    }
+
+    suspend fun setShortcutSearchEnabled(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[shortcutSearchKey] = enabled }
     }
 
     suspend fun setTileEnabled(id: SettingsTileId, enabled: Boolean) {
