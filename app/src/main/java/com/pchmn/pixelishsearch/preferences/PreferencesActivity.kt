@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -21,9 +22,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntOffset
 import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
 import com.pchmn.pixelishsearch.preferences.ui.PreferencesScreen
+import com.pchmn.pixelishsearch.preferences.ui.PreferencesViewModel
 import com.pchmn.pixelishsearch.preferences.ui.TilesScreen
 
 class PreferencesActivity : ComponentActivity() {
+
+    private val vm: PreferencesViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,15 +55,29 @@ class PreferencesActivity : ComponentActivity() {
                 ) { current ->
                     when (current) {
                         Route.Root -> PreferencesScreen(
+                            viewModel = vm,
                             onBack = { finish() },
                             onOpenTiles = { route = Route.Tiles },
                         )
 
-                        Route.Tiles -> TilesScreen(onBack = { route = Route.Root })
+                        Route.Tiles -> TilesScreen(
+                            viewModel = vm,
+                            onBack = { route = Route.Root },
+                        )
                     }
                 }
             }
         }
+    }
+
+    /**
+     * The user can change the READ_CONTACTS grant in system settings while we're
+     * paused; re-snapshot it on return. Mirrors `MainActivity.onResume`'s call to
+     * `vm.refreshTileStates()`.
+     */
+    override fun onResume() {
+        super.onResume()
+        vm.refreshContactsPermission()
     }
 
     private enum class Route { Root, Tiles }
