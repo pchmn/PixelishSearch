@@ -17,6 +17,10 @@ import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutHistoryRepository
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIconFetcher
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIconKeyer
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIndex
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
@@ -41,6 +45,8 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         private set
     lateinit var settingsPageHistory: SettingsPageHistoryRepository
         private set
+    lateinit var shortcutHistory: ShortcutHistoryRepository
+        private set
     lateinit var hiddenApps: HiddenAppsRepository
         private set
     lateinit var preferences: PreferencesRepository
@@ -60,6 +66,7 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             searchHistory = WebSearchHistoryRepository(this, appScope)
             contactHistory = ContactHistoryRepository(this, appScope)
             settingsPageHistory = SettingsPageHistoryRepository(this, appScope)
+            shortcutHistory = ShortcutHistoryRepository(this, appScope)
             hiddenApps = HiddenAppsRepository(this, appScope)
             preferences = PreferencesRepository(this, appScope)
             updates = UpdateRepository(this, appScope)
@@ -100,6 +107,13 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         trace("SettingsPageIndex.preload.dispatch") {
             SettingsPageIndex.preload(appScope, this@PixelishSearchApp)
         }
+
+        // Parse every launcher app's static shortcuts into an in-memory index.
+        // Off the first-frame path (shortcuts only render on a non-blank query),
+        // so it's a plain async preload with no disk cache.
+        trace("ShortcutIndex.preload.dispatch") {
+            ShortcutIndex.preload(this@PixelishSearchApp, appScope)
+        }
     }
 
     /**
@@ -124,6 +138,8 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
                 .components {
                     add(AppIconKeyer())
                     add(AppIconFetcher.Factory())
+                    add(ShortcutIconKeyer())
+                    add(ShortcutIconFetcher.Factory())
                 }
                 .build()
         }

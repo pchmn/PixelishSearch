@@ -16,6 +16,15 @@ history entries (whose `ComponentName` no longer resolves in
 `SettingsPageIndex.entries`) are filtered at display time, not deleted — if the
 page reappears after a rollback, the entry resurfaces with its score intact.
 
+## Update (ADR-0008)
+
+App shortcuts joined as a **third** fused source on the same terms: a separate
+typed `ShortcutHistoryRepository` feeding its own `scoreOf` in query mode, fused
+only at display via a third `RecentEntity.Shortcut` variant, capped at the same 2,
+with the same stale-filtering (entries whose key is no longer in `ShortcutIndex`
+are hidden, not deleted). The fused block is now contacts + settings pages +
+shortcuts.
+
 ## Considered options
 
 - **One block per category in the blank state** — rejected: adds a 4th distinct

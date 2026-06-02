@@ -14,6 +14,7 @@
     <string name="search_section_web">Web Search</string>
     <string name="search_section_contacts">Contacts</string>
     <string name="search_section_calendar">Events</string>
+    <string name="search_section_shortcuts">Shortcuts</string>
     <string name="search_section_settings">Settings</string>
 
     <!-- Calendar event date/time labels -->
@@ -55,6 +56,8 @@
     <string name="preferences_contact_search_subtitle">Include in search results</string>
     <string name="preferences_calendar_search_title">Calendar</string>
     <string name="preferences_calendar_search_subtitle">Include events in search results</string>
+    <string name="preferences_shortcut_search_title">App shortcuts</string>
+    <string name="preferences_shortcut_search_subtitle">Include app shortcuts in search results</string>
     <string name="preferences_tiles_title">Tiles</string>
     <string name="preferences_tiles_subtitle">Choose which tiles appear in search results</string>
     <string name="preferences_tiles_count">%1$d of 10</string>

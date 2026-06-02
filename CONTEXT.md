@@ -29,6 +29,27 @@ _Avoid_: Settings shortcut, settings entry
 An installed, launchable application surfaced from the in-memory `AppIndex`.
 _Avoid_: App, application, launcher entry
 
+**App shortcut**:
+A deep-link action a target app declares *statically* in its manifest
+(`android.app.shortcuts` meta-data on a launcher activity, e.g. Files →
+"Downloads", Fit → "Track workout"), surfaced from the in-memory
+`ShortcutIndex` built by parsing every launcher app's shortcut XML — no
+default-launcher role required. Only the *static* kind exists here: dynamic
+and pinned shortcuts are out of scope because reading them needs the launcher
+role. Searched live per keystroke; recorded in a `ShortcutHistoryRepository`
+so recently-used shortcuts resurface in the fused blank-state Recents strip
+alongside Contact entries and Settings pages (ADR-0002), and frequency
+re-ranks typed results (ADR-0006) — matching the native Pixel Launcher, which
+shows e.g. "Downloads · Files" there. Distinct from `ShortcutHistoryEntry`,
+the locally-stored recent-use record (whose key is filtered from display once
+its shortcut leaves `ShortcutIndex`). Distinct from a **Tile** (which
+deliberately avoids the word "shortcut") and from `pinAppShortcut` (which pins
+an *app* to the home screen via Android's pinned-shortcut API — an unrelated
+sense of the word).
+_Avoid_: Shortcut (bare — ambiguous with the Tile alias and the pinned-app
+sense), dynamic shortcut, pinned shortcut, static shortcut (in user-facing
+text; the "static" qualifier is an implementation detail)
+
 **Contact entry**:
 A person surfaced from the device address book via `ContactRepository`.
 Distinct from `ContactHistoryEntry`, which is the locally-stored recent-use

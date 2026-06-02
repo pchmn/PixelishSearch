@@ -10,6 +10,7 @@
     <string name="search_section_web">Recherche Web</string>
     <string name="search_section_contacts">Contacts</string>
     <string name="search_section_calendar">Événements</string>
+    <string name="search_section_shortcuts">Raccourcis</string>
     <string name="search_section_settings">Paramètres</string>
 
     <string name="calendar_date_today">Aujourd\'hui</string>
@@ -45,6 +46,8 @@
     <string name="preferences_contact_search_subtitle">Inclure dans la recherche</string>
     <string name="preferences_calendar_search_title">Calendrier</string>
     <string name="preferences_calendar_search_subtitle">Inclure les événements dans la recherche</string>
+    <string name="preferences_shortcut_search_title">Raccourcis d\'application</string>
+    <string name="preferences_shortcut_search_subtitle">Inclure les raccourcis d\'application dans la recherche</string>
     <string name="preferences_tiles_title">Tuiles</string>
     <string name="preferences_tiles_subtitle">Choisis les tuiles à afficher dans la recherche</string>
     <string name="preferences_tiles_count">%1$d sur 10</string>
