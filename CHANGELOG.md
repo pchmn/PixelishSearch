@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.0-beta.5] - 2026-06-02
+
+### Features
+- Add calendar event search ([`d82b76f`](https://github.com/pchmn/PixelishSearch/commit/d82b76fd0b06912aafdb5d52507739767741f9e8)) ([#3](https://github.com/pchmn/PixelishSearch/pull/3))
+
 ## [v1.0.0-beta.4] - 2026-06-02
 
 ### Other
