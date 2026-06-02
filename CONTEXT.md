@@ -35,6 +35,15 @@ Distinct from `ContactHistoryEntry`, which is the locally-stored recent-use
 record (not a source of truth).
 _Avoid_: Contact (ambiguous between source and history record)
 
+**Calendar event**:
+A single upcoming occurrence surfaced from the device calendars via
+`CalendarRepository`. Searched live per keystroke like a Contact entry; only
+occurrences from now onward are returned, and a recurring series contributes
+its next matching occurrence rather than the abstract series. Tapping one opens
+it in the calendar app — it carries no quick actions of its own.
+_Avoid_: Event (overloaded with Android/analytics events), appointment,
+meeting, agenda item
+
 **Web suggestion**:
 A query string returned by Google Suggest for the current input.
 _Avoid_: Search suggestion, autocomplete

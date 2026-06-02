@@ -69,6 +69,7 @@ pixelishsearch/
 │   ├── ui/                           # SearchScreen, SearchField, SearchViewModel
 │   ├── apps/{data,ui}/               # AppIndex & cache, history, hidden, icon fetcher, launchers, receivers
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
+│   ├── calendar/{data,ui,utils}/     # CalendarRepository (upcoming events, no history — see ADR-0007), launcher, date formatter, list/row
 │   ├── settings/{data,ui}/           # Quick-toggle tiles + curated Settings pages (resolved via PM) — static lists + launchers
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
 ├── preferences/                      # PreferencesActivity + data/PreferencesRepository + ui/{PreferencesScreen,TilesScreen,PreferencesViewModel} — see ADR-0005

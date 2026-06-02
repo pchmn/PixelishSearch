@@ -28,11 +28,17 @@ class PreferencesRepository(
 ) {
     private val dataStore = context.applicationContext.preferencesDataStore
     private val contactSearchKey = booleanPreferencesKey("contact_search_enabled")
+    private val calendarSearchKey = booleanPreferencesKey("calendar_search_enabled")
     private val disabledTilesKey = stringSetPreferencesKey("disabled_tile_ids")
 
     val contactSearchEnabled: StateFlow<Boolean> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
         .map { prefs -> prefs[contactSearchKey] ?: false }
+        .stateIn(scope, SharingStarted.Companion.Eagerly, false)
+
+    val calendarSearchEnabled: StateFlow<Boolean> = dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { prefs -> prefs[calendarSearchKey] ?: false }
         .stateIn(scope, SharingStarted.Companion.Eagerly, false)
 
     val disabledTileIds: StateFlow<Set<String>> = dataStore.data
@@ -42,6 +48,10 @@ class PreferencesRepository(
 
     suspend fun setContactSearchEnabled(enabled: Boolean) {
         dataStore.edit { prefs -> prefs[contactSearchKey] = enabled }
+    }
+
+    suspend fun setCalendarSearchEnabled(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[calendarSearchKey] = enabled }
     }
 
     suspend fun setTileEnabled(id: SettingsTileId, enabled: Boolean) {

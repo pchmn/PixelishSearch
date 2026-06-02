@@ -11,6 +11,7 @@ import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
 import com.pchmn.pixelishsearch.search.apps.data.AppIconKeyer
 import com.pchmn.pixelishsearch.search.apps.data.AppIndex
 import com.pchmn.pixelishsearch.search.apps.data.HiddenAppsRepository
+import com.pchmn.pixelishsearch.search.calendar.data.CalendarRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
@@ -79,6 +80,11 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // doesn't pay the binder + provider startup cost.
         trace("ContactRepository.warmUp.dispatch") {
             ContactRepository.warmUp(this, appScope)
+        }
+
+        // Same for the (out-of-process) Calendar provider.
+        trace("CalendarRepository.warmUp.dispatch") {
+            CalendarRepository.warmUp(this, appScope)
         }
 
         // Register the torch callback now so the flashlight tile shows the

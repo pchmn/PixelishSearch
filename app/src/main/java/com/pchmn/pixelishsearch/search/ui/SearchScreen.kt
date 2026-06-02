@@ -33,6 +33,7 @@ import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.core.ui.components.BottomSheet
 import com.pchmn.pixelishsearch.core.ui.components.rememberSheetState
 import com.pchmn.pixelishsearch.search.apps.ui.AppList
+import com.pchmn.pixelishsearch.search.calendar.ui.CalendarResultList
 import com.pchmn.pixelishsearch.search.contacts.ui.ContactResultList
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.settings.ui.SettingsPageList
@@ -106,7 +107,7 @@ fun SearchScreen(
                         onPageClick = viewModel::onRecentSettingsPageClick,
                         onPageDelete = viewModel::removeRecentSettingsPage,
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 WebSearchList(
                     suggestions = uiState.webRecents.take(3),
@@ -127,14 +128,14 @@ fun SearchScreen(
                 if (uiState.webResults.isNotEmpty()) {
                     SectionHeader(title = stringResource(R.string.search_section_web))
                     WebSearchList(
-                        suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty()) 3 else 5),
+                        suggestions = uiState.webResults.take(if (displayedApps.isNotEmpty() || uiState.contactResults.isNotEmpty() || uiState.calendarResults.isNotEmpty()) 3 else 5),
                         leadingIcon = R.drawable.ic_search,
                         onClick = viewModel::onWebSuggestionClick,
                     )
                 }
 
                 if (uiState.contactResults.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader(title = stringResource(R.string.search_section_contacts))
                     ContactResultList(
                         contacts = uiState.contactResults,
@@ -144,8 +145,17 @@ fun SearchScreen(
                     )
                 }
 
+                if (uiState.calendarResults.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SectionHeader(title = stringResource(R.string.search_section_calendar))
+                    CalendarResultList(
+                        events = uiState.calendarResults,
+                        onEventClick = viewModel::onCalendarEventClick,
+                    )
+                }
+
                 if (uiState.settingsPageResults.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader(title = stringResource(R.string.search_section_settings))
                     SettingsPageList(
                         pages = uiState.settingsPageResults,

@@ -68,6 +68,10 @@ fun PreferencesScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> viewModel.onContactsPermissionResult(granted) }
 
+    val calendarPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> viewModel.onCalendarPermissionResult(granted) }
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -127,6 +131,21 @@ fun PreferencesScreen(
                             permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                         } else {
                             viewModel.setContactSearch(newValue)
+                        }
+                    },
+                )
+                PreferenceToggleRow(
+                    icon = R.drawable.ic_calendar,
+                    title = stringResource(R.string.preferences_calendar_search_title),
+                    subtitle = stringResource(R.string.preferences_calendar_search_subtitle),
+                    isFirst = false,
+                    isLast = false,
+                    checked = uiState.effectiveCalendarSearch,
+                    onCheckedChange = { newValue ->
+                        if (newValue && !uiState.hasCalendarPermission) {
+                            calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+                        } else {
+                            viewModel.setCalendarSearch(newValue)
                         }
                     },
                 )

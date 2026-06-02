@@ -71,13 +71,14 @@ class PreferencesActivity : ComponentActivity() {
     }
 
     /**
-     * The user can change the READ_CONTACTS grant in system settings while we're
-     * paused; re-snapshot it on return. Mirrors `MainActivity.onResume`'s call to
-     * `vm.refreshTileStates()`.
+     * The user can change the READ_CONTACTS / READ_CALENDAR grants in system
+     * settings while we're paused; re-snapshot them on return. Mirrors
+     * `MainActivity.onResume`'s call to `vm.refreshTileStates()`.
      */
     override fun onResume() {
         super.onResume()
         vm.refreshContactsPermission()
+        vm.refreshCalendarPermission()
     }
 
     private enum class Route { Root, Tiles }
