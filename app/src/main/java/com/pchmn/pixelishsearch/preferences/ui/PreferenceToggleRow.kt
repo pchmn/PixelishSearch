@@ -5,7 +5,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 
 @Composable
-fun SwitchPreference(
+fun PreferenceToggleRow(
     @DrawableRes icon: Int,
     title: String,
     subtitle: String? = null,

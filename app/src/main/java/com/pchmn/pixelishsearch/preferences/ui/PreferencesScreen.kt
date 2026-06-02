@@ -115,7 +115,7 @@ fun PreferencesScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             PreferencesGroup(title = stringResource(R.string.preferences_section_search)) {
-                SwitchPreference(
+                PreferenceToggleRow(
                     icon = R.drawable.ic_contacts,
                     title = stringResource(R.string.preferences_contact_search_title),
                     subtitle = stringResource(R.string.preferences_contact_search_subtitle),
@@ -130,7 +130,7 @@ fun PreferencesScreen(
                         }
                     },
                 )
-                NavigationPreference(
+                PreferenceNavigationRow(
                     isFirst = false,
                     isLast = true,
                     icon = R.drawable.ic_location_chip,
@@ -145,7 +145,7 @@ fun PreferencesScreen(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 PreferencesGroup(title = stringResource(R.string.preferences_section_appearance)) {
-                    LanguagePreference(
+                    PreferenceLanguageRow(
                         currentTag = uiState.currentLanguageTag,
                         onSelect = viewModel::onLanguageSelected,
                     )
@@ -153,7 +153,7 @@ fun PreferencesScreen(
             }
 
             PreferencesGroup(title = stringResource(R.string.preferences_section_about)) {
-                UpdateCheckPreference(
+                PreferenceUpdateCheckRow(
                     available = uiState.updateAvailable,
                     currentVersion = uiState.currentVersion,
                     checkState = uiState.updateCheck,
@@ -167,7 +167,7 @@ fun PreferencesScreen(
 }
 
 @Composable
-private fun UpdateCheckPreference(
+private fun PreferenceUpdateCheckRow(
     available: UpdateInfo?,
     currentVersion: String,
     checkState: CheckUiState,
@@ -207,7 +207,7 @@ private fun UpdateCheckPreference(
 }
 
 @Composable
-private fun LanguagePreference(
+private fun PreferenceLanguageRow(
     currentTag: String?,
     onSelect: (String?) -> Unit,
 ) {
@@ -299,7 +299,7 @@ private fun PreferencesGroup(title: String? = null, content: @Composable () -> U
 }
 
 @Composable
-private fun NavigationPreference(
+private fun PreferenceNavigationRow(
     @DrawableRes icon: Int,
     title: String,
     subtitle: String? = null,

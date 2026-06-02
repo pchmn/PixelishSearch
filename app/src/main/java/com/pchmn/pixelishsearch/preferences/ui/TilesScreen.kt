@@ -109,7 +109,7 @@ fun TilesScreen(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 settingsTiles.forEachIndexed { index, tile ->
-                    TileToggleRow(
+                    PreferenceTileToggleRow(
                         isFirst = index == 0,
                         isLast = index == settingsTiles.lastIndex,
                         tile = tile,
@@ -125,14 +125,14 @@ fun TilesScreen(
 }
 
 @Composable
-private fun TileToggleRow(
+private fun PreferenceTileToggleRow(
     tile: SettingsTile,
     checked: Boolean,
     isFirst: Boolean,
     isLast: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    SwitchPreference(
+    PreferenceToggleRow(
         isFirst = isFirst,
         isLast = isLast,
         icon = tile.iconRes,
