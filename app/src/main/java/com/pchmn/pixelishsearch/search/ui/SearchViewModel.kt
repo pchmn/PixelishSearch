@@ -14,6 +14,9 @@ import com.pchmn.pixelishsearch.search.apps.data.geminiIntent
 import com.pchmn.pixelishsearch.search.apps.data.launchAppInfo
 import com.pchmn.pixelishsearch.search.apps.data.lensIntent
 import com.pchmn.pixelishsearch.search.apps.data.pinAppShortcut
+import com.pchmn.pixelishsearch.search.calendar.data.CalendarEventEntry
+import com.pchmn.pixelishsearch.search.calendar.data.CalendarRepository
+import com.pchmn.pixelishsearch.search.calendar.data.launchCalendarEvent
 import com.pchmn.pixelishsearch.search.contacts.data.ContactAction
 import com.pchmn.pixelishsearch.search.contacts.data.ContactEntry
 import com.pchmn.pixelishsearch.search.contacts.data.ContactHistoryEntry
@@ -65,6 +68,7 @@ data class SearchUiState(
     val appResults: List<AppEntry> = emptyList(),
     val fusedRecents: List<RecentEntity> = emptyList(),
     val contactResults: List<ContactEntry> = emptyList(),
+    val calendarResults: List<CalendarEventEntry> = emptyList(),
     val webRecents: List<String> = emptyList(),
     val webResults: List<String> = emptyList(),
     val tileResults: List<SettingsTileResult> = emptyList(),
@@ -147,6 +151,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         // next keystroke.
         viewModelScope.launch {
             preferences.contactSearchEnabled.collect {
+                runLocalSearch(_query.value)
+            }
+        }
+
+        // Same reactivity for the calendar-search toggle.
+        viewModelScope.launch {
+            preferences.calendarSearchEnabled.collect {
                 runLocalSearch(_query.value)
             }
         }
@@ -297,6 +308,10 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun onCalendarEventClick(event: CalendarEventEntry) {
+        launchCalendarEvent(app, event.id, event.begin, event.end)
+    }
+
     fun onWebSuggestionClick(query: String) {
         launchGoogleSearch(app, query)
         viewModelScope.launch { searchHistory.record(query) }
@@ -370,6 +385,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 query = query,
                 appResults = emptyList(),
                 contactResults = emptyList(),
+                calendarResults = emptyList(),
                 webResults = emptyList(),
                 tileResults = emptyList(),
                 settingsPageResults = emptyList(),
@@ -390,6 +406,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 contactScores[id]?.score(now) ?: 0f
             }
         } else emptyList()
+        val calendarEvents = if (preferences.calendarSearchEnabled.value) {
+            CalendarRepository.search(getApplication(), query, limit = 3)
+        } else emptyList()
         val tiles = SettingsTileRepository.search(
             getApplication(),
             query,
@@ -404,6 +423,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             query = query,
             appResults = apps,
             contactResults = contacts,
+            calendarResults = calendarEvents,
             tileResults = tiles,
             settingsPageResults = pages,
         )

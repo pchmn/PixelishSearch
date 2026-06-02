@@ -9,7 +9,11 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Websuche</string>
     <string name="search_section_contacts">Kontakte</string>
+    <string name="search_section_calendar">Termine</string>
     <string name="search_section_settings">Einstellungen</string>
+
+    <string name="calendar_date_today">Heute</string>
+    <string name="calendar_date_tomorrow">Morgen</string>
 
     <string name="tile_wifi">WLAN</string>
     <string name="tile_bluetooth">Bluetooth</string>
@@ -39,6 +43,8 @@
     <string name="preferences_section_search">Suche</string>
     <string name="preferences_contact_search_title">Kontakte</string>
     <string name="preferences_contact_search_subtitle">In Suche einbeziehen</string>
+    <string name="preferences_calendar_search_title">Kalender</string>
+    <string name="preferences_calendar_search_subtitle">Termine in Suchergebnisse einbeziehen</string>
     <string name="preferences_tiles_title">Kacheln</string>
     <string name="preferences_tiles_subtitle">Lege fest, welche Kacheln in den Suchergebnissen erscheinen</string>
     <string name="preferences_tiles_count">%1$d von 10</string>

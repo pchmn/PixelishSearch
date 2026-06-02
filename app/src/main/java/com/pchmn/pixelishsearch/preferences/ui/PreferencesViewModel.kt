@@ -8,6 +8,7 @@ import android.os.LocaleList
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.pchmn.pixelishsearch.PixelishSearchApp
+import com.pchmn.pixelishsearch.search.calendar.data.CalendarRepository
 import com.pchmn.pixelishsearch.search.contacts.data.ContactRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTileId
 import com.pchmn.pixelishsearch.update.UpdateActivity
@@ -37,6 +38,8 @@ sealed interface CheckUiState {
 data class PreferencesUiState(
     val contactSearchEnabled: Boolean = false,
     val hasContactsPermission: Boolean = false,
+    val calendarSearchEnabled: Boolean = false,
+    val hasCalendarPermission: Boolean = false,
     val disabledTileIds: Set<String> = emptySet(),
     val updateAvailable: UpdateInfo? = null,
     val currentVersion: String = "",
@@ -49,6 +52,9 @@ data class PreferencesUiState(
      * `ContactRepository.search` applies on the actual search path.
      */
     val effectiveContactSearch: Boolean get() = contactSearchEnabled && hasContactsPermission
+
+    /** Same gating as [effectiveContactSearch], for the READ_CALENDAR grant. */
+    val effectiveCalendarSearch: Boolean get() = calendarSearchEnabled && hasCalendarPermission
 }
 
 /**
@@ -70,6 +76,7 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
     private val _uiState = MutableStateFlow(
         PreferencesUiState(
             hasContactsPermission = ContactRepository.hasPermission(app),
+            hasCalendarPermission = CalendarRepository.hasPermission(app),
             currentVersion = app.currentVersionName(),
             currentLanguageTag = currentLanguageTag(),
         )
@@ -82,6 +89,11 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             preferences.contactSearchEnabled.collect { enabled ->
                 _uiState.value = _uiState.value.copy(contactSearchEnabled = enabled)
+            }
+        }
+        viewModelScope.launch {
+            preferences.calendarSearchEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(calendarSearchEnabled = enabled)
             }
         }
         viewModelScope.launch {
@@ -119,6 +131,24 @@ class PreferencesViewModel(application: Application) : AndroidViewModel(applicat
         val granted = ContactRepository.hasPermission(app)
         if (granted != _uiState.value.hasContactsPermission) {
             _uiState.value = _uiState.value.copy(hasContactsPermission = granted)
+        }
+    }
+    // endregion
+
+    // region Calendar search + permission
+    fun setCalendarSearch(enabled: Boolean) {
+        viewModelScope.launch { preferences.setCalendarSearchEnabled(enabled) }
+    }
+
+    fun onCalendarPermissionResult(granted: Boolean) {
+        _uiState.value = _uiState.value.copy(hasCalendarPermission = granted)
+        if (granted) setCalendarSearch(true)
+    }
+
+    fun refreshCalendarPermission() {
+        val granted = CalendarRepository.hasPermission(app)
+        if (granted != _uiState.value.hasCalendarPermission) {
+            _uiState.value = _uiState.value.copy(hasCalendarPermission = granted)
         }
     }
     // endregion

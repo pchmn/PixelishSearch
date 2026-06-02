@@ -9,7 +9,11 @@
     <string name="search_lens">Google Lens</string>
     <string name="search_section_web">Búsqueda Web</string>
     <string name="search_section_contacts">Contactos</string>
+    <string name="search_section_calendar">Eventos</string>
     <string name="search_section_settings">Ajustes</string>
+
+    <string name="calendar_date_today">Hoy</string>
+    <string name="calendar_date_tomorrow">Mañana</string>
 
     <string name="tile_wifi">Wi-Fi</string>
     <string name="tile_bluetooth">Bluetooth</string>
@@ -39,6 +43,8 @@
     <string name="preferences_section_search">Búsqueda</string>
     <string name="preferences_contact_search_title">Contactos</string>
     <string name="preferences_contact_search_subtitle">Incluir en la búsqueda</string>
+    <string name="preferences_calendar_search_title">Calendario</string>
+    <string name="preferences_calendar_search_subtitle">Incluir eventos en la búsqueda</string>
     <string name="preferences_tiles_title">Mosaicos</string>
     <string name="preferences_tiles_subtitle">Elige qué mosaicos aparecen en los resultados</string>
     <string name="preferences_tiles_count">%1$d de 10</string>
