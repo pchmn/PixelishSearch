@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.0-beta.6] - 2026-06-03
+
+### Features
+- Search apps' static manifest shortcuts ([`cf4dcd0`](https://github.com/pchmn/PixelishSearch/commit/cf4dcd0da0aa41848b9b0a67ce04d12d497976ed)) ([#4](https://github.com/pchmn/PixelishSearch/pull/4))
+
 ## [v1.0.0-beta.5] - 2026-06-02
 
 ### Features
