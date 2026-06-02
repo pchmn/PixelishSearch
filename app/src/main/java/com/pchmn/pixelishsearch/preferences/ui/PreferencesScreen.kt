@@ -135,7 +135,7 @@ fun PreferencesScreen(
                     },
                 )
                 PreferenceToggleRow(
-                    icon = R.drawable.ic_calendar,
+                    icon = R.drawable.ic_event,
                     title = stringResource(R.string.preferences_calendar_search_title),
                     subtitle = stringResource(R.string.preferences_calendar_search_subtitle),
                     isFirst = false,

@@ -43,11 +43,11 @@
     <string name="preferences_title">Ajustes</string>
     <string name="preferences_section_search">Búsqueda</string>
     <string name="preferences_contact_search_title">Contactos</string>
-    <string name="preferences_contact_search_subtitle">Incluir en la búsqueda</string>
+    <string name="preferences_contact_search_subtitle">Buscar contactos</string>
     <string name="preferences_calendar_search_title">Calendario</string>
-    <string name="preferences_calendar_search_subtitle">Incluir eventos en la búsqueda</string>
+    <string name="preferences_calendar_search_subtitle">Buscar eventos</string>
     <string name="preferences_shortcut_search_title">Accesos directos de apps</string>
-    <string name="preferences_shortcut_search_subtitle">Incluir accesos directos de apps en la búsqueda</string>
+    <string name="preferences_shortcut_search_subtitle">Buscar accesos directos</string>
     <string name="preferences_tiles_title">Mosaicos</string>
     <string name="preferences_tiles_subtitle">Elige qué mosaicos aparecen en los resultados</string>
     <string name="preferences_tiles_count">%1$d de 10</string>
