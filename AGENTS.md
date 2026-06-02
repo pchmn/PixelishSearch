@@ -71,7 +71,7 @@ pixelishsearch/
 │   ├── contacts/{data,ui,utils}/     # ContactRepository, history, launchers, list/row composables
 │   ├── settings/{data,ui}/           # Quick-toggle tiles + curated Settings pages (resolved via PM) — static lists + launchers
 │   └── web/{data,ui}/                # WebSuggestionsRepository, history, launcher, list/row
-├── preferences/                      # PreferencesActivity + data/PreferencesRepository + ui/{PreferencesScreen,TilesScreen} — see ADR-0005
+├── preferences/                      # PreferencesActivity + data/PreferencesRepository + ui/{PreferencesScreen,TilesScreen,PreferencesViewModel} — see ADR-0005
 ├── update/                           # Self-update from GitHub Releases (UpdateActivity + data/ + ui/UpdateScreen)
 └── widget/                           # SearchWidget (AppWidgetProvider)
 ```

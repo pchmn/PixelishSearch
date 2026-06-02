@@ -10,7 +10,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.provider.Settings
 import androidx.core.graphics.drawable.toBitmap
-import com.pchmn.pixelishsearch.core.data.launchAndDismiss
+import com.pchmn.pixelishsearch.core.data.launch
 
 /**
  * Open Gemini in voice mode. ACTION_VOICE_COMMAND triggers the default
@@ -62,7 +62,7 @@ fun launchAppInfo(context: Context, packageName: String) {
         .setData(Uri.fromParts("package", packageName, null))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        context.launchAndDismiss(intent)
+        context.launch(intent)
     } catch (_: ActivityNotFoundException) {
     }
 }

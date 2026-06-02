@@ -1,15 +1,10 @@
 package com.pchmn.pixelishsearch.preferences.ui
 
 import android.Manifest
-import android.app.LocaleManager
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
-import android.os.LocaleList
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,85 +34,39 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.search.settings.data.settingsTiles
-import com.pchmn.pixelishsearch.update.UpdateActivity
-import com.pchmn.pixelishsearch.update.data.CheckOutcome
-import com.pchmn.pixelishsearch.update.data.UpdateChecker
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.Locale
+import com.pchmn.pixelishsearch.update.data.UpdateInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferencesScreen(
+    viewModel: PreferencesViewModel,
     onBack: () -> Unit,
     onOpenTiles: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val app = context.applicationContext as PixelishSearchApp
-    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val contactSearchEnabled by app.preferences.contactSearchEnabled.collectAsStateWithLifecycle()
-    val disabledTileIds by app.preferences.disabledTileIds.collectAsStateWithLifecycle()
-    var hasContactsPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_CONTACTS,
-            ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    // Permission state can change while we're paused (user toggled it in
-    // system settings). Re-check on every resume.
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                hasContactsPermission = ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_CONTACTS,
-                ) == PackageManager.PERMISSION_GRANTED
-            }
-        }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer) }
-    }
-
+    // The system permission dialog must be launched from composition. The VM
+    // owns the decision and the resulting state; the screen only fires the
+    // dialog and reports the outcome back.
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        hasContactsPermission = granted
-        if (granted) {
-            scope.launch { app.preferences.setContactSearchEnabled(true) }
-        }
-    }
-
-    val effectiveContactToggle = contactSearchEnabled && hasContactsPermission
+    ) { granted -> viewModel.onContactsPermissionResult(granted) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -166,33 +115,29 @@ fun PreferencesScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             PreferencesGroup(title = stringResource(R.string.preferences_section_search)) {
-                SwitchPreference(
+                PreferenceToggleRow(
                     icon = R.drawable.ic_contacts,
                     title = stringResource(R.string.preferences_contact_search_title),
                     subtitle = stringResource(R.string.preferences_contact_search_subtitle),
                     isFirst = true,
                     isLast = false,
-                    checked = effectiveContactToggle,
+                    checked = uiState.effectiveContactSearch,
                     onCheckedChange = { newValue ->
-                        if (newValue) {
-                            if (hasContactsPermission) {
-                                scope.launch { app.preferences.setContactSearchEnabled(true) }
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            }
+                        if (newValue && !uiState.hasContactsPermission) {
+                            permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                         } else {
-                            scope.launch { app.preferences.setContactSearchEnabled(false) }
+                            viewModel.setContactSearch(newValue)
                         }
                     },
                 )
-                NavigationPreference(
+                PreferenceNavigationRow(
                     isFirst = false,
                     isLast = true,
                     icon = R.drawable.ic_location_chip,
                     title = stringResource(R.string.preferences_tiles_title),
                     subtitle = stringResource(
                         R.string.preferences_tiles_count,
-                        settingsTiles.size - disabledTileIds.size,
+                        settingsTiles.size - uiState.disabledTileIds.size,
                     ),
                     onClick = onOpenTiles,
                 )
@@ -200,12 +145,20 @@ fun PreferencesScreen(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 PreferencesGroup(title = stringResource(R.string.preferences_section_appearance)) {
-                    LanguagePreference()
+                    PreferenceLanguageRow(
+                        currentTag = uiState.currentLanguageTag,
+                        onSelect = viewModel::onLanguageSelected,
+                    )
                 }
             }
 
             PreferencesGroup(title = stringResource(R.string.preferences_section_about)) {
-                UpdateCheckPreference()
+                PreferenceUpdateCheckRow(
+                    available = uiState.updateAvailable,
+                    currentVersion = uiState.currentVersion,
+                    checkState = uiState.updateCheck,
+                    onCheck = viewModel::onCheckForUpdates,
+                )
             }
 
             Spacer(Modifier.height(24.dp))
@@ -213,46 +166,26 @@ fun PreferencesScreen(
     }
 }
 
-private sealed interface CheckUiState {
-    data object Idle : CheckUiState
-    data object Checking : CheckUiState
-    data object UpToDate : CheckUiState
-    data object Failed : CheckUiState
-}
-
 @Composable
-private fun UpdateCheckPreference() {
-    val context = LocalContext.current
-    val app = context.applicationContext as PixelishSearchApp
-    val scope = rememberCoroutineScope()
-
-    val update by app.updates.available.collectAsStateWithLifecycle()
-    val currentVersion = remember { app.currentVersionName() }
-    var state by remember { mutableStateOf<CheckUiState>(CheckUiState.Idle) }
-
-    // Auto-clear the transient "up to date" / "failed" states after a few
-    // seconds so the row settles back to its default subtitle.
-    LaunchedEffect(state) {
-        if (state is CheckUiState.UpToDate || state is CheckUiState.Failed) {
-            delay(3_000)
-            state = CheckUiState.Idle
-        }
-    }
-
-    val available = update
+private fun PreferenceUpdateCheckRow(
+    available: UpdateInfo?,
+    currentVersion: String,
+    checkState: CheckUiState,
+    onCheck: () -> Unit,
+) {
     val subtitle = when {
         available != null -> stringResource(
             R.string.update_settings_available,
-            available.versionName
+            available.versionName,
         )
 
-        state is CheckUiState.Checking -> stringResource(R.string.update_status_checking)
-        state is CheckUiState.UpToDate -> stringResource(R.string.update_status_up_to_date)
-        state is CheckUiState.Failed -> stringResource(R.string.update_status_check_failed)
+        checkState is CheckUiState.Checking -> stringResource(R.string.update_status_checking)
+        checkState is CheckUiState.UpToDate -> stringResource(R.string.update_status_up_to_date)
+        checkState is CheckUiState.Failed -> stringResource(R.string.update_status_check_failed)
         else -> stringResource(R.string.update_settings_current_version, currentVersion)
     }
 
-    val isChecking = state is CheckUiState.Checking
+    val isChecking = checkState is CheckUiState.Checking
 
     PreferenceRow(
         isFirst = true,
@@ -269,35 +202,15 @@ private fun UpdateCheckPreference() {
                 )
             }
         },
-        onClick = {
-            if (!isChecking) {
-                state = CheckUiState.Checking
-                scope.launch {
-                    state = when (UpdateChecker.checkNow(app.updates, currentVersion)) {
-                        is CheckOutcome.Available -> {
-                            context.startActivity(Intent(context, UpdateActivity::class.java))
-                            CheckUiState.Idle
-                        }
-
-                        CheckOutcome.UpToDate -> CheckUiState.UpToDate
-                        CheckOutcome.Failed -> CheckUiState.Failed
-                    }
-                }
-            }
-        }
+        onClick = { if (!isChecking) onCheck() },
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun LanguagePreference() {
-    val context = LocalContext.current
-    val localeManager = remember { context.getSystemService(LocaleManager::class.java) }
-    var currentTag by remember {
-        mutableStateOf(
-            localeManager.applicationLocales.takeIf { !it.isEmpty }?.get(0)?.language
-        )
-    }
+private fun PreferenceLanguageRow(
+    currentTag: String?,
+    onSelect: (String?) -> Unit,
+) {
     var showDialog by remember { mutableStateOf(false) }
 
     val options: List<Pair<String?, String>> = listOf(
@@ -333,12 +246,7 @@ private fun LanguagePreference() {
                                 .selectable(
                                     selected = tag == currentTag,
                                     onClick = {
-                                        localeManager.applicationLocales = if (tag == null) {
-                                            LocaleList.getEmptyLocaleList()
-                                        } else {
-                                            LocaleList(Locale.forLanguageTag(tag))
-                                        }
-                                        currentTag = tag
+                                        onSelect(tag)
                                         showDialog = false
                                     },
                                 )
@@ -391,7 +299,7 @@ private fun PreferencesGroup(title: String? = null, content: @Composable () -> U
 }
 
 @Composable
-private fun NavigationPreference(
+private fun PreferenceNavigationRow(
     @DrawableRes icon: Int,
     title: String,
     subtitle: String? = null,

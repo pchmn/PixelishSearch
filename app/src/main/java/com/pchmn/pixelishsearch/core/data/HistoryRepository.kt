@@ -66,6 +66,13 @@ abstract class HistoryRepository<T : HistoryEntry, K>(
         }
         .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
+    // Indexed view of [items], derived once per emission. Lets callers do
+    // O(1) score lookups on the keystroke path without each one rebuilding
+    // its own `associateBy` map.
+    val byKey: StateFlow<Map<K, T>> = items
+        .map { list -> list.associateBy(keyOf) }
+        .stateIn(scope, SharingStarted.Eagerly, emptyMap())
+
     protected suspend fun upsert(item: T) {
         dataStore.edit { prefs ->
             val current = prefs[key]

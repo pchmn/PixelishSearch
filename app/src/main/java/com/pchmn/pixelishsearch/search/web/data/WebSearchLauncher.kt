@@ -6,7 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
-import com.pchmn.pixelishsearch.core.data.launchAndDismiss
+import com.pchmn.pixelishsearch.core.data.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -23,7 +23,7 @@ fun launchGoogleSearch(context: Context, query: String) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
     }
     try {
-        context.launchAndDismiss(implicitEntrypoint)
+        context.launch(implicitEntrypoint)
         return
     } catch (_: ActivityNotFoundException) {
         // Entrypoint missing on this Google app version, try ACTION_WEB_SEARCH.
@@ -35,7 +35,7 @@ fun launchGoogleSearch(context: Context, query: String) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     try {
-        context.launchAndDismiss(webSearch)
+        context.launch(webSearch)
         return
     } catch (_: ActivityNotFoundException) {
         // Google app unavailable, fall back to the browser.
@@ -44,5 +44,5 @@ fun launchGoogleSearch(context: Context, query: String) {
     val encoded = URLEncoder.encode(query, StandardCharsets.UTF_8.name())
     val fallback = Intent(Intent.ACTION_VIEW, "https://www.google.com/search?q=$encoded".toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.launchAndDismiss(fallback)
+    context.launch(fallback)
 }

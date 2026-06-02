@@ -9,7 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import com.pchmn.pixelishsearch.core.data.launchAndDismiss
+import com.pchmn.pixelishsearch.core.data.launch
 
 /**
  * Launch a quick-toggle tile. Strategy:
@@ -21,7 +21,7 @@ import com.pchmn.pixelishsearch.core.data.launchAndDismiss
  * - Tiles with no public toggle API (wifi, bluetooth, hotspot, cast)
  *   always open the matching Settings panel.
  *
- * In all cases the host Activity is dismissed via [launchAndDismiss].
+ * In all cases the host Activity is dismissed via [launch].
  */
 fun launchSettingsTile(context: Context, tile: SettingsTileId) {
     val handled = when (tile) {
@@ -41,7 +41,7 @@ private fun openSettingsFor(context: Context, tile: SettingsTileId) {
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     tile.highlightKey()?.let(intent::withSettingsHighlight)
     try {
-        context.launchAndDismiss(intent)
+        context.launch(intent)
     } catch (_: ActivityNotFoundException) {
     }
 }

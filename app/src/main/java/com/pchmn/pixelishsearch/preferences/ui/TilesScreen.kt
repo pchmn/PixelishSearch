@@ -25,32 +25,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.R
 import com.pchmn.pixelishsearch.search.settings.data.SettingsTile
 import com.pchmn.pixelishsearch.search.settings.data.settingsTiles
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TilesScreen(onBack: () -> Unit) {
+fun TilesScreen(
+    viewModel: PreferencesViewModel,
+    onBack: () -> Unit,
+) {
     BackHandler(onBack = onBack)
 
-    val context = LocalContext.current
-    val app = context.applicationContext as PixelishSearchApp
-    val scope = rememberCoroutineScope()
-    val disabledIds by app.preferences.disabledTileIds.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val disabledIds = uiState.disabledTileIds
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -112,14 +109,12 @@ fun TilesScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 settingsTiles.forEachIndexed { index, tile ->
-                    TileToggleRow(
+                    PreferenceTileToggleRow(
                         isFirst = index == 0,
                         isLast = index == settingsTiles.lastIndex,
                         tile = tile,
                         checked = tile.id.name !in disabledIds,
-                        onCheckedChange = { enabled ->
-                            scope.launch { app.preferences.setTileEnabled(tile.id, enabled) }
-                        },
+                        onCheckedChange = { enabled -> viewModel.onTileToggled(tile.id, enabled) },
                     )
                 }
             }
@@ -130,14 +125,14 @@ fun TilesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun TileToggleRow(
+private fun PreferenceTileToggleRow(
     tile: SettingsTile,
     checked: Boolean,
     isFirst: Boolean,
     isLast: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    SwitchPreference(
+    PreferenceToggleRow(
         isFirst = isFirst,
         isLast = isLast,
         icon = tile.iconRes,
@@ -145,34 +140,4 @@ private fun TileToggleRow(
         checked = checked,
         onCheckedChange = onCheckedChange,
     )
-//
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clip(RoundedCornerShape(28.dp))
-//            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-//            .clickable { onCheckedChange(!checked) }
-//            .padding(horizontal = 20.dp, vertical = 16.dp),
-//        verticalAlignment = Alignment.CenterVertically,
-//    ) {
-//        Icon(
-//            painter = painterResource(tile.iconRes),
-//            contentDescription = null,
-//            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-//            modifier = Modifier.size(24.dp),
-//        )
-//        Spacer(Modifier.width(20.dp))
-//        Text(
-//            text = stringResource(tile.labelRes),
-//            modifier = Modifier.weight(1f),
-//            fontSize = 17.sp,
-//            fontWeight = FontWeight.Medium,
-//            color = MaterialTheme.colorScheme.onSurface,
-//        )
-//        Spacer(Modifier.width(32.dp))
-//        Switch(
-//            checked = checked,
-//            onCheckedChange = onCheckedChange,
-//        )
-//    }
 }
