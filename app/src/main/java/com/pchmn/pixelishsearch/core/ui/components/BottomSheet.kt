@@ -5,8 +5,11 @@ import android.view.View
 import android.view.ViewParent
 import android.view.Window
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +17,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SheetValue.Hidden
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,6 +46,18 @@ fun BottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        // Compact drag handle: same look as BottomSheetDefaults.DragHandle (32×4dp,
+        // extraLarge, onSurfaceVariant @ 40%) but with 8dp vertical padding instead of
+        // the default 22dp, to tighten the gap above the search field.
+        dragHandle = {
+            Surface(
+                modifier = Modifier.padding(vertical = 16.dp),
+                color = MaterialTheme.colorScheme.onSurface,
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Box(Modifier.size(width = 32.dp, height = 4.dp))
+            }
+        },
         modifier = Modifier
             .statusBarsPadding()
             .fillMaxSize(),
