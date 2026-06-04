@@ -12,8 +12,21 @@ import kotlinx.coroutines.Dispatchers
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            AppIndex.preload(context.applicationContext, CoroutineScope(Dispatchers.Default))
-        }
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+
+        // Skip on the `.benchmark` build only. Macrobenchmark's StartupMode.COLD
+        // re-delivers BOOT_COMPLETED to the freshly-started process on *every*
+        // iteration, so this refresh would run phase-B `enumerate` during the
+        // first frame and contaminate the measured TTID — work a real
+        // tap-to-search cold start never does (BOOT_COMPLETED fires once, at real
+        // boot, in the background). The benchmark applicationId is suffixed
+        // `.benchmark`; production keeps the refresh. See docs/performance-analysis.md.
+        if (context.packageName.endsWith(".benchmark")) return
+
+        // Authoritative re-enumeration (phase B) — there's no first frame to
+        // protect on boot, and we want the freshest list cached for the next
+        // launch. The cold-start path's cheap cache-hydrate (phase A) is
+        // pointless here since nothing is displayed.
+        AppIndex.refresh(context.applicationContext, CoroutineScope(Dispatchers.Default))
     }
 }

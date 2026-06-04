@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
  * Reproducible cold-start measurements.
  *
  * Run with:
- *   ./gradlew :benchmark:connectedBenchmarkAndroidTest
+ *   ./gradlew :benchmark:connectedBenchmarkReleaseAndroidTest
  *
  * Three variants are measured:
  *   - startupNone:        no AOT compilation — pessimistic baseline
@@ -44,6 +44,10 @@ class StartupBenchmark {
         startupMode = StartupMode.COLD,
         compilationMode = mode,
     ) {
+        // Note: COLD mode re-delivers BOOT_COMPLETED to the process every
+        // iteration; BootReceiver self-skips on the `.benchmark` applicationId so
+        // its phase-B refresh doesn't run during the first frame and contaminate
+        // TTID (see BootReceiver / docs/performance-analysis.md).
         pressHome()
         startActivityAndWait()
     }

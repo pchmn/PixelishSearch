@@ -44,10 +44,36 @@ object SettingsPageIndex {
     var iconRequest: AppIconRequest? = null
         private set
 
-    fun preload(scope: CoroutineScope, context: Context) {
+    /**
+     * Phase A — hydrate from the persisted cache (no Settings `.arsc` / RRO
+     * overlay load). Dispatched eagerly from `Application.onCreate` so the
+     * blank-state recent-settings block renders on the first frame. The icon is
+     * re-resolved here too — cheap (`resolveActivity` + `getPackageInfo`, no
+     * label load). Skips the entries if [refresh] already populated the index.
+     */
+    fun preloadFromCache(scope: CoroutineScope, context: Context) {
         scope.launch(Dispatchers.IO) {
-            _entries.value = discover(context)
+            val cached = SettingsPageIndexCacheRepository(context).read()
+            if (cached.isNotEmpty() && _entries.value.isEmpty()) {
+                _entries.value = cached.mapNotNull { it.toEntry() }
+            }
+            if (iconRequest == null) iconRequest = resolveIcon(context)
+        }
+    }
+
+    /**
+     * Phase B — authoritative re-discovery from PackageManager (loads the
+     * Settings `.arsc` + RRO overlay cascade), then rewrite the cache. Deferred
+     * past the first frame from `MainActivity` — its cross-package `getResources`
+     * would otherwise contend with the first-frame composition on ART locks (see
+     * `docs/performance-analysis.md`, ADR-0009).
+     */
+    fun refresh(scope: CoroutineScope, context: Context) {
+        scope.launch(Dispatchers.IO) {
+            val fresh = discover(context)
+            _entries.value = fresh
             iconRequest = resolveIcon(context)
+            SettingsPageIndexCacheRepository(context).write(fresh.map { it.toCached() })
         }
     }
 

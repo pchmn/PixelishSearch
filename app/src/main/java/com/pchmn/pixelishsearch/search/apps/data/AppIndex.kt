@@ -48,71 +48,60 @@ object AppIndex {
     private val _apps = MutableStateFlow<List<AppEntry>>(emptyList())
     val apps: StateFlow<List<AppEntry>> = _apps.asStateFlow()
 
-    private val _isLoaded = MutableStateFlow(false)
-    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
-
-    fun preload(context: Context, scope: CoroutineScope) {
-        if (_isLoaded.value) return
+    /**
+     * Phase A — hydrate the in-memory list from the persisted cache. Cheap: a
+     * single DataStore read, no PackageManager label resolution, so it is safe
+     * on the cold-start critical path (dispatched from `Application.onCreate`).
+     * The UI renders real names + Coil disk-cached icons within ms without ever
+     * touching PackageManager.
+     *
+     * Phase B ([refresh]) is deliberately *not* chained here: resolving each
+     * launcher app's label loads that app's resources, which contends with the
+     * first-frame composition on ART locks (see docs/performance-analysis.md,
+     * ADR-0009). The cold-start path defers it past the first frame from
+     * `MainActivity`; nothing needs it before the user types 2 chars.
+     */
+    fun preloadFromCache(context: Context, scope: CoroutineScope) {
         scope.launch {
-            // Async section: the coroutine may hop dispatcher threads on suspension,
-            // so we use beginAsyncSection (cross-thread safe) instead of trace { }.
-            val preloadCookie = ASYNC_COOKIE_PRELOAD
-            Trace.beginAsyncSection("AppIndex.preload", preloadCookie)
-            try {
-                val cacheRepo = AppIndexCacheRepository(context)
+            // Async section: the coroutine may hop dispatcher threads on
+            // suspension, so we use beginAsyncSection (cross-thread safe).
+            val readCookie = ASYNC_COOKIE_READ_CACHE
+            Trace.beginAsyncSection("AppIndex.phaseA.readCache", readCookie)
+            val cached = try { AppIndexCacheRepository(context).read() }
+                finally { Trace.endAsyncSection("AppIndex.phaseA.readCache", readCookie) }
 
-                // Phase A — hydrate from the persisted cache so the UI can render
-                // the AppRow with real names + Coil disk-cached icons within ms,
-                // without waiting on PackageManager.
-                val readCookie = ASYNC_COOKIE_READ_CACHE
-                Trace.beginAsyncSection("AppIndex.phaseA.readCache", readCookie)
-                val cached = try { cacheRepo.read() }
-                    finally { Trace.endAsyncSection("AppIndex.phaseA.readCache", readCookie) }
-
-                if (cached.isNotEmpty() && _apps.value.isEmpty()) {
-                    trace("AppIndex.phaseA.hydrate") {
-                        _apps.value = cached.map { it.toAppEntry() }
-                    }
+            if (cached.isNotEmpty() && _apps.value.isEmpty()) {
+                trace("AppIndex.phaseA.hydrate") {
+                    _apps.value = cached.map { it.toAppEntry() }
                 }
-
-                // Phase B — authoritative enumeration. Picks up newly installed /
-                // uninstalled / renamed apps. Cheap now that icons are loaded by
-                // Coil on demand.
-                val fresh = trace("AppIndex.phaseB.enumerate") { enumerate(context) }
-                val freshCached = fresh.map { it.toCached() }
-                if (freshCached != cached) {
-                    _apps.value = fresh
-                    val writeCookie = ASYNC_COOKIE_WRITE_CACHE
-                    Trace.beginAsyncSection("AppIndex.phaseB.writeCache", writeCookie)
-                    try { cacheRepo.write(freshCached) }
-                    finally { Trace.endAsyncSection("AppIndex.phaseB.writeCache", writeCookie) }
-                }
-
-                _isLoaded.value = true
-            } finally {
-                Trace.endAsyncSection("AppIndex.preload", preloadCookie)
             }
         }
     }
 
-    private const val ASYNC_COOKIE_PRELOAD = 1
-    private const val ASYNC_COOKIE_READ_CACHE = 2
-    private const val ASYNC_COOKIE_WRITE_CACHE = 3
+    private const val ASYNC_COOKIE_READ_CACHE = 1
+    private const val ASYNC_COOKIE_WRITE_CACHE = 2
 
     /**
-     * Re-enumerates from PackageManager and persists if the list changed.
-     * Triggered by [PackageReceiver] when an app is installed / removed /
-     * updated, so the next user tap reflects the new state without waiting
-     * for the process to be restarted.
+     * Phase B — authoritative re-enumeration from PackageManager. Resolving each
+     * launcher app's label loads its resources, so this is the expensive,
+     * contention-prone half kept *off* the cold-start critical path. Persists
+     * only if the list changed (and updates the in-memory list to match).
+     * Triggered after the first frame from `MainActivity` on cold start, by
+     * [PackageReceiver] on app install / remove / update, and by [BootReceiver]
+     * on boot — so the next user tap reflects the current state without waiting
+     * for the process to restart.
      */
     fun refresh(context: Context, scope: CoroutineScope) {
         scope.launch {
             val cacheRepo = AppIndexCacheRepository(context)
-            val fresh = enumerate(context)
+            val fresh = trace("AppIndex.phaseB.enumerate") { enumerate(context) }
             val freshCached = fresh.map { it.toCached() }
             if (freshCached != cacheRepo.read()) {
                 _apps.value = fresh
-                cacheRepo.write(freshCached)
+                val writeCookie = ASYNC_COOKIE_WRITE_CACHE
+                Trace.beginAsyncSection("AppIndex.phaseB.writeCache", writeCookie)
+                try { cacheRepo.write(freshCached) }
+                finally { Trace.endAsyncSection("AppIndex.phaseB.writeCache", writeCookie) }
             }
         }
     }

@@ -5,6 +5,7 @@ import androidx.tracing.trace
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import com.pchmn.pixelishsearch.core.ui.theme.warmUpGoogleSans
 import com.pchmn.pixelishsearch.preferences.data.PreferencesRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppHistoryRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
@@ -18,9 +19,9 @@ import com.pchmn.pixelishsearch.search.settings.data.FlashlightController
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageHistoryRepository
 import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
 import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutHistoryRepository
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIndex
 import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIconFetcher
 import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIconKeyer
-import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIndex
 import com.pchmn.pixelishsearch.search.web.data.WebSearchHistoryRepository
 import com.pchmn.pixelishsearch.search.web.data.WebSuggestionsRepository
 import com.pchmn.pixelishsearch.update.data.UpdateRepository
@@ -72,9 +73,20 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             updates = UpdateRepository(this, appScope)
         }
 
-        // Async preload of the index
-        trace("AppIndex.preload.dispatch") {
-            AppIndex.preload(this@PixelishSearchApp, appScope)
+        // Phase A only — hydrate the three indexes from their persisted disk
+        // caches (cheap DataStore reads, no PackageManager / getResources). This
+        // feeds both the typed app results AND the blank-state recents block
+        // (recent apps / shortcuts / settings pages) on the first frame. The
+        // expensive phase B (re-enumeration / re-parse, which loads other
+        // packages' resources) is deferred to MainActivity — see the NOTE below.
+        trace("AppIndex.preloadFromCache.dispatch") {
+            AppIndex.preloadFromCache(this@PixelishSearchApp, appScope)
+        }
+        trace("ShortcutIndex.preloadFromCache.dispatch") {
+            ShortcutIndex.preloadFromCache(this@PixelishSearchApp, appScope)
+        }
+        trace("SettingsPageIndex.preloadFromCache.dispatch") {
+            SettingsPageIndex.preloadFromCache(appScope, this@PixelishSearchApp)
         }
 
         // Warm up the TLS connection to Google Suggest so the first real call
@@ -101,19 +113,23 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
             FlashlightController.warmUp(this, appScope)
         }
 
-        // Resolve the curated list of Settings.ACTION_* against PackageManager
-        // once, so search queries can match against localized labels without
-        // paying PM cost on the typing path.
-        trace("SettingsPageIndex.preload.dispatch") {
-            SettingsPageIndex.preload(appScope, this@PixelishSearchApp)
+        // Pre-resolve the GoogleSans device font so the first text layout
+        // doesn't pay the lookup during the heavy post-first-frame composition
+        // (which delays WINDOW_FOCUS_CHANGED → the IME). See ADR-0009 notes /
+        // docs/performance-analysis.md.
+        trace("warmUpGoogleSans.dispatch") {
+            warmUpGoogleSans(appScope, this@PixelishSearchApp)
         }
 
-        // Parse every launcher app's static shortcuts into an in-memory index.
-        // Off the first-frame path (shortcuts only render on a non-blank query),
-        // so it's a plain async preload with no disk cache.
-        trace("ShortcutIndex.preload.dispatch") {
-            ShortcutIndex.preload(this@PixelishSearchApp, appScope)
-        }
+        // NOTE: the phase-B refreshes of all three indexes (AppIndex.refresh,
+        // ShortcutIndex.refresh, SettingsPageIndex.refresh) are deliberately NOT
+        // dispatched here. Their cross-package getResources (every app's
+        // resources via loadLabel, the Settings .arsc + RRO overlay cascade,
+        // each shortcut-declaring app's resources) contends with the first-frame
+        // composition on ART locks (see docs/performance-analysis.md, ADR-0009).
+        // The phase-A cache hydrates above already feed the first frame, so the
+        // authoritative re-scan can wait: MainActivity kicks the refreshes off
+        // (on appScope) once the first content frame is actually drawn.
     }
 
     /**

@@ -22,7 +22,11 @@ Five layers contribute, in order of execution:
 4. **`PackageReceiver`** refreshes the index on install / uninstall / update so changes appear at
    the next tap without restarting the process.
 5. **`MainActivity`** uses `Theme.PixelishSearch.Transparent` + `FLAG_BLUR_BEHIND` so the search
-   sheet renders directly over the launcher, no app transition.
+   sheet renders directly over the launcher, no app transition. It also defers
+   `SettingsPageIndex.preload` + `ShortcutIndex.preload` (cross-package `getResources` that would
+   otherwise contend with the first-frame composition) until *after* the first frame, via a double
+   `Choreographer.postFrameCallback` — see ADR-0009 and
+   [`performance-analysis.md`](performance-analysis.md).
 
 ## First-frame tuning
 
@@ -47,6 +51,62 @@ The `:benchmark` module (root-level, next to `:app`) generates a baseline profil
 into the release APK and applied at install time by `androidx.profileinstaller`. This precompiles
 the startup-critical Compose / M3 runtime methods in AOT, cutting ~10-15ms off `TotalTime`.
 
+### Which command targets which module — and why
+
+The `androidx.baselineprofile` plugin gives the two modules distinct roles, so the commands look
+asymmetric until you map each one to where its responsibility lives:
+
+- **`:app`** is the *consumer* (`com.android.application` + the plugin, which declares
+  `"baselineProfile"(project(":benchmark"))`). It owns the APK, the build variants, and the
+  generated profile that gets packaged into release builds.
+- **`:benchmark`** is the *producer* (`com.android.test` + the plugin, with `targetProjectPath =
+  ":app"`). It owns the test code — the `BaselineProfileGenerator` and the `StartupBenchmark`.
+
+| Command | Module | Why |
+|---|---|---|
+| `generateBaselineProfile` | `:app` | The profile is *consumed / versioned / packaged* by the app. The task drives `:benchmark` to run the generator under the hood, then copies the result back into `app/src/release/generated/baselineProfiles/`. |
+| `installBenchmarkRelease` | `:app` | `benchmarkRelease` is a build **variant of the app**; installing it installs an APK. |
+| `connectedBenchmarkReleaseAndroidTest` | `:benchmark` | The macrobenchmark **test code** (`StartupBenchmark`) lives in the test module; running connected instrumentation tests is a `:benchmark` task. Its `benchmarkRelease` test variant pairs with the app's via `targetProjectPath = ":app"`. |
+
+Mental rule: **`:app` = the APK and its profile** (what you produce / install), **`:benchmark` = the
+tests** (what measures). The first two commands manipulate the app; the third runs the tests.
+
+### End-to-end workflow (recommended order)
+
+When you've touched the cold-start path and want trustworthy before/after numbers, run the commands
+in **this order**. Each step notes when it can be skipped.
+
+```bash
+# 1. Regenerate the profile (device connected, screen on, USB debugging on).
+#    Skip if the startup path didn't change — see "Regenerate the profile" below.
+./gradlew :app:generateBaselineProfile
+
+# 2. Build + install the benchmark variant. This bakes the step-1 profile into the
+#    measured APK and settles the .benchmark package on benchmarkRelease, ending the
+#    variant-switch churn left by step 1 (which installed nonMinifiedRelease).
+./gradlew :app:installBenchmarkRelease
+
+# 3. Prime the caches: open the app and use it a bit so AppIndex / Coil / DataStore
+#    disk caches populate. Do this AFTER step 2 — switching variants resets the
+#    package's state, so priming earlier would be wiped.
+
+# 4. Measure. Reinstalls benchmarkRelease only if app code changed since step 2
+#    (it didn't), so your primed caches survive.
+./gradlew :benchmark:connectedBenchmarkReleaseAndroidTest
+```
+
+Why the order matters: step 4's `startupBaselineProfile` benchmark applies the profile that's
+**baked into the installed APK**, so a freshly regenerated profile (step 1) is only measured if you
+rebuild/reinstall the variant (step 2) before measuring. And because step 1 installs a *different*
+build type on the same `.benchmark` applicationId, priming (step 3) must come after step 2 or it
+gets reset by the variant switch.
+
+Shortcuts:
+
+- **Re-measure an unchanged profile** → skip step 1; run 2 → 3 → 4.
+- **Quick unprimed sanity check** → run step 4 alone (it builds + installs `benchmarkRelease`
+  itself); numbers will be pessimistic until caches warm.
+
 ### The `benchmarkRelease` / `nonMinifiedRelease` variants
 
 `connectedBenchmarkReleaseAndroidTest` installs the `benchmarkRelease` variant on the device;
@@ -62,20 +122,16 @@ block) to:
   back to its debug key.
 - **`app_name=PixelishBenchmark`** — distinct launcher label.
 
-For realistic warm-cache cold-start numbers, install the benchmark variant once and use it a
-bit before running the benchmark so its caches populate:
-
-```bash
-./gradlew :app:installBenchmarkRelease
-# use the app a bit so AppIndex / Coil / DataStore caches populate
-./gradlew :benchmark:connectedBenchmarkReleaseAndroidTest
-```
+For realistic warm-cache cold-start numbers, install the benchmark variant once and use it a bit
+before running the benchmark so its caches populate — that's steps 2-3 of the
+[end-to-end workflow](#end-to-end-workflow-recommended-order) above.
 
 Note that `generateBaselineProfile` and `connectedBenchmarkReleaseAndroidTest` share the same
 `.benchmark` applicationId but target different build types (`nonMinifiedRelease` vs
 `benchmarkRelease`). Running one after the other triggers a variant-switch reinstall on the
 benchmark package — the release install is unaffected, but the benchmark variant's accumulated
-state resets. Re-prime it by using the app for a moment before measuring again.
+state resets. This is exactly why the workflow above puts priming *after*
+`installBenchmarkRelease`: re-prime by using the app for a moment before measuring again.
 
 ### Regenerate the profile
 

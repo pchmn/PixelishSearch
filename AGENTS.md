@@ -85,11 +85,16 @@ pixelishsearch/
 
 - **Eager state in `PixelishSearchApp.onCreate`** — DataStore-backed repos use
   `.stateIn(appScope, Eagerly, ...)` so the search VM doesn't pay a decode cost when it subscribes;
-  expensive one-shots (`AppIndex.preload`, repository `warmUp`s for the contacts ContentProvider
-  binder and Google Suggest TLS) run async on `appScope`. Coil is wired up here too.
-- **App index** hydrates from a persisted cache (no PM call needed) then refreshes from
-  `PackageManager` in the background. `BootReceiver` and `PackageReceiver` keep it fresh across
-  reboots and install / remove / replace.
+  expensive one-shots (the three indexes' `preloadFromCache` phase A, repository `warmUp`s for the
+  contacts ContentProvider binder and Google Suggest TLS, and `warmUpGoogleSans` to pre-resolve the
+  device font) run async on `appScope`. Coil is wired up here too.
+- **Feature indexes (`AppIndex`, `ShortcutIndex`, `SettingsPageIndex`) are two-phase.** Phase A
+  (`preloadFromCache`) hydrates from a persisted DataStore cache (no PackageManager / `getResources`)
+  — this feeds both typed results and the blank-state recents on the first frame. Phase B
+  (`refresh`) re-resolves from `PackageManager` (the part that loads *other* packages' resources) and
+  rewrites the cache; it's deferred past the first frame (see preload/warmup convention below).
+  `BootReceiver` and `PackageReceiver` also call `refresh` to keep them fresh across reboots and
+  install / remove / replace.
 - **`MainActivity`** uses `Theme.PixelishSearch.Transparent` + `FLAG_BLUR_BEHIND`, declared
   `singleTask + excludeFromRecents` so re-tap reuses the instance (`onNewIntent` resets the query).
 - **First-frame tuning** — manifest sets `windowSoftInputMode="stateAlwaysVisible|adjustPan"` (IME
@@ -117,8 +122,17 @@ pixelishsearch/
   `<feature>/data/<Feature>Launcher.kt` and always call through it.
 - **Preload / warmup pattern.** Expensive one-shot startup work exposes
   `fun preload/warmUp(scope: CoroutineScope, ...)` and encapsulates its own `launch(Dispatchers.X)`.
-  Callers in `PixelishSearchApp.onCreate` line up symmetrically. `UpdateChecker.check` uses the same
-  shape but runs from `MainActivity` instead — `Application.onCreate` may not re-run for days.
+  Callers in `PixelishSearchApp.onCreate` line up symmetrically. Two exceptions run from
+  `MainActivity` instead: `UpdateChecker.check` (because `Application.onCreate` may not re-run for
+  days), and the three indexes' **phase-B `refresh`** (`AppIndex.refresh`, `ShortcutIndex.refresh`,
+  `SettingsPageIndex.refresh`) — the cross-package `getResources` that would otherwise contend with
+  the first-frame composition on ART locks. `MainActivity` kicks them off (still on `appScope`) only
+  once the first *content* frame is actually drawn, via a `ViewTreeObserver.OnDrawListener` +
+  `decorView.post` (a `Choreographer` vsync count fired off-by-one — see ADR-0009), gated on
+  `savedInstanceState == null` so recreation doesn't re-scan. The cheap phase-A `preloadFromCache`
+  (cache hydrate, no `getResources`) stays eager in `Application.onCreate` and feeds the first frame
+  (typed results + blank-state recents). See ADR-0009 and
+  [`docs/performance-analysis.md`](docs/performance-analysis.md).
 - **No DI framework.** Singletons are Kotlin `object`s; stateful repos are classes constructed in
   `PixelishSearchApp.onCreate` and exposed as `lateinit var` properties.
 - **Hot DataStore flows.** `HistoryRepository<T>.items` is a `StateFlow` started eagerly so the
