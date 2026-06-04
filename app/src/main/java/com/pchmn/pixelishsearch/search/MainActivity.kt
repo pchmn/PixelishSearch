@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.graphics.Color
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -22,6 +23,9 @@ import androidx.core.content.ContextCompat
 import androidx.tracing.trace
 import com.pchmn.pixelishsearch.PixelishSearchApp
 import com.pchmn.pixelishsearch.core.ui.theme.PixelishTheme
+import com.pchmn.pixelishsearch.search.apps.data.AppIndex
+import com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex
+import com.pchmn.pixelishsearch.search.shortcuts.data.ShortcutIndex
 import com.pchmn.pixelishsearch.search.ui.SearchScreen
 import com.pchmn.pixelishsearch.search.ui.SearchViewModel
 import com.pchmn.pixelishsearch.update.data.UpdateChecker
@@ -91,7 +95,54 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // Only on first creation: on activity recreation the singleton indexes
+        // are already populated in this process, so re-running the expensive
+        // phase-B refresh (which re-loads every app's resources) is wasted work.
+        if (savedInstanceState == null) preloadDeferredIndexesAfterFirstFrame()
         triggerUpdateCheck()
+    }
+
+    /**
+     * Kick off the **phase-B refreshes** that re-resolve *other* packages'
+     * labels / resources ([AppIndex], [SettingsPageIndex], [ShortcutIndex]) and
+     * rewrite their disk caches — but only once the first content frame is
+     * actually on screen. Dispatched from `Application.onCreate` this
+     * cross-package `getResources` runs concurrently with the first-frame
+     * composition, contending on ART locks and inflating TTID (see
+     * `docs/performance-analysis.md`, ADR-0009). The first frame is already
+     * served by the eager phase-A cache hydrates (typed results *and* the
+     * blank-state recents block), so the authoritative re-scan can wait —
+     * deferring it is free.
+     *
+     * We trigger off the first real [ViewTreeObserver.OnDrawListener] callback —
+     * the frame that *actually draws* the Compose content — not a fixed number
+     * of `Choreographer` vsync ticks. The transparent window emits an empty
+     * frame first, so a vsync count is off-by-one and lands this work *inside*
+     * the heavy composition frame (the original regression). Keying off the
+     * real draw is robust to however many empty frames precede the content.
+     *
+     * From inside that first draw we [android.view.View.post] the work so it
+     * runs *after* the draw frame completes, not at its start; the listener is
+     * removed in the same post (it can't be removed mid-draw). The work runs on
+     * `appScope` so it outlives this Activity. The caller gates this on
+     * `savedInstanceState == null`, so recreation doesn't re-run the refreshes.
+     */
+    private fun preloadDeferredIndexesAfterFirstFrame() {
+        val decor = window.decorView
+        decor.viewTreeObserver.addOnDrawListener(object : ViewTreeObserver.OnDrawListener {
+            private var fired = false
+            override fun onDraw() {
+                if (fired) return
+                fired = true
+                decor.post {
+                    decor.viewTreeObserver.removeOnDrawListener(this)
+                    val app = application as PixelishSearchApp
+                    AppIndex.refresh(app, app.backgroundScope)
+                    SettingsPageIndex.refresh(app.backgroundScope, app)
+                    ShortcutIndex.refresh(app, app.backgroundScope)
+                }
+            }
+        })
     }
 
     /**

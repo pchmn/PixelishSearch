@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.content.res.XmlResourceParser
 import android.net.Uri
+import com.pchmn.pixelishsearch.search.apps.data.AppIndex
 import com.pchmn.pixelishsearch.search.apps.data.normalizeForSearch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +46,16 @@ data class ShortcutEntry(
  * In-memory index of *static* app shortcuts, built by parsing the
  * `android.app.shortcuts` meta-data XML of every launcher activity — no
  * default-launcher role required. Mirrors [SettingsPageIndex][com.pchmn.pixelishsearch.search.settings.data.SettingsPageIndex]:
- * preloaded async on app start, refreshed by `PackageReceiver`, no disk cache
- * (shortcuts only ever render on a non-blank query, never at first frame).
+ *
+ *  - **Phase A — [preloadFromCache]:** hydrate from a persisted disk cache
+ *    ([ShortcutIndexCacheRepository]), no PackageManager / `getResources`.
+ *    Dispatched eagerly from `Application.onCreate` so the blank-state
+ *    recent-shortcuts block renders on the first frame.
+ *  - **Phase B — [refresh]:** re-parse every launcher app's `shortcuts.xml`
+ *    (loads each declaring app's `.arsc`) and rewrite the cache. Deferred past
+ *    the first frame from `MainActivity` (its cross-package `getResources` would
+ *    otherwise contend with the first-frame composition on ART locks — see
+ *    `docs/performance-analysis.md`, ADR-0009); also triggered by `PackageReceiver`.
  *
  * Only launchable shortcuts are kept: we fire the parsed intent ourselves (we
  * can't use `LauncherApps.startShortcut` without the launcher role), so a target
@@ -62,13 +71,31 @@ object ShortcutIndex {
     private val _entries = MutableStateFlow<List<ShortcutEntry>>(emptyList())
     val entries: StateFlow<List<ShortcutEntry>> = _entries.asStateFlow()
 
-    fun preload(context: Context, scope: CoroutineScope) {
-        scope.launch(Dispatchers.IO) { _entries.value = discover(context) }
+    /**
+     * Phase A — hydrate from the persisted cache (no PackageManager). Cheap
+     * enough for the cold-start critical path; feeds the blank-state recents
+     * immediately. Skips if [refresh] already populated the index.
+     */
+    fun preloadFromCache(context: Context, scope: CoroutineScope) {
+        scope.launch(Dispatchers.IO) {
+            val cached = ShortcutIndexCacheRepository(context).read()
+            if (cached.isNotEmpty() && _entries.value.isEmpty()) {
+                _entries.value = cached.mapNotNull { it.toShortcutEntry() }
+            }
+        }
     }
 
-    /** Re-parse from PackageManager. Triggered by `PackageReceiver`. */
+    /**
+     * Phase B — authoritative re-parse from PackageManager, then rewrite the
+     * cache. Deferred past the first frame from `MainActivity`; also triggered
+     * by `PackageReceiver`.
+     */
     fun refresh(context: Context, scope: CoroutineScope) {
-        scope.launch(Dispatchers.IO) { _entries.value = discover(context) }
+        scope.launch(Dispatchers.IO) {
+            val fresh = discover(context)
+            _entries.value = fresh
+            ShortcutIndexCacheRepository(context).write(fresh.map { it.toCached() })
+        }
     }
 
     fun find(key: ShortcutKey): ShortcutEntry? =
@@ -112,6 +139,11 @@ object ShortcutIndex {
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val activities = pm.queryIntentActivities(intent, PackageManager.GET_META_DATA)
 
+        // Reuse the labels AppIndex already resolved (same launcher-activity
+        // `loadLabel` source) to skip a second per-app resource load; fall back
+        // to `loadLabel` for anything missing (e.g. AppIndex not yet hydrated).
+        val appLabels = AppIndex.apps.value.associate { it.packageName to it.label }
+
         val out = ArrayList<ShortcutEntry>()
         val seen = HashSet<ShortcutKey>()
         val resByPkg = HashMap<String, Resources?>()
@@ -131,7 +163,9 @@ object ShortcutIndex {
                 parser.close()
                 continue
             }
-            val appLabel = labelByPkg.getOrPut(pkg) { info.loadLabel(pm).toString() }
+            val appLabel = labelByPkg.getOrPut(pkg) {
+                appLabels[pkg] ?: info.loadLabel(pm).toString()
+            }
             val lastUpdate = updateByPkg.getOrPut(pkg) {
                 runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L)
             }

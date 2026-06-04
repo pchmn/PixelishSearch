@@ -13,7 +13,11 @@ import kotlinx.coroutines.Dispatchers
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            AppIndex.preload(context.applicationContext, CoroutineScope(Dispatchers.Default))
+            // Authoritative re-enumeration (phase B) — there's no first frame to
+            // protect on boot, and we want the freshest list cached for the next
+            // launch. The cold-start path's cheap cache-hydrate (phase A) is
+            // pointless here since nothing is displayed.
+            AppIndex.refresh(context.applicationContext, CoroutineScope(Dispatchers.Default))
         }
     }
 }

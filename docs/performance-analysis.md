@@ -1,9 +1,36 @@
 # Cold-start analysis — `getResources` bottleneck
 
-> **Status:** investigation done, fix **not yet implemented**. Pick an option below and
-> implement, then re-measure.
-> **Source run:** `benchmarkRelease` on Pixel 9 (tokay), 2026-06-02 22:12–22:15, freshly
-> regenerated baseline profile (commit `3ddc72f`). Median iteration analysed:
+> **Status:** investigation done. **Option 1 implemented, then corrected after re-measurement**
+> (branch `chore/improve-perf`; see ADR-0009).
+> - *First attempt* deferred `SettingsPageIndex` + `ShortcutIndex` preloads from `MainActivity` via
+>   a **double `Choreographer.postFrameCallback`**. Re-measured 2026-06-04 (Pixel 9) → **no gain**:
+>   `startupBaselineProfile` median 193 ms ≈ `startupNone` 195 ms, and the trace still showed the
+>   full `getResources` cascade at t ≈ 142–197 ms. Diagnosis: the transparent window draws an empty
+>   frame first (vsync 1 ≈ 114 ms), so the *content* draws on vsync 2 (≈ 155–197 ms) and the inner
+>   frame callback fired at the **start** of that very frame — inside the composition, not past it.
+>   Plus `AppIndex` phase B (`loadLabel` per app) was never deferred and carried its own share.
+> - *Correction* — trigger off the first real `ViewTreeObserver.OnDrawListener` (the content draw)
+>   then `decorView.post` so the work lands *after* the frame; defer `AppIndex.refresh` (phase B) too.
+> - *Second re-measurement (2026-06-04, 10:40 — `Pixel 9 - 16`) exposed two things, both now fixed:*
+>   1. **Benchmark contamination (systematic, not a one-off reboot).** Every iteration of every
+>      variant delivers `BOOT_COMPLETED` to the freshly-started process — `StartupMode.COLD`
+>      force-stops + relaunches, and the system re-delivers it each time → `BootReceiver.refresh`
+>      runs phase-B `enumerate` at t≈100–120 ms, *in* the first frame. A real tap-to-search cold
+>      start never does this (BOOT_COMPLETED fires once at boot, in the background). It inflated
+>      **all three** variants — not a code regression. **Fix: `StartupBenchmark`'s `setupBlock` now
+>      `pm disable-user`s `BootReceiver`** so the measured TTID reflects the real launch path. (The
+>      deferred `MainActivity` refresh itself correctly lands *after* TTID.)
+>   2. **A real recents regression.** The blank-state recents block *does* consume the indexes at
+>      the first frame (it stale-filters recent shortcuts/settings against the live index). Deferring
+>      `ShortcutIndex` / `SettingsPageIndex`, which had **no disk cache**, made recently-used
+>      shortcuts/settings pop in late. **Fix = Option 2 (disk cache):** both indexes now persist
+>      their entries (`*IndexCacheRepository`) and hydrate (phase A) before the first frame; the
+>      deferred phase B only refreshes. See ADR-0009 / ADR-0008.
+> - Option 3 (`localeFilters`) still not taken. **A clean (uncontaminated) re-measurement of the
+>   final state is still pending** (see "How to re-measure").
+>
+> **Source run (the analysed trace below):** `benchmarkRelease` on Pixel 9 (tokay), 2026-06-02
+> 22:12–22:15, freshly regenerated baseline profile (commit `3ddc72f`). Median iteration analysed:
 > `StartupBenchmark_startupBaselineProfile_iter005`.
 > Companion doc: [`PERFORMANCE.md`](PERFORMANCE.md) (the how-to). This file is the *findings*.
 
@@ -112,42 +139,55 @@ reason to run *before* the first frame.
 
 ## Improvement options
 
-### Option 1 — Defer past the first frame (recommended)
+### Option 1 — Defer past the first frame (recommended) — ✅ implemented (ADR-0009)
 
-Move `ShortcutIndex.preload` + `SettingsPageIndex.preload` **out of `Application.onCreate`** and
-trigger them from `MainActivity` once the first frame is drawn. Also reuse `AppIndex`'s
-already-resolved labels inside `ShortcutIndex` instead of calling `loadLabel` again (drops one
-resource-loading vector). Optionally defer `AppIndex` phase-B refresh too (phase-A cache already
-feeds the UI — see caveat below).
+Move all three `getResources` vectors **out of `Application.onCreate`** and trigger them from
+`MainActivity` once the first *content* frame is drawn: `ShortcutIndex.preload`,
+`SettingsPageIndex.preload`, **and `AppIndex.refresh` (phase B)**. `AppIndex` keeps its cheap phase A
+(cache hydrate, no `loadLabel`) eager from `Application.onCreate`, so the typed UI still has the app
+list immediately. `ShortcutIndex` also reuses `AppIndex`'s already-resolved labels instead of calling
+`loadLabel` again (drops one resource-loading vector).
 
 - **Targets exactly the contention** shown in the trace. Minimal diff. Low risk.
-- Readiness is safe: first frame ≈ 161 ms; typing 2 chars takes >300 ms, so kicking the preloads
-  off right after the first frame leaves ample lead time.
-- **Deferral mechanism** (pick one): `MainActivity.reportFullyDrawn()`, or
-  `window.decorView.post { }` after `setContent`, or `Choreographer.postFrameCallback`, or a
-  `LifecycleEventObserver` firing on `ON_RESUMED`. Keep ownership on `appScope`
-  (`PixelishSearchApp.backgroundScope`) — the indexes are `object`s, just pass the scope.
-- **Caveat (`AppIndex` phase B):** phase A (persisted cache) hydrates the app list cheaply and *is*
-  effectively needed the moment the user types; phase B only *refreshes* via `loadLabel`. Deferring
-  phase B is safe-ish but more delicate than the other two — treat as a separate, measured step.
+- Readiness is safe: first frame ≈ 161–197 ms; typing 2 chars takes >300 ms, so kicking the work off
+  right after the first frame leaves ample lead time.
+- **Deferral mechanism — use the first *content draw*, not a vsync count.** The original double
+  `Choreographer.postFrameCallback` was measured to fire too early: the transparent window draws an
+  empty frame first (vsync 1), so the inner callback lands at the *start* of the content frame
+  (vsync 2), inside the composition. The robust signal is `ViewTreeObserver.OnDrawListener` — act on
+  its first `onDraw()` (the real content draw) and from there `decorView.post {}` so the work runs
+  *after* the frame completes. (`reportFullyDrawn()` / a `LifecycleEventObserver` on `ON_RESUMED` are
+  even earlier and were rejected.) Keep ownership on `appScope` (`PixelishSearchApp.backgroundScope`)
+  — the indexes are `object`s, just pass the scope.
+- **Caveat (`AppIndex` phase B), now accepted:** phase A (persisted cache) hydrates the app list
+  cheaply and feeds the typed UI; phase B only *refreshes* via `loadLabel`. Deferring phase B means
+  the **first-ever launch** (empty cache) has no app results until phase B finishes (a few hundred ms
+  after the first frame, still ahead of the user typing 2 chars). If that ever proves perceptible,
+  run phase B eagerly *only* on an empty cache.
 - **Convention note:** AGENTS.md documents preloads/warmups lining up symmetrically in
-  `Application.onCreate`. Moving two of them to a post-first-frame trigger departs from that — update
-  AGENTS.md / PERFORMANCE.md (and consider an ADR) when implementing.
+  `Application.onCreate`. Moving these to a post-first-frame trigger departs from that — AGENTS.md,
+  this doc, and ADR-0009 are updated to match.
 
-### Option 2 — Defer + disk cache
+### Option 2 — Defer + disk cache — ✅ implemented (ADR-0009/0008)
 
 Option 1 **plus** persist the resolved entries of `ShortcutIndex` and `SettingsPageIndex` to disk,
 mirroring `AppIndex` phase A (`AppIndexCacheRepository`). Cold start then hydrates from cache
 instantly and performs **zero `getResourcesForApplication`** on the cold path; the (deferred)
 re-enumeration only runs in the background and rewrites the cache when it changes.
 
+This turned out to be **not optional**: deferring these two indexes without a cache regressed the
+blank-state recents (recent shortcuts/settings stale-filter against the live index, which was empty
+until the deferred re-parse — visible pop-in). So the cache is what *lets* the deferral keep recents
+intact.
+
 - Biggest win on warm cold-starts; also cuts total CPU/I/O every launch (not just moves it).
-- More code: serialize `Intent` (`Intent.toUri` / `parseUri`), `ComponentName`
-  (`flattenToString`), `iconResId` (int), `lastUpdateTime` (gates invalidation). `SettingsPageEntry`
-  (`label` + `ComponentName`) is trivial; `ShortcutEntry` (built `Intent`) is the work.
-- Invalidation already has a hook: `PackageReceiver` triggers `refresh` on install/remove/update.
-- These indexes are currently documented as "no disk cache" — that decision would change; update
-  their KDoc + ADR-0008 (shortcuts).
+- Implemented as `ShortcutIndexCacheRepository` + `SettingsPageIndexCacheRepository` (DataStore JSON,
+  same shape as `AppIndexCacheRepository`): `ShortcutEntry` serializes its built `Intent` via
+  `Intent.toUri` / `parseUri` (+ `iconResId`, `lastUpdateTime`); `SettingsPageEntry` flattens its
+  `ComponentName`. Coil still resolves icons on demand from `iconResId` / `packageName`.
+- Invalidation hook: `PackageReceiver` triggers `ShortcutIndex.refresh`; every cold start's deferred
+  `refresh` also self-heals the caches.
+- Reversed the "no disk cache" note in `ShortcutIndex`'s KDoc + ADR-0008.
 
 ### Option 3 — Defer + disk cache + `localeFilters`
 
@@ -162,11 +202,42 @@ bloat **our** `resources.arsc`.
 
 ## How to re-measure after a fix
 
+First decide whether your fix touched the **cold-start path** (anything running before/during the
+first frame: `PixelishSearchApp.onCreate`, `MainActivity`, `SearchScreen` composition, a Compose/M3
+bump). That decides whether the baseline profile must be regenerated.
+
+**If the cold-start path changed** — regenerate so `startupBaselineProfile` measures what ships:
+
 ```bash
-./gradlew :app:installBenchmarkRelease     # install benchmark variant
+./gradlew :app:generateBaselineProfile     # installs nonMinifiedRelease, rewrites
+                                           # app/src/release/generated/baselineProfiles/*.txt
+```
+
+**Then measure (always):**
+
+```bash
+./gradlew :app:installBenchmarkRelease     # installs benchmarkRelease
 # use the app a bit so AppIndex / Coil / DataStore caches populate (warm cold-start)
 ./gradlew :benchmark:connectedBenchmarkReleaseAndroidTest
 ```
+
+Three gotchas:
+
+- **`BootReceiver` is disabled during the benchmark — keep it that way.** `StartupMode.COLD`
+  re-delivers `BOOT_COMPLETED` to the process every iteration, which fires `BootReceiver.refresh` →
+  phase-B `enumerate` *during* the first frame (a real tap-to-search never does this). It inflates
+  TTID uniformly across all variants. `StartupBenchmark`'s `setupBlock` `pm disable-user`s the
+  receiver to neutralise it; if you measure another way, do the same (and check a trace for
+  `broadcastReceiveComp: …BOOT_COMPLETED` on the app process if numbers look uniformly slow). Also
+  prefer a settled, cool device — background load still adds noise.
+- `connectedBenchmarkReleaseAndroidTest` **consumes** the committed profile, it does not generate
+  one. `StartupBenchmark` uses `CompilationMode.Partial()` (= `UseIfAvailable`): with no profile
+  packaged, `startupBaselineProfile` silently falls back to no-AOT and reads identical to
+  `startupNone` — no error, just no gain.
+- `generateBaselineProfile` (`nonMinifiedRelease`) and `connectedBenchmarkReleaseAndroidTest`
+  (`benchmarkRelease`) share the `.benchmark` applicationId but differ in build type. Running
+  measure after generate triggers a variant-switch reinstall that **resets the benchmark package's
+  caches** — so warm the app *after* `installBenchmarkRelease`, not before.
 
 Compare `startupNone` vs `startupBaselineProfile` medians in
 `benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/connected/<Device>/`
@@ -217,7 +288,14 @@ ORDER BY t.tid, s.ts;
 
 ## Open questions for next session
 
-- How much does Option 1 alone actually move TTID? (Measure: defer Shortcut + Settings, re-run.)
-- Does deferring `AppIndex` phase B regress "app results ready on first keystroke"? (Phase A cache
-  should cover it; verify on a cold device.)
+- How much does the **corrected** Option 1 move TTID? The first attempt (double
+  `postFrameCallback`) showed no gain because it fired inside the content frame; the `OnDrawListener`
+  version + phase-B deferral now need a clean re-measurement. **Control conditions:** warm the app
+  after `installBenchmarkRelease`, discard `iter000`, and compare min / trimmed mean — the 2026-06-04
+  run was too noisy (`None` 240→195, `Full` 242→183 both shifted, an impossible "code" change) to
+  trust a single median.
+- Confirm on a re-measured trace that the `getResources` cascade now lands **after** TTID (it should
+  start at the first `onDraw`, ≈ TTID, not at t≈142 ms).
+- Does deferring `AppIndex` phase B regress "app results ready on first keystroke" on a **fresh
+  install** (empty cache)? Phase A covers warm starts; verify the first-ever launch on a cold device.
 - Is the second frame (164→221 ms, IME/insets) worth attacking next, or is TTID the only headline?

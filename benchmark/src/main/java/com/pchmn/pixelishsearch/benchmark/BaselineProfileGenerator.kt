@@ -1,24 +1,24 @@
 package com.pchmn.pixelishsearch.benchmark
 
 import androidx.benchmark.macro.junit4.BaselineProfileRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Generates a baseline profile for PixelishSearch.
  *
  * Run with:
- *   ./gradlew :benchmark:generateBaselineProfile
+ *   ./gradlew :app:generateBaselineProfile
  *
  * The generated profile lands in:
- *   app/src/main/generated/baselineProfiles/baseline-prof.txt
+ *   app/src/release/generated/baselineProfiles/{baseline-prof,startup-prof}.txt
  * and is automatically packaged into the release APK by the baselineprofile
  * consumer plugin applied to :app.
  */
 @RunWith(AndroidJUnit4::class)
-class BaselineProfileGenerator {
+class gBaselineProfileGenerator {
 
     @get:Rule
     val rule = BaselineProfileRule()

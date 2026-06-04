@@ -40,6 +40,17 @@ and its limits.
   at tap time, and entries whose key is absent from the live index are filtered at
   display (stale-filtering, like Settings pages).
 
+- **The index is disk-cached so recents survive the cold-start deferral.** Because
+  recent shortcuts only render once their key is present in the live `ShortcutIndex`
+  (the stale-filter above), and the expensive `shortcuts.xml` re-parse is deferred
+  past the first frame for startup (ADR-0009), `ShortcutIndex` persists its resolved
+  entries to a `ShortcutIndexCacheRepository` (DataStore JSON, the built launch
+  Intent stored via `Intent.toUri`). Cold start hydrates the index from that cache
+  before the first frame, so previously-seen recent shortcuts show immediately, and
+  the deferred re-parse only refreshes it. (Originally documented as "no disk cache"
+  on the assumption shortcuts never render at first frame; that overlooked the
+  blank-state Recents strip - see ADR-0009.)
+
 ## Revisit when
 
 - Users ask why a known dynamic or pinned shortcut (a conversation, a recent

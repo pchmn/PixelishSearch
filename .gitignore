@@ -81,3 +81,19 @@ record_android_trace
 
 # .agents
 .agents/settings.local.json
+
+# Version benchmark connected test results (benchmarkData.json + .txt summaries)
+# while keeping the rest of benchmark/build/ ignored. Each parent dir must be
+# un-ignored (and its other contents re-ignored) for git to descend. The heavy
+# .perfetto-trace captures (~hundreds of MB, regenerated each run) stay ignored.
+!/benchmark/build/
+/benchmark/build/*
+!/benchmark/build/outputs/
+/benchmark/build/outputs/*
+!/benchmark/build/outputs/connected_android_test_additional_output/
+/benchmark/build/outputs/connected_android_test_additional_output/*
+!/benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/
+/benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/*
+!/benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/connected/
+!/benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/connected/**
+/benchmark/build/outputs/connected_android_test_additional_output/benchmarkRelease/connected/**/*.perfetto-trace
