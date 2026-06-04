@@ -86,8 +86,8 @@ pixelishsearch/
 - **Eager state in `PixelishSearchApp.onCreate`** — DataStore-backed repos use
   `.stateIn(appScope, Eagerly, ...)` so the search VM doesn't pay a decode cost when it subscribes;
   expensive one-shots (the three indexes' `preloadFromCache` phase A, repository `warmUp`s for the
-  contacts ContentProvider binder and Google Suggest TLS) run async on `appScope`. Coil is wired up
-  here too.
+  contacts ContentProvider binder and Google Suggest TLS, and `warmUpGoogleSans` to pre-resolve the
+  device font) run async on `appScope`. Coil is wired up here too.
 - **Feature indexes (`AppIndex`, `ShortcutIndex`, `SettingsPageIndex`) are two-phase.** Phase A
   (`preloadFromCache`) hydrates from a persisted DataStore cache (no PackageManager / `getResources`)
   — this feeds both typed results and the blank-state recents on the first frame. Phase B

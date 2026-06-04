@@ -5,6 +5,7 @@ import androidx.tracing.trace
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import com.pchmn.pixelishsearch.core.ui.theme.warmUpGoogleSans
 import com.pchmn.pixelishsearch.preferences.data.PreferencesRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppHistoryRepository
 import com.pchmn.pixelishsearch.search.apps.data.AppIconFetcher
@@ -110,6 +111,14 @@ class PixelishSearchApp : Application(), SingletonImageLoader.Factory {
         // one onTorchModeChanged per camera right after registration).
         trace("FlashlightController.warmUp.dispatch") {
             FlashlightController.warmUp(this, appScope)
+        }
+
+        // Pre-resolve the GoogleSans device font so the first text layout
+        // doesn't pay the lookup during the heavy post-first-frame composition
+        // (which delays WINDOW_FOCUS_CHANGED → the IME). See ADR-0009 notes /
+        // docs/performance-analysis.md.
+        trace("warmUpGoogleSans.dispatch") {
+            warmUpGoogleSans(appScope, this@PixelishSearchApp)
         }
 
         // NOTE: the phase-B refreshes of all three indexes (AppIndex.refresh,

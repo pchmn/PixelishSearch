@@ -17,36 +17,50 @@
 >      force-stops + relaunches, and the system re-delivers it each time → `BootReceiver.refresh`
 >      runs phase-B `enumerate` at t≈100–120 ms, *in* the first frame. A real tap-to-search cold
 >      start never does this (BOOT_COMPLETED fires once at boot, in the background). It inflated
->      **all three** variants — not a code regression. **Fix: `StartupBenchmark`'s `setupBlock` now
->      `pm disable-user`s `BootReceiver`** so the measured TTID reflects the real launch path. (The
->      deferred `MainActivity` refresh itself correctly lands *after* TTID.)
+>      **all three** variants — not a code regression. **Fix: `BootReceiver` self-skips on the
+>      `.benchmark` applicationId** (a build-time `pm disable-user` / source-set manifest override
+>      doesn't survive the baselineprofile plugin's build types), so its phase-B refresh no longer
+>      runs during the measured launch. (The deferred `MainActivity` refresh itself correctly lands
+>      *after* TTID.)
 >   2. **A real recents regression.** The blank-state recents block *does* consume the indexes at
 >      the first frame (it stale-filters recent shortcuts/settings against the live index). Deferring
 >      `ShortcutIndex` / `SettingsPageIndex`, which had **no disk cache**, made recently-used
 >      shortcuts/settings pop in late. **Fix = Option 2 (disk cache):** both indexes now persist
 >      their entries (`*IndexCacheRepository`) and hydrate (phase A) before the first frame; the
 >      deferred phase B only refreshes. See ADR-0009 / ADR-0008.
-> - Option 3 (`localeFilters`) still not taken. **A clean (uncontaminated) re-measurement of the
->   final state is still pending** (see "How to re-measure").
+> - *Clean final measurement (2026-06-04, 14:35 — `Pixel 9 - 16`, BootReceiver self-skip + font
+>   warmup):* contamination gone (BOOT_COMPLETED still delivered but no `phaseB.enumerate` before
+>   TTID), `compilation_filter: speed-profile` confirmed, `time_get_resources` **376 → 111 ms**.
+>   `Baseline` median **176.6** (min 165.6) ≈ `None` **178.5** (min 174.0); `Full` 188.2. **The
+>   profile and no-AOT now tie** — expected: the cold path is light enough (cache, no enumerate
+>   contention, font pre-warmed) that AOT has almost nothing left to remove. The headline win is the
+>   no-AOT floor dropping **240.7 → 178.5 ms** and `getResources` falling 70 %, *not* an AOT delta.
+>   The profile still doesn't hurt (slightly better median/min) and earns its keep on slower devices.
+> - Option 3 (`localeFilters`) deliberately not taken — orthogonal to the (now-resolved) bottleneck.
 >
-> **Source run (the analysed trace below):** `benchmarkRelease` on Pixel 9 (tokay), 2026-06-02
-> 22:12–22:15, freshly regenerated baseline profile (commit `3ddc72f`). Median iteration analysed:
-> `StartupBenchmark_startupBaselineProfile_iter005`.
+> **Source run (the trace analysis further down):** `benchmarkRelease` on Pixel 9 (tokay), 2026-06-02
+> 22:12–22:15, baseline profile commit `3ddc72f`. Median iteration analysed:
+> `StartupBenchmark_startupBaselineProfile_iter005`. (Numbers in that section are the *original*
+> pre-fix run — kept as the diagnosis of record; the clean final numbers are the bullet above.)
 > Companion doc: [`PERFORMANCE.md`](PERFORMANCE.md) (the how-to). This file is the *findings*.
 
 ## TL;DR
 
-- The new baseline profile works: **cold start `None → BaselineProfile` = 240.7 ms → 171.5 ms
-  (‑29 %)**, with variance collapsing (CoV 0.15 → 0.07).
-- The single bottleneck flagged by Perfetto's `android_startup` metric is
-  **`ResourcesManager#getResources`** — and it is **our code's fault**, not the framework's.
-- Three index preloads (`ShortcutIndex`, `SettingsPageIndex`, `AppIndex` phase B) call
+- **Outcome (implemented + measured clean):** the `getResources` contention was moved off the first
+  frame (defer phase B + disk-cache all three indexes) and the device-font lookup pre-warmed. Result:
+  `time_get_resources` **376 → 111 ms**, the no-AOT cold-start floor **240.7 → 178.5 ms**, and
+  `Baseline ≈ None` (~177 ms) — the path is now light enough that AOT barely matters. It also fixed a
+  real UX bug (recent shortcuts/settings popping in late) and made the macrobenchmark trustworthy
+  (`BootReceiver` self-skips on `.benchmark`). See the status block above for the full saga.
+- The single bottleneck flagged by Perfetto's `android_startup` metric was
+  **`ResourcesManager#getResources`** — and it was **our code's fault**, not the framework's.
+- Three index preloads (`ShortcutIndex`, `SettingsPageIndex`, `AppIndex` phase B) called
   `PackageManager` to resolve **other packages'** labels/resources, dispatched from
-  `Application.onCreate`. They run **concurrently with the first-frame composition**, stealing CPU
+  `Application.onCreate`. They ran **concurrently with the first-frame composition**, stealing CPU
   and contending on ART locks. None of that data is needed for the first frame.
 - **Fix = don't run those enumerations during the first frame.** Trigger them *after* the first
-  frame (from `MainActivity`), not from `Application.onCreate`. Estimated **~10–25 ms** off TTID +
-  lower variance — **must be measured**, not guaranteed.
+  frame (from `MainActivity`), not from `Application.onCreate` — plus a disk cache so the first frame
+  (incl. blank-state recents) hydrates without any `getResources`.
 
 ## Benchmark results (this run)
 
@@ -223,12 +237,15 @@ bump). That decides whether the baseline profile must be regenerated.
 
 Three gotchas:
 
-- **`BootReceiver` is disabled during the benchmark — keep it that way.** `StartupMode.COLD`
-  re-delivers `BOOT_COMPLETED` to the process every iteration, which fires `BootReceiver.refresh` →
-  phase-B `enumerate` *during* the first frame (a real tap-to-search never does this). It inflates
-  TTID uniformly across all variants. `StartupBenchmark`'s `setupBlock` `pm disable-user`s the
-  receiver to neutralise it; if you measure another way, do the same (and check a trace for
-  `broadcastReceiveComp: …BOOT_COMPLETED` on the app process if numbers look uniformly slow). Also
+- **`BootReceiver` self-skips on `.benchmark` — that's load-bearing for the numbers.**
+  `StartupMode.COLD` re-delivers `BOOT_COMPLETED` to the process every iteration, which would fire
+  `BootReceiver.refresh` → phase-B `enumerate` *during* the first frame (a real tap-to-search never
+  does this). It inflates TTID uniformly across all variants. `BootReceiver` therefore early-returns
+  when `packageName.endsWith(".benchmark")`. (A `setupBlock` `pm disable-user` and a
+  `src/benchmarkRelease/` manifest override were both tried first and don't work — the package isn't
+  always installed when the shell runs, and the baselineprofile plugin's build types don't expose a
+  mergeable manifest source set.) If you measure another way, replicate the skip, and check a trace
+  for `broadcastReceiveComp: …BOOT_COMPLETED` on the app process if numbers look uniformly slow. Also
   prefer a settled, cool device — background load still adds noise.
 - `connectedBenchmarkReleaseAndroidTest` **consumes** the committed profile, it does not generate
   one. `StartupBenchmark` uses `CompilationMode.Partial()` (= `UseIfAvailable`): with no profile
@@ -298,4 +315,14 @@ ORDER BY t.tid, s.ts;
   start at the first `onDraw`, ≈ TTID, not at t≈142 ms).
 - Does deferring `AppIndex` phase B regress "app results ready on first keystroke" on a **fresh
   install** (empty cache)? Phase A covers warm starts; verify the first-ever launch on a cold device.
-- Is the second frame (164→221 ms, IME/insets) worth attacking next, or is TTID the only headline?
+- **IME readiness.** Trace finding: the soft keyboard isn't *requested* until ~100 ms after TTID
+  because `MSG_WINDOW_FOCUS_CHANGED` is queued on the main thread behind a heavy ~71 ms post-TTID
+  composition frame (text layout / `StaticLayout` ≈ 10 ms, `applyChanges` 8, `measure` 6.5, `draw`
+  8.6). The IME config is already correct (`.onPlaced { requestFocus() }` + `stateAlwaysVisible`);
+  the lever is lightening that frame. **Experiment in place:** `warmUpGoogleSans` (Theme.kt) pre-
+  resolves the device font from `Application.onCreate` to pull the `DeviceFontFamilyName` lookup out
+  of that frame. *To verify:* compare the post-TTID `doFrame` duration and the
+  `IMMS.startInputOrWindowGainedFocus` timestamp with/without the warmup (trace, all processes).
+  Expectation is modest — much of the gap is the framework focus handshake + Gboard's own draw
+  (pessimistic in-benchmark since Gboard is cold; warm in real use).
+- Is the rest of the second frame (IME/insets) worth attacking, or is the font warmup enough?

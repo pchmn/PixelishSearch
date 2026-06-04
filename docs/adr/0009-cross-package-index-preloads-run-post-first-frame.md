@@ -91,6 +91,6 @@ follow-up was deliberately *not* taken yet.
   `PackageReceiver` `refresh` firing during the first frame. Those run phase B
   eagerly (no first frame to protect) — correct in normal use, but `StartupMode.COLD`
   re-delivers `BOOT_COMPLETED` to the process *every iteration*, so `BootReceiver`
-  re-scans during startup and inflates TTID uniformly (a real tap-to-search never
-  does this). `StartupBenchmark`'s `setupBlock` `pm disable-user`s the receiver to
-  neutralise it (see `docs/performance-analysis.md`).
+  would re-scan during startup and inflate TTID uniformly (a real tap-to-search
+  never does this). `BootReceiver` therefore early-returns when the applicationId
+  ends with `.benchmark` (see `docs/performance-analysis.md`).

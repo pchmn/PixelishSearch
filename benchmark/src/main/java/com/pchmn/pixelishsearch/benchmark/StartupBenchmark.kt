@@ -43,21 +43,12 @@ class StartupBenchmark {
         iterations = 10,
         startupMode = StartupMode.COLD,
         compilationMode = mode,
-        setupBlock = {
-            // StartupMode.COLD delivers BOOT_COMPLETED to the freshly-started
-            // process on every iteration, firing BootReceiver -> AppIndex.refresh
-            // (phase B) *during* the first frame — work a real tap-to-search cold
-            // start never does (BOOT_COMPLETED fires once at boot, in the
-            // background). Disable the receiver so the measured TTID reflects the
-            // actual launch path, not this benchmark artifact. Persists across
-            // iterations; harmless to re-issue. See docs/performance-analysis.md.
-            device.executeShellCommand(
-                "pm disable-user --user 0 com.pchmn.pixelishsearch.benchmark/" +
-                    "com.pchmn.pixelishsearch.search.apps.data.BootReceiver"
-            )
-            pressHome()
-        },
     ) {
+        // Note: COLD mode re-delivers BOOT_COMPLETED to the process every
+        // iteration; BootReceiver self-skips on the `.benchmark` applicationId so
+        // its phase-B refresh doesn't run during the first frame and contaminate
+        // TTID (see BootReceiver / docs/performance-analysis.md).
+        pressHome()
         startActivityAndWait()
     }
 }

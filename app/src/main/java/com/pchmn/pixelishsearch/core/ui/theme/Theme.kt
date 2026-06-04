@@ -1,5 +1,6 @@
 package com.pchmn.pixelishsearch.core.ui.theme
 
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +15,10 @@ import androidx.compose.ui.text.font.DeviceFontFamilyName
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.createFontFamilyResolver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Material 3 theme with Dynamic Color (Material You) on Android 12+.
@@ -28,6 +33,23 @@ val GoogleSans = FontFamily(
     Font(DeviceFontFamilyName("google-sans"), weight = FontWeight.Medium),
     Font(DeviceFontFamilyName("google-sans"), weight = FontWeight.Bold),
 )
+
+/**
+ * Pre-resolve [GoogleSans] into Compose's (process-global) font cache so the
+ * first text layout doesn't pay the device-font lookup
+ * (`DeviceFontFamilyName("google-sans")` → platform `Typeface`) on the heavy
+ * post-first-frame composition — which, while it runs, blocks the main thread
+ * from processing `WINDOW_FOCUS_CHANGED` and therefore delays the IME. The
+ * typeface caches behind `createFontFamilyResolver` are shared across resolver
+ * instances, so warming one here warms the resolver the composition uses. See
+ * `docs/performance-analysis.md`.
+ */
+fun warmUpGoogleSans(scope: CoroutineScope, context: Context) {
+    val resolver = createFontFamilyResolver(context.applicationContext)
+    scope.launch(Dispatchers.IO) {
+        runCatching { resolver.preload(GoogleSans) }
+    }
+}
 
 private fun appTypography(fontFamily: FontFamily): Typography {
     val base = Typography()

@@ -27,24 +27,24 @@
             "name": "startupFull",
             "params": {},
             "className": "com.pchmn.pixelishsearch.benchmark.StartupBenchmark",
-            "totalRunTimeNs": 85577533856,
+            "totalRunTimeNs": 48595007307,
             "metrics": {
                 "timeToInitialDisplayMs": {
-                    "minimum": 179.63383,
-                    "maximum": 204.340943,
-                    "median": 191.66886399999999,
-                    "coefficientOfVariation": 0.04427547845044381,
+                    "minimum": 170.194011,
+                    "maximum": 217.013672,
+                    "median": 188.2018235,
+                    "coefficientOfVariation": 0.07359922432169445,
                     "runs": [
-                        196.681356,
-                        179.63383,
-                        193.500366,
-                        203.984172,
-                        190.184326,
-                        188.661987,
-                        204.340943,
-                        184.906128,
-                        181.505168,
-                        193.153402
+                        185.993775,
+                        170.194011,
+                        206.220296,
+                        177.493937,
+                        184.255737,
+                        201.305135,
+                        217.013672,
+                        182.477254,
+                        191.479492,
+                        190.409872
                     ]
                 }
             },
@@ -56,52 +56,52 @@
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 0",
-                    "filename": "StartupBenchmark_startupFull_iter000_2026-06-04-12-20-04.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter000_2026-06-04-14-33-21.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 1",
-                    "filename": "StartupBenchmark_startupFull_iter001_2026-06-04-12-20-10.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter001_2026-06-04-14-33-25.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 2",
-                    "filename": "StartupBenchmark_startupFull_iter002_2026-06-04-12-20-14.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter002_2026-06-04-14-33-29.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 3",
-                    "filename": "StartupBenchmark_startupFull_iter003_2026-06-04-12-20-19.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter003_2026-06-04-14-33-33.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 4",
-                    "filename": "StartupBenchmark_startupFull_iter004_2026-06-04-12-20-25.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter004_2026-06-04-14-33-37.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 5",
-                    "filename": "StartupBenchmark_startupFull_iter005_2026-06-04-12-20-30.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter005_2026-06-04-14-33-42.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 6",
-                    "filename": "StartupBenchmark_startupFull_iter006_2026-06-04-12-20-35.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter006_2026-06-04-14-33-46.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 7",
-                    "filename": "StartupBenchmark_startupFull_iter007_2026-06-04-12-20-40.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter007_2026-06-04-14-33-50.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 8",
-                    "filename": "StartupBenchmark_startupFull_iter008_2026-06-04-12-20-44.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter008_2026-06-04-14-33-54.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 9",
-                    "filename": "StartupBenchmark_startupFull_iter009_2026-06-04-12-20-48.perfetto-trace"
+                    "filename": "StartupBenchmark_startupFull_iter009_2026-06-04-14-33-59.perfetto-trace"
                 }
             ]
         },
@@ -109,24 +109,24 @@
             "name": "startupNone",
             "params": {},
             "className": "com.pchmn.pixelishsearch.benchmark.StartupBenchmark",
-            "totalRunTimeNs": 60328769072,
+            "totalRunTimeNs": 58982705107,
             "metrics": {
                 "timeToInitialDisplayMs": {
-                    "minimum": 199.085572,
-                    "maximum": 264.727295,
-                    "median": 205.8433635,
-                    "coefficientOfVariation": 0.09538986175515819,
+                    "minimum": 174.031454,
+                    "maximum": 201.401367,
+                    "median": 178.512268,
+                    "coefficientOfVariation": 0.04970731463059076,
                     "runs": [
-                        203.250325,
-                        222.657552,
-                        217.352499,
-                        205.662028,
-                        204.771485,
-                        206.024699,
-                        237.512533,
-                        199.085572,
-                        264.727295,
-                        202.889852
+                        185.791097,
+                        192.245768,
+                        180.907919,
+                        175.296997,
+                        201.401367,
+                        175.858073,
+                        180.561279,
+                        174.30542,
+                        174.031454,
+                        176.463257
                     ]
                 }
             },
@@ -138,52 +138,52 @@
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 0",
-                    "filename": "StartupBenchmark_startupNone_iter000_2026-06-04-12-21-01.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter000_2026-06-04-14-34-13.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 1",
-                    "filename": "StartupBenchmark_startupNone_iter001_2026-06-04-12-21-06.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter001_2026-06-04-14-34-18.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 2",
-                    "filename": "StartupBenchmark_startupNone_iter002_2026-06-04-12-21-12.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter002_2026-06-04-14-34-23.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 3",
-                    "filename": "StartupBenchmark_startupNone_iter003_2026-06-04-12-21-17.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter003_2026-06-04-14-34-29.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 4",
-                    "filename": "StartupBenchmark_startupNone_iter004_2026-06-04-12-21-24.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter004_2026-06-04-14-34-34.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 5",
-                    "filename": "StartupBenchmark_startupNone_iter005_2026-06-04-12-21-29.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter005_2026-06-04-14-34-39.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 6",
-                    "filename": "StartupBenchmark_startupNone_iter006_2026-06-04-12-21-35.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter006_2026-06-04-14-34-45.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 7",
-                    "filename": "StartupBenchmark_startupNone_iter007_2026-06-04-12-21-41.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter007_2026-06-04-14-34-51.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 8",
-                    "filename": "StartupBenchmark_startupNone_iter008_2026-06-04-12-21-46.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter008_2026-06-04-14-34-57.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 9",
-                    "filename": "StartupBenchmark_startupNone_iter009_2026-06-04-12-21-52.perfetto-trace"
+                    "filename": "StartupBenchmark_startupNone_iter009_2026-06-04-14-35-02.perfetto-trace"
                 }
             ]
         },
@@ -191,24 +191,24 @@
             "name": "startupBaselineProfile",
             "params": {},
             "className": "com.pchmn.pixelishsearch.benchmark.StartupBenchmark",
-            "totalRunTimeNs": 50618152979,
+            "totalRunTimeNs": 47706132876,
             "metrics": {
                 "timeToInitialDisplayMs": {
-                    "minimum": 180.571411,
-                    "maximum": 241.718668,
-                    "median": 198.3526005,
-                    "coefficientOfVariation": 0.08933790776297673,
+                    "minimum": 165.614462,
+                    "maximum": 212.84607,
+                    "median": 176.609965,
+                    "coefficientOfVariation": 0.09183093680217776,
                     "runs": [
-                        241.718668,
-                        182.0649,
-                        202.631144,
-                        194.074057,
-                        206.023315,
-                        202.783366,
-                        206.035197,
-                        180.571411,
-                        188.025065,
-                        187.719686
+                        172.269287,
+                        179.033,
+                        178.624878,
+                        166.433309,
+                        165.614462,
+                        212.84607,
+                        180.546794,
+                        209.218588,
+                        170.973186,
+                        174.595052
                     ]
                 }
             },
@@ -220,52 +220,52 @@
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 0",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter000_2026-06-04-12-22-03.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter000_2026-06-04-14-35-13.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 1",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter001_2026-06-04-12-22-07.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter001_2026-06-04-14-35-18.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 2",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter002_2026-06-04-12-22-12.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter002_2026-06-04-14-35-22.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 3",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter003_2026-06-04-12-22-16.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter003_2026-06-04-14-35-26.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 4",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter004_2026-06-04-12-22-20.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter004_2026-06-04-14-35-30.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 5",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter005_2026-06-04-12-22-25.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter005_2026-06-04-14-35-35.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 6",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter006_2026-06-04-12-22-30.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter006_2026-06-04-14-35-39.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 7",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter007_2026-06-04-12-22-35.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter007_2026-06-04-14-35-43.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 8",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter008_2026-06-04-12-22-39.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter008_2026-06-04-14-35-47.perfetto-trace"
                 },
                 {
                     "type": "PerfettoTrace",
                     "label": "Trace Iteration 9",
-                    "filename": "StartupBenchmark_startupBaselineProfile_iter009_2026-06-04-12-22-44.perfetto-trace"
+                    "filename": "StartupBenchmark_startupBaselineProfile_iter009_2026-06-04-14-35-51.perfetto-trace"
                 }
             ]
         }
