@@ -3,6 +3,11 @@
 Minimalist Android app that aims to stay as close as possible to the native Pixel Launcher unified
 search UI (pre-November 2025 Feature Drop). Inspired by PixelSearch.
 
+<img width="24%" alt="image" src="https://github.com/user-attachments/assets/4a8fc0df-4e6f-4fd7-ada0-732cb97a84b1" />
+<img width="24%" alt="image" src="https://github.com/user-attachments/assets/3ef42f2f-34fa-4204-8d6e-b75e9232c63f" />
+<img width="24%" alt="image" src="https://github.com/user-attachments/assets/fe7b819e-2405-4727-a57a-64d1e63f9f40" />
+<img width="24%" alt="image" src="https://github.com/user-attachments/assets/8f639950-a4bc-468e-a215-e72a32a5bc2d" />
+
 ## Features
 
 - Search across installed apps, contacts (with permission), web (Google Suggest) and recent queries
